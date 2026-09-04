@@ -1,0 +1,83 @@
+:root {
+  --radius: 0.5rem;
+  --color-primary: 152 70% 50%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-destructive: 0 72% 51%;
+  --color-text-primary: 0 0% 95%;
+  --color-text-secondary: 0 0% 65%;
+  --color-text-muted: 0 0% 55%;
+  --color-bg-body: 240 4% 8%;
+  --color-bg-surface: 240 4% 12%;
+  --color-bg-surface-alt: 240 4% 16%;
+  --color-bg-interactive: 240 4% 20%;
+  --color-bg-input: 240 4% 12%;
+  --color-text-input: 0 0% 95%;
+  --color-border: 240 4% 20%;
+  --color-border-input: 240 4% 25%;
+}
+
+.light {
+  --color-primary: 152 70% 50%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-text-primary: 30 10% 15%;
+  --color-text-secondary: 30 8% 45%;
+  --color-text-muted: 30 6% 55%;
+  --color-bg-body: 40 20% 96%;
+  --color-bg-surface: 40 15% 98%;
+  --color-bg-surface-alt: 40 10% 90%;
+  --color-bg-interactive: 40 10% 85%;
+  --color-bg-input: 40 15% 98%;
+  --color-text-input: 30 10% 15%;
+  --color-border: 40 10% 85%;
+  --color-border-input: 40 10% 80%;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: hsl(var(--color-bg-body));
+  color: hsl(var(--color-text-primary));
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+*,
+*::before,
+*::after {
+  transition-property: background-color, color, border-color;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.875rem;
+  color: hsl(var(--color-text-secondary));
+  margin-bottom: 0.5rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.field-input {
+  width: 100%;
+  background-color: hsl(var(--color-bg-input));
+  border: 1px solid hsl(var(--color-border-input));
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  color: hsl(var(--color-text-input));
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.field-input::placeholder {
+  color: hsl(var(--color-text-muted));
+}
+
+.field-input:focus {
+  border-color: #3ecf7e;
+  box-shadow: 0 0 0 2px rgba(62, 207, 126, 0.4);
+}

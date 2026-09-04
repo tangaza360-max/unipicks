@@ -1,0 +1,25 @@
+{
+  "name": "Unipicks",
+  "short_name": "Unipicks",
+  "description": "Student discounts and local deals near campus.",
+  "start_url": "/register",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0e0c",
+  "theme_color": "#3ecf7e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

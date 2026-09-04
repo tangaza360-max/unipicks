@@ -1,0 +1,1 @@
+alter table public.deals rename column original_price to price;
