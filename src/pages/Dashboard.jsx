@@ -23,19 +23,47 @@ export default function Dashboard() {
   const [merchantTab, setMerchantTab] = useState('deals')
   const { theme, toggleTheme } = useTheme()
 
+  // ✅ FIX: On mount, fetch the current session (not cached user)
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) {
+    const fetchSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        setUser(session.user)
+      } else {
+        setUser(null)
         navigate('/login')
-        return
       }
-      setUser(data.user)
       setLoading(false)
-    })
+    }
+    fetchSession()
+
+    // ✅ FIX: Subscribe to auth changes (login, logout, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          // Update user state with the fresh session user
+          setUser(session?.user ?? null)
+          setLoading(false)
+        } else if (event === 'SIGNED_OUT') {
+          // Clear user state and redirect to login
+          setUser(null)
+          setLoading(false)
+          navigate('/login')
+        }
+      }
+    )
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription?.unsubscribe()
+    }
   }, [navigate])
 
   async function handleLogout() {
     await supabase.auth.signOut()
+    // The onAuthStateChange listener will handle clearing user and redirecting
+    // but we also manually clear to be safe.
+    setUser(null)
     navigate('/login')
   }
 
@@ -45,6 +73,12 @@ export default function Dashboard() {
         Loading…
       </div>
     )
+  }
+
+  // If user is null after loading, redirect (should already be handled)
+  if (!user) {
+    navigate('/login')
+    return null
   }
 
   const role = user.user_metadata?.role
@@ -80,7 +114,7 @@ export default function Dashboard() {
   } else if (role === 'merchant') {
     content = (
       <>
-        <div className="flex gap-2 border-b border-border pb-3 mb-4">
+        <div className="flex gap-2 border-b border-border pb-3 mb-4 flex-wrap">
           <button
             onClick={() => setMerchantTab('deals')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
