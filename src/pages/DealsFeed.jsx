@@ -187,4 +187,4 @@ function DealCard({ deal, ratingStats }) {
       </div>
     </div>
   )
-}
+}export default DealsFeed;
