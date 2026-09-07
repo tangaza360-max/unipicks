@@ -47,8 +47,27 @@ export default function Dashboard() {
     )
   }
 
-  const role = user.user_metadata?.role ?? 'student'
+  const role = user.user_metadata?.role
   const name = user.user_metadata?.full_name ?? user.email
+
+  if (!role) {
+    return (
+      <div className="min-h-screen flex items-center justify-center flex-col gap-4 px-4">
+        <div className="text-center">
+          <h2 className="font-display text-2xl font-semibold">Account Not Set Up</h2>
+          <p className="text-muted-foreground mt-2">
+            Your account doesn't have a role assigned yet. Please contact support.
+          </p>
+          <button
+            onClick={handleLogout}
+            className="mt-4 bg-primary text-primary-foreground rounded-lg px-6 py-2"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   // Render different content based on role
   let content
@@ -190,12 +209,14 @@ export default function Dashboard() {
             >
               {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
             </button>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-muted-foreground hover:text-foreground border border-border rounded-lg px-4 py-2 transition"
-            >
-              Log out
-            </button>
+            {role !== 'student' && (
+              <button
+                onClick={handleLogout}
+                className="text-sm text-muted-foreground hover:text-foreground border border-border rounded-lg px-4 py-2 transition"
+              >
+                Log out
+              </button>
+            )}
           </div>
         </div>
 
