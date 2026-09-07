@@ -1,97 +1,189 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
+// supabase/functions/process-payment/index.ts
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 
+// --- CORS Headers ---
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+// --- Supabase Admin Client (bypasses RLS) ---
+const supabaseAdmin = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+);
+
+// --- Helper function: call UmunotaPay API ---
+async function callUmunotaPay(payload: {
+  amount: number;
+  currency: string;
+  phone?: string;
+  description: string;
+  redirect_url: string;
+  transaction_id: string;
+}) {
+  console.log('👉 Calling UmunotaPay with payload:', payload);
+  
+  // 🔧 When you get the real UmunotaPay API docs, replace this mock with actual fetch:
+  // const response = await fetch(`${UMUNOTA_BASE_URL}/pay`, {
+  //   method: 'POST',
+  //   headers: {
+  //     'Authorization': `Bearer ${Deno.env.get('UMUNOTA_API_KEY')}`,
+  //     'X-Secret': Deno.env.get('UMUNOTA_SECRET') ?? '',
+  //     'Content-Type': 'application/json',
+  //   },
+  //   body: JSON.stringify({
+  //     amount: payload.amount,
+  //     currency: payload.currency,
+  //     phone: payload.phone || '',
+  //     description: payload.description,
+  //     redirect_url: payload.redirect_url,
+  //     external_id: payload.transaction_id,
+  //   }),
+  // });
+  // const data = await response.json();
+  // return data;
+
+  // --- MOCK response for testing (remove when real API is ready) ---
+  return {
+    success: true,
+    payment_url: `https://pay.umunotapay.com/simulate?amount=${payload.amount}&ref=${payload.transaction_id}`,
+    reference: `UM-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+  };
 }
 
-function response(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  })
-}
-
-function validRwandanPhone(phone: string) {
-  return /^(078|079|072|073)\d{7}$/.test(phone)
-}
-
-serve(async (request) => {
-  if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
-  if (request.method !== 'POST') return response({ error: 'Method not allowed' }, 405)
+// --- Main handler ---
+serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
 
   try {
-    const authorization = request.headers.get('Authorization')
-    if (!authorization) return response({ error: 'Authentication required' }, 401)
-
-    const userClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authorization } } },
-    )
-    const { data: { user }, error: authError } = await userClient.auth.getUser()
-    if (authError || !user) return response({ error: 'Invalid authentication token' }, 401)
-
-    const body = await request.json()
-    const amount = Number(body.amount)
-    const phoneNumber = String(body.phone_number ?? '').replace(/\s+/g, '')
-    const transactionId = String(body.transaction_id ?? '')
-    const reference = String(body.reference ?? '')
-    const description = String(body.description ?? 'Unipicks payment')
-
-    if (!Number.isInteger(amount) || amount <= 0 || !validRwandanPhone(phoneNumber) || !transactionId || !reference) {
-      return response({ error: 'Valid amount, Rwandan phone number, transaction_id, and reference are required' }, 400)
+    // 1. Authenticate the student
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
 
-    const serviceClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    )
-    const { data: transaction, error: transactionError } = await serviceClient
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    // 2. Parse request body
+    const body = await req.json();
+    const { redemption_id, deal_id, amount, phone, currency = 'RWF' } = body;
+
+    if (!redemption_id || !deal_id || !amount) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields: redemption_id, deal_id, amount' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    console.log(`📝 Processing payment for student ${user.id}, redemption ${redemption_id}, amount ${amount} ${currency}`);
+
+    // 3. Create a pending transaction
+    const { data: transaction, error: insertError } = await supabaseAdmin
       .from('transactions')
-      .select('id, student_id, amount, phone_number, reference, status')
-      .eq('id', transactionId)
-      .eq('student_id', user.id)
-      .eq('reference', reference)
-      .single()
+      .insert({
+        redemption_id,
+        student_id: user.id,
+        deal_id,
+        amount,
+        currency,
+        payment_method: 'momo',
+        status: 'pending',
+      })
+      .select('*')
+      .single();
 
-    if (transactionError || !transaction || transaction.status !== 'pending' || transaction.amount !== amount) {
-      return response({ error: 'Pending transaction was not found or is invalid' }, 400)
+    if (insertError) {
+      console.error('❌ Error creating transaction:', insertError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to create transaction' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
 
-    const baseUrl = (Deno.env.get('PAYPACK_BASE_URL') ?? 'https://api.paypack.io/sandbox').replace(/\/$/, '')
-    const paypackResponse = await fetch(`${baseUrl}/payments`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${Deno.env.get('PAYPACK_PUBLIC_KEY') ?? ''}`,
-        'x-api-key': Deno.env.get('PAYPACK_SECRET_KEY') ?? '',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ amount, phone_number: phoneNumber, reference, description }),
-    })
+    console.log(`✅ Transaction created: ${transaction.id}`);
 
-    const providerBody = await paypackResponse.json().catch(() => ({}))
-    const providerStatus = paypackResponse.ok ? 'pending' : 'failed'
-    await serviceClient.from('transactions').update({
-      status: providerStatus,
-      phone_number: phoneNumber,
-      provider_response: providerBody,
-    }).eq('id', transaction.id)
+    // 4. Call UmunotaPay API
+    const UMUNOTA_REDIRECT_URL = Deno.env.get('UMUNOTA_REDIRECT_URL') || 'https://unipicks.vercel.app/order-confirmed';
+    const description = `Unipicks order #${redemption_id}`;
+    const redirect_url = `${UMUNOTA_REDIRECT_URL}?transaction_id=${transaction.id}`;
 
-    if (!paypackResponse.ok) {
-      return response({ error: providerBody?.message ?? `Paypack request failed (${paypackResponse.status})`, provider_response: providerBody }, 502)
+    let umunotaResponse;
+    try {
+      umunotaResponse = await callUmunotaPay({
+        amount: Number(amount),
+        currency,
+        phone: phone || undefined,
+        description,
+        redirect_url,
+        transaction_id: transaction.id,
+      });
+    } catch (apiError: any) {
+      console.error('❌ UmunotaPay API error:', apiError.message);
+      await supabaseAdmin
+        .from('transactions')
+        .update({ status: 'failed' })
+        .eq('id', transaction.id);
+
+      return new Response(
+        JSON.stringify({ error: 'Payment service error', details: apiError.message }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
 
-    return response({
-      transaction_id: providerBody.transaction_id ?? providerBody.id ?? transaction.id,
-      status: providerBody.status ?? 'pending',
-      payment_url: providerBody.payment_url ?? null,
-      reference,
-    })
-  } catch (error) {
-    console.error('[process-payment]', error)
-    return response({ error: error instanceof Error ? error.message : 'Unexpected payment error' }, 500)
+    // 5. Update transaction with UmunotaPay reference
+    const umunota_ref = umunotaResponse.reference || `UM-${Date.now()}`;
+    await supabaseAdmin
+      .from('transactions')
+      .update({
+        umunota_reference: umunota_ref,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', transaction.id);
+
+    // 6. Return payment link to frontend
+    const payment_url = umunotaResponse.payment_url;
+    if (!payment_url) {
+      console.error('❌ UmunotaPay did not return a payment URL');
+      return new Response(
+        JSON.stringify({ error: 'Payment URL not returned by provider' }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    console.log(`🔗 Payment URL generated: ${payment_url}`);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        payment_url,
+        transaction_id: transaction.id,
+        umunota_reference: umunota_ref,
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+
+  } catch (error: any) {
+    console.error('❌ Unhandled error:', error.message);
+    return new Response(
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
   }
-})
+});
