@@ -468,4 +468,3 @@ function ForkKnifeIcon() {
     </svg>
   )
 }
-wc -l src/pages/DealsFeed.jsx
