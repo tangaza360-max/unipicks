@@ -31,13 +31,13 @@ export default function DealsFeed() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [ratingStats, setRatingStats] = useState({})
   const [stories, setStories] = useState([])
-  const [merchantNames, setMerchantNames] = useState({})
+  const [merchantData, setMerchantData] = useState({}) // { merchant_id: { business_name, logo_url } }
   const [storyViewerOpen, setStoryViewerOpen] = useState(false)
   const [selectedStoryMerchant, setSelectedStoryMerchant] = useState(null)
 
   const categories = ['all', 'Pizza', 'Tacos', 'Burgers', 'Drinks', 'Desserts', 'Specials']
 
-  // --- Load stories and fetch merchant names ---
+  // --- Load stories and fetch merchant data ---
   async function loadStories() {
     try {
       const { data, error } = await supabase
@@ -54,24 +54,31 @@ export default function DealsFeed() {
 
       setStories(data || [])
 
-      // Fetch merchant names for all unique merchant_ids
+      // Fetch merchant profiles for all unique merchant_ids
       if (data && data.length > 0) {
-        const merchantIds = [...new Set(data.map(s => s.merchant_id))];
+        const merchantIds = [...new Set(data.map(s => s.merchant_id))]
         const { data: profiles, error: profileError } = await supabase
           .from('merchant_profiles')
-          .select('id, business_name')
+          .select('id, business_name, logo_url')
           .in('id', merchantIds)
 
         if (!profileError && profiles) {
-          const nameMap = {}
-          profiles.forEach(p => { nameMap[p.id] = p.business_name || 'Merchant' })
-          setMerchantNames(nameMap)
+          const dataMap = {}
+          profiles.forEach(p => {
+            dataMap[p.id] = {
+              business_name: p.business_name || 'Merchant',
+              logo_url: p.logo_url || null,
+            }
+          })
+          setMerchantData(dataMap)
         } else {
           console.error('Error fetching merchant profiles:', profileError)
-          // Fallback: use placeholder
+          // Fallback
           const fallback = {}
-          merchantIds.forEach(id => { fallback[id] = 'Merchant' })
-          setMerchantNames(fallback)
+          merchantIds.forEach(id => {
+            fallback[id] = { business_name: 'Merchant', logo_url: null }
+          })
+          setMerchantData(fallback)
         }
       }
     } catch (err) {
@@ -152,22 +159,24 @@ export default function DealsFeed() {
     }
   }, [])
 
-  // --- Group stories by merchant with actual names ---
+  // --- Group stories by merchant with actual data ---
   const groupedStories = useMemo(() => {
     const map = {}
     for (const story of stories) {
       const merchantId = story.merchant_id
+      const data = merchantData[merchantId] || { business_name: 'Merchant', logo_url: null }
       if (!map[merchantId]) {
         map[merchantId] = {
           merchant_id: merchantId,
-          business_name: merchantNames[merchantId] || 'Merchant',
+          business_name: data.business_name,
+          logo_url: data.logo_url,
           stories: [],
         }
       }
       map[merchantId].stories.push(story)
     }
     return Object.values(map)
-  }, [stories, merchantNames])
+  }, [stories, merchantData])
 
   // --- Order handler (for deal cards only) ---
   async function handleOrderFromStory(deal) {
@@ -217,25 +226,40 @@ export default function DealsFeed() {
       {groupedStories.length > 0 && (
         <div className="pb-2 border-b border-border/50">
           <div className="flex gap-4 overflow-x-auto py-2">
-            {groupedStories.map((merchant) => (
-              <button
-                key={merchant.merchant_id}
-                onClick={() => {
-                  setSelectedStoryMerchant(merchant)
-                  setStoryViewerOpen(true)
-                }}
-                className="flex flex-col items-center gap-1 min-w-[70px]"
-              >
-                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-accent to-primary p-[2px]">
-                  <div className="w-full h-full rounded-full bg-card overflow-hidden flex items-center justify-center text-2xl">
-                    🏪
+            {groupedStories.map((merchant) => {
+              const initial = merchant.business_name.charAt(0).toUpperCase()
+              const logoUrl = merchant.logo_url
+
+              return (
+                <button
+                  key={merchant.merchant_id}
+                  onClick={() => {
+                    setSelectedStoryMerchant(merchant)
+                    setStoryViewerOpen(true)
+                  }}
+                  className="flex flex-col items-center gap-1 min-w-[70px]"
+                >
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-accent to-primary p-[2px]">
+                    <div className="w-full h-full rounded-full bg-card overflow-hidden flex items-center justify-center text-2xl">
+                      {logoUrl ? (
+                        <img
+                          src={logoUrl}
+                          alt={merchant.business_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-lg font-bold text-foreground">
+                          {initial || '🏪'}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <p className="text-[10px] text-muted-foreground truncate max-w-[70px]">
-                  {merchant.business_name}
-                </p>
-              </button>
-            ))}
+                  <p className="text-[10px] text-muted-foreground truncate max-w-[70px]">
+                    {merchant.business_name}
+                  </p>
+                </button>
+              )
+            })}
           </div>
         </div>
       )}
