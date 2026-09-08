@@ -1,8 +1,8 @@
-cat > src/pages/DealsFeed.jsx << 'EOF'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import GroupOrders from './GroupOrders.jsx'
+import StoryViewer from '../components/StoryViewer.jsx'
 
 function makeCode() {
   return String(Math.floor(1000 + Math.random() * 9000))
@@ -23,6 +23,7 @@ function extractBudget(text) {
 }
 
 export default function DealsFeed() {
+  const navigate = useNavigate()
   const [deals, setDeals] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -30,8 +31,27 @@ export default function DealsFeed() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [ratingStats, setRatingStats] = useState({})
+  const [stories, setStories] = useState([])
+  const [storyViewerOpen, setStoryViewerOpen] = useState(false)
+  const [selectedStoryMerchant, setSelectedStoryMerchant] = useState(null)
 
   const categories = ['all', 'Pizza', 'Tacos', 'Burgers', 'Drinks', 'Desserts', 'Specials']
+
+  async function loadStories() {
+    const { data, error } = await supabase
+      .from('merchant_stories')
+      .select(`
+        *,
+        merchant:merchant_id ( business_name ),
+        deal:deal_id ( id, title, price, discount_percent, business_name )
+      `)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+
+    if (!error) {
+      setStories(data || [])
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -65,10 +85,10 @@ export default function DealsFeed() {
     }
 
     loadDeals()
+    loadStories()
 
-    // --- Real-time subscription for active deals ---
-    const channel = supabase
-      .channel('student-feed')
+    const dealsChannel = supabase
+      .channel('student-feed-deals')
       .on(
         'postgres_changes',
         {
@@ -83,11 +103,106 @@ export default function DealsFeed() {
       )
       .subscribe()
 
+    const storiesChannel = supabase
+      .channel('student-feed-stories')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'merchant_stories',
+        },
+        () => {
+          loadStories()
+        }
+      )
+      .subscribe()
+
     return () => {
       cancelled = true
-      channel.unsubscribe()
+      dealsChannel.unsubscribe()
+      storiesChannel.unsubscribe()
     }
   }, [])
+
+  const groupedStories = useMemo(() => {
+    const map = {}
+    for (const story of stories) {
+      const merchantId = story.merchant_id
+      if (!map[merchantId]) {
+        map[merchantId] = {
+          merchant_id: merchantId,
+          business_name: story.merchant?.business_name || 'Merchant',
+          stories: [],
+        }
+      }
+      map[merchantId].stories.push(story)
+    }
+    return Object.values(map)
+  }, [stories])
+
+  async function handleOrderFromStory(deal) {
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser()
+      if (userError) throw new Error(userError.message)
+      if (!userData.user) throw new Error('You must be logged in to order')
+
+      const newCode = makeCode()
+      const { data: redemptionData, error: insertError } = await supabase
+        .from('redemptions')
+        .insert({
+          deal_id: deal.id,
+          student_id: userData.user.id,
+          student_name: userData.user.user_metadata?.full_name ?? userData.user.email,
+          code: newCode,
+          status: 'pending',
+          payment_status: 'unpaid',
+        })
+        .select('id')
+        .single()
+
+      if (insertError) throw new Error(insertError.message)
+      if (!redemptionData) throw new Error('Failed to create order')
+
+      const redemption_id = redemptionData.id
+      const phone = userData.user.user_metadata?.phone || ''
+      const finalPrice = finalPriceOf(deal)
+      const amount = finalPrice !== null ? finalPrice : deal.price
+
+      const response = await fetch(
+        'https://dylgephsnywowxxasifs.supabase.co/functions/v1/process-payment',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            redemption_id,
+            deal_id: deal.id,
+            amount,
+            phone,
+            currency: 'RWF',
+          }),
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Payment service error')
+      }
+
+      if (data.payment_url) {
+        window.location.href = data.payment_url
+      } else {
+        throw new Error('No payment URL received from provider')
+      }
+    } catch (err) {
+      console.error('Payment error:', err.message)
+      alert(err.message || 'Something went wrong. Please try again.')
+    }
+  }
 
   const visibleDeals = useMemo(() => {
     let filtered = deals
@@ -128,6 +243,33 @@ export default function DealsFeed() {
 
   return (
     <div className="space-y-4 relative">
+      {/* Stories Row */}
+      {groupedStories.length > 0 && (
+        <div className="pb-2 border-b border-border/50">
+          <div className="flex gap-4 overflow-x-auto py-2">
+            {groupedStories.map((merchant) => (
+              <button
+                key={merchant.merchant_id}
+                onClick={() => {
+                  setSelectedStoryMerchant(merchant)
+                  setStoryViewerOpen(true)
+                }}
+                className="flex flex-col items-center gap-1 min-w-[70px]"
+              >
+                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-accent to-primary p-[2px]">
+                  <div className="w-full h-full rounded-full bg-card overflow-hidden flex items-center justify-center text-2xl">
+                    🏪
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground truncate max-w-[70px]">
+                  {merchant.business_name}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <h2 className="font-display text-lg font-semibold">Your deals feed</h2>
@@ -199,10 +341,21 @@ export default function DealsFeed() {
 
       <GroupOrders deals={deals} />
       <Advisor deals={deals} onBudget={setBudget} />
+
+      {/* Story Viewer */}
+      {storyViewerOpen && selectedStoryMerchant && (
+        <StoryViewer
+          stories={selectedStoryMerchant.stories}
+          onClose={() => setStoryViewerOpen(false)}
+          initialIndex={0}
+          onOrder={handleOrderFromStory}
+        />
+      )}
     </div>
   )
 }
 
+// --- DealCard component (unchanged, keep the same as before) ---
 function DealCard({ deal, ratingStats }) {
   const navigate = useNavigate()
   const [ordering, setOrdering] = useState(false)
@@ -351,6 +504,7 @@ function DealCard({ deal, ratingStats }) {
   )
 }
 
+// --- Advisor component (unchanged) ---
 function Advisor({ deals, onBudget }) {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
@@ -485,4 +639,3 @@ function ForkKnifeIcon() {
     </svg>
   )
 }
-EOF

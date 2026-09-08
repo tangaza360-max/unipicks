@@ -6,7 +6,8 @@ import DealsFeed from './DealsFeed.jsx'
 import MerchantDeals from './MerchantDeals.jsx'
 import MerchantAnalytics from './MerchantAnalytics.jsx'
 import MerchantProfile from './MerchantProfile.jsx'
-import AIDealGenerator from './AIDealGenerator.jsx'     // <--- ADDED
+import MerchantStories from './MerchantStories.jsx'
+import AIDealGenerator from './AIDealGenerator.jsx'
 import AdminAnalytics from './AdminAnalytics.jsx'
 import AdminApprovals from './AdminApprovals.jsx'
 import AdminStudentView from './AdminStudentView.jsx'
@@ -139,7 +140,6 @@ export default function Dashboard() {
           >
             ⚙️ Profile
           </button>
-          {/* --- NEW AI DEAL BUTTON --- */}
           <button
             onClick={() => setMerchantTab('ai-deal')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
@@ -150,12 +150,22 @@ export default function Dashboard() {
           >
             ✨ AI Deal
           </button>
+          <button
+            onClick={() => setMerchantTab('stories')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              merchantTab === 'stories'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground border border-border'
+            }`}
+          >
+            📸 Stories
+          </button>
         </div>
         {merchantTab === 'deals' && <MerchantDeals />}
         {merchantTab === 'analytics' && <MerchantAnalytics />}
         {merchantTab === 'profile' && <MerchantProfile merchantId={user.id} />}
-        {/* --- NEW AI DEAL RENDER --- */}
         {merchantTab === 'ai-deal' && <AIDealGenerator />}
+        {merchantTab === 'stories' && <MerchantStories merchantId={user.id} />}
       </>
     )
   } else if (role === 'delivery') {
