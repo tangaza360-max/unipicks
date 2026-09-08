@@ -13,17 +13,19 @@ export default function MerchantStories() {
   const [userId, setUserId] = useState(null)
 
   useEffect(() => {
-    async function getUserId() {
+    async function init() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
-        setUserId(session.user.id)
-        loadStories(session.user.id)
-        loadDeals(session.user.id)
+        const uid = session.user.id
+        console.log('🔑 Session user ID:', uid)
+        setUserId(uid)
+        loadStories(uid)
+        loadDeals(uid)
       } else {
-        console.error('No session found')
+        console.error('❌ No session found')
       }
     }
-    getUserId()
+    init()
   }, [])
 
   async function loadStories(uid) {
@@ -66,6 +68,7 @@ export default function MerchantStories() {
     e.preventDefault()
     if (!file) return setError('Please select an image')
 
+    // Get fresh session
     const { data: { session } } = await supabase.auth.getSession()
     if (!session?.user) return setError('Not authenticated')
 
@@ -89,28 +92,31 @@ export default function MerchantStories() {
         .from('story-images')
         .getPublicUrl(filePath)
 
-      // --- IMPORTANT: Do NOT use .select() here ---
+      const payload = {
+        merchant_id: uid,
+        media_url: publicUrlData.publicUrl,
+        caption: caption.trim() || null,
+        deal_id: selectedDealId || null,
+      }
+      console.log('📦 Insert payload:', payload)
+
+      // Now insert
       const { error: insertError } = await supabase
         .from('merchant_stories')
-        .insert({
-          merchant_id: uid,
-          media_url: publicUrlData.publicUrl,
-          caption: caption.trim() || null,
-          deal_id: selectedDealId || null,
-        })
-        // ⚠️ NO .select() — this avoids the RLS return issue!
+        .insert(payload)  // NO .select()!
 
       if (insertError) {
-        console.error('Insert error:', insertError)
+        console.error('❌ Insert error:', insertError)
         throw insertError
       }
 
+      console.log('✅ Story inserted successfully!')
       setCaption('')
       setFile(null)
       setSelectedDealId('')
       loadStories(uid)
     } catch (err) {
-      console.error('Upload error:', err)
+      console.error('❌ Upload error:', err)
       setError(err.message || 'Upload failed')
     } finally {
       setUploading(false)
