@@ -1,12 +1,6 @@
 import { useState, useEffect } from 'react'
 
-function finalPrice(deal) {
-  if (!deal) return null
-  if (deal.discount_percent == null) return deal.price
-  return Math.round(deal.price * (1 - deal.discount_percent / 100))
-}
-
-export default function StoryViewer({ stories, onClose, initialIndex = 0, onOrder }) {
+export default function StoryViewer({ stories, onClose, initialIndex = 0 }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [progress, setProgress] = useState(0)
 
@@ -44,16 +38,6 @@ export default function StoryViewer({ stories, onClose, initialIndex = 0, onOrde
   }
 
   if (!currentStory) return null
-
-  const linkedDeal = currentStory.deal
-  const linkedFinalPrice = linkedDeal ? finalPrice(linkedDeal) : null
-
-  function handleOrderClick(e) {
-    e.stopPropagation()
-    if (onOrder && linkedDeal) {
-      onOrder(linkedDeal)
-    }
-  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
@@ -93,18 +77,6 @@ export default function StoryViewer({ stories, onClose, initialIndex = 0, onOrde
             ✕
           </button>
         </div>
-
-        {/* Order Now button if deal is linked */}
-        {linkedDeal && (
-          <div className="absolute bottom-4 left-4 right-4 flex justify-center">
-            <button
-              onClick={handleOrderClick}
-              className="bg-accent hover:bg-accent-dim text-background-foreground font-semibold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105 flex items-center gap-2"
-            >
-              🛒 Order now – {linkedFinalPrice || linkedDeal.price} RWF
-            </button>
-          </div>
-        )}
 
         {/* Tap zones */}
         <div className="absolute inset-0 flex">

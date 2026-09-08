@@ -23,7 +23,6 @@ function extractBudget(text) {
 }
 
 export default function DealsFeed() {
-  const navigate = useNavigate()
   const [deals, setDeals] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -37,19 +36,21 @@ export default function DealsFeed() {
 
   const categories = ['all', 'Pizza', 'Tacos', 'Burgers', 'Drinks', 'Desserts', 'Specials']
 
+  // --- Load stories (NO deal relation) ---
   async function loadStories() {
     const { data, error } = await supabase
       .from('merchant_stories')
       .select(`
         *,
-        merchant:merchant_id ( business_name ),
-        deal:deal_id ( id, title, price, discount_percent, business_name )
+        merchant:merchant_id ( business_name )
       `)
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })
 
     if (!error) {
       setStories(data || [])
+    } else {
+      console.error('Error loading stories:', error)
     }
   }
 
@@ -141,67 +142,11 @@ export default function DealsFeed() {
     return Object.values(map)
   }, [stories])
 
+  // --- Order handler (for deal cards only) ---
   async function handleOrderFromStory(deal) {
-    try {
-      const { data: userData, error: userError } = await supabase.auth.getUser()
-      if (userError) throw new Error(userError.message)
-      if (!userData.user) throw new Error('You must be logged in to order')
-
-      const newCode = makeCode()
-      const { data: redemptionData, error: insertError } = await supabase
-        .from('redemptions')
-        .insert({
-          deal_id: deal.id,
-          student_id: userData.user.id,
-          student_name: userData.user.user_metadata?.full_name ?? userData.user.email,
-          code: newCode,
-          status: 'pending',
-          payment_status: 'unpaid',
-        })
-        .select('id')
-        .single()
-
-      if (insertError) throw new Error(insertError.message)
-      if (!redemptionData) throw new Error('Failed to create order')
-
-      const redemption_id = redemptionData.id
-      const phone = userData.user.user_metadata?.phone || ''
-      const finalPrice = finalPriceOf(deal)
-      const amount = finalPrice !== null ? finalPrice : deal.price
-
-      const response = await fetch(
-        'https://dylgephsnywowxxasifs.supabase.co/functions/v1/process-payment',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          },
-          body: JSON.stringify({
-            redemption_id,
-            deal_id: deal.id,
-            amount,
-            phone,
-            currency: 'RWF',
-          }),
-        }
-      )
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Payment service error')
-      }
-
-      if (data.payment_url) {
-        window.location.href = data.payment_url
-      } else {
-        throw new Error('No payment URL received from provider')
-      }
-    } catch (err) {
-      console.error('Payment error:', err.message)
-      alert(err.message || 'Something went wrong. Please try again.')
-    }
+    // This is no longer used because we removed `deal` from stories.
+    // We keep it as a placeholder in case we re‑introduce linked deals.
+    alert('This story does not have a linked deal.')
   }
 
   const visibleDeals = useMemo(() => {
@@ -243,7 +188,7 @@ export default function DealsFeed() {
 
   return (
     <div className="space-y-4 relative">
-      {/* Stories Row */}
+      {/* --- STORIES ROW --- */}
       {groupedStories.length > 0 && (
         <div className="pb-2 border-b border-border/50">
           <div className="flex gap-4 overflow-x-auto py-2">
@@ -342,7 +287,7 @@ export default function DealsFeed() {
       <GroupOrders deals={deals} />
       <Advisor deals={deals} onBudget={setBudget} />
 
-      {/* Story Viewer */}
+      {/* --- Story Viewer Modal --- */}
       {storyViewerOpen && selectedStoryMerchant && (
         <StoryViewer
           stories={selectedStoryMerchant.stories}
@@ -355,7 +300,7 @@ export default function DealsFeed() {
   )
 }
 
-// --- DealCard component (unchanged, keep the same as before) ---
+// --- DealCard component (unchanged) ---
 function DealCard({ deal, ratingStats }) {
   const navigate = useNavigate()
   const [ordering, setOrdering] = useState(false)
