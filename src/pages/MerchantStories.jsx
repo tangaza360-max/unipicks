@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 
-export default function MerchantStories({ merchantId }) {
+export default function MerchantStories() {
   const [stories, setStories] = useState([])
   const [deals, setDeals] = useState([])
   const [caption, setCaption] = useState('')
@@ -10,18 +10,26 @@ export default function MerchantStories({ merchantId }) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [userId, setUserId] = useState(null)
 
   useEffect(() => {
-    loadStories()
-    loadDeals()
-  }, [merchantId])
+    async function getUserId() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserId(user.id)
+        loadStories(user.id)
+        loadDeals(user.id)
+      }
+    }
+    getUserId()
+  }, [])
 
-  async function loadStories() {
+  async function loadStories(uid) {
     setLoading(true)
     const { data, error } = await supabase
       .from('merchant_stories')
       .select('*')
-      .eq('merchant_id', merchantId)
+      .eq('merchant_id', uid)
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })
 
@@ -33,11 +41,11 @@ export default function MerchantStories({ merchantId }) {
     setLoading(false)
   }
 
-  async function loadDeals() {
+  async function loadDeals(uid) {
     const { data, error } = await supabase
       .from('deals')
       .select('id, title, price, discount_percent')
-      .eq('merchant_id', merchantId)
+      .eq('merchant_id', uid)
       .eq('active', true)
       .order('created_at', { ascending: false })
 
@@ -55,12 +63,14 @@ export default function MerchantStories({ merchantId }) {
   async function handleUpload(e) {
     e.preventDefault()
     if (!file) return setError('Please select an image')
+    if (!userId) return setError('User not authenticated')
+
     setUploading(true)
     setError('')
 
     try {
       const fileExt = file.name.split('.').pop()
-      const filePath = `merchants/${merchantId}/${Date.now()}.${fileExt}`
+      const filePath = `merchants/${userId}/${Date.now()}.${fileExt}`
 
       const { error: uploadError } = await supabase.storage
         .from('story-images')
@@ -73,7 +83,7 @@ export default function MerchantStories({ merchantId }) {
         .getPublicUrl(filePath)
 
       const storyData = {
-        merchant_id: merchantId,
+        merchant_id: userId,
         media_url: publicUrlData.publicUrl,
         caption: caption.trim() || null,
         deal_id: selectedDealId || null,
@@ -88,7 +98,7 @@ export default function MerchantStories({ merchantId }) {
       setCaption('')
       setFile(null)
       setSelectedDealId('')
-      loadStories()
+      loadStories(userId)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -103,7 +113,11 @@ export default function MerchantStories({ merchantId }) {
       .delete()
       .eq('id', id)
 
-    if (!error) loadStories()
+    if (!error) loadStories(userId)
+  }
+
+  if (!userId) {
+    return <p className="text-muted-foreground text-sm">Loading user...</p>
   }
 
   return (
