@@ -36,21 +36,27 @@ export default function DealsFeed() {
 
   const categories = ['all', 'Pizza', 'Tacos', 'Burgers', 'Drinks', 'Desserts', 'Specials']
 
-  // --- Load stories (NO deal relation) ---
+  // --- Load stories with correct merchant_profile relation ---
   async function loadStories() {
-    const { data, error } = await supabase
-      .from('merchant_stories')
-      .select(`
-        *,
-        merchant:merchant_id ( business_name )
-      `)
-      .gt('expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false })
+    try {
+      const { data, error } = await supabase
+        .from('merchant_stories')
+        .select(`
+          *,
+          merchant_profile:merchant_id ( business_name )
+        `)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
 
-    if (!error) {
+      if (error) {
+        console.error('Error loading stories:', error)
+        setStories([])
+        return
+      }
       setStories(data || [])
-    } else {
-      console.error('Error loading stories:', error)
+    } catch (err) {
+      console.error('Unexpected error loading stories:', err)
+      setStories([])
     }
   }
 
@@ -133,7 +139,7 @@ export default function DealsFeed() {
       if (!map[merchantId]) {
         map[merchantId] = {
           merchant_id: merchantId,
-          business_name: story.merchant?.business_name || 'Merchant',
+          business_name: story.merchant_profile?.business_name || 'Merchant',
           stories: [],
         }
       }
@@ -144,8 +150,6 @@ export default function DealsFeed() {
 
   // --- Order handler (for deal cards only) ---
   async function handleOrderFromStory(deal) {
-    // This is no longer used because we removed `deal` from stories.
-    // We keep it as a placeholder in case we re‑introduce linked deals.
     alert('This story does not have a linked deal.')
   }
 
