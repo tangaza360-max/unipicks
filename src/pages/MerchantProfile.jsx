@@ -108,8 +108,23 @@ export default function MerchantProfile({ merchantId }) {
         .getPublicUrl(filePath)
 
       const logoUrl = publicUrlData.publicUrl
+
+      // --- Automatically save to database after upload ---
+      const { error: updateError } = await supabase
+        .from('merchant_profiles')
+        .update({
+          logo_url: logoUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', merchantId)
+
+      if (updateError) throw updateError
+
+      // Update local state
       setProfile((prev) => ({ ...prev, logo_url: logoUrl }))
-      setSuccess('Logo uploaded! Click Save Profile to confirm.')
+      setOriginalProfile((prev) => ({ ...prev, logo_url: logoUrl }))
+
+      setSuccess('Logo uploaded and saved successfully!')
 
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
@@ -257,7 +272,7 @@ export default function MerchantProfile({ merchantId }) {
             {uploading && <span className="text-sm text-muted-foreground">Uploading...</span>}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Upload a square image (recommended: 512x512)
+            Upload a square image. It will be saved automatically.
           </p>
         </div>
 
