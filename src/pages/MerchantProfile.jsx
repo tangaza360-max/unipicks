@@ -1,10 +1,10 @@
-// src/pages/MerchantProfile.jsx
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 
 export default function MerchantProfile({ merchantId }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [profile, setProfile] = useState({
     business_name: '',
     phone: '',
@@ -14,6 +14,7 @@ export default function MerchantProfile({ merchantId }) {
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     async function loadProfile() {
@@ -72,6 +73,42 @@ export default function MerchantProfile({ merchantId }) {
     setProfile((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
+  async function handleLogoUpload(e) {
+    const file = e.target.files[0]
+    if (!file) return
+
+    setUploading(true)
+    setError('')
+
+    try {
+      const fileExt = file.name.split('.').pop()
+      const filePath = `${merchantId}/${Date.now()}.${fileExt}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('merchant-logos')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: publicUrlData } = supabase.storage
+        .from('merchant-logos')
+        .getPublicUrl(filePath)
+
+      const logoUrl = publicUrlData.publicUrl
+      setProfile((prev) => ({ ...prev, logo_url: logoUrl }))
+      setSuccess('Logo uploaded successfully!')
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
   if (loading) {
     return <p className="text-muted-foreground text-sm">Loading profile…</p>
   }
@@ -125,8 +162,37 @@ export default function MerchantProfile({ merchantId }) {
           />
         </div>
 
+        {/* --- Logo upload and preview --- */}
         <div>
-          <label className="field-label">Logo URL</label>
+          <label className="field-label">Logo</label>
+          {profile.logo_url && (
+            <div className="mb-2">
+              <img
+                src={profile.logo_url}
+                alt="Business logo"
+                className="w-20 h-20 object-cover rounded-full border border-border"
+              />
+            </div>
+          )}
+          <div className="flex items-center gap-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleLogoUpload}
+              className="text-sm text-muted-foreground"
+              disabled={uploading}
+            />
+            {uploading && <span className="text-sm text-muted-foreground">Uploading...</span>}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Upload a square image (recommended: 512x512)
+          </p>
+        </div>
+
+        {/* --- Logo URL input (fallback) --- */}
+        <div>
+          <label className="field-label">Logo URL (or upload above)</label>
           <input
             name="logo_url"
             value={profile.logo_url}
