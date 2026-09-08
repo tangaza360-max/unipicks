@@ -1,25 +1,41 @@
+cat > src/pages/AIDealGenerator.jsx << 'EOF'
 // src/pages/AIDealGenerator.jsx
 import { useState, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 
 export default function AIDealGenerator({ onDealCreated }) {
   const [prompt, setPrompt] = useState('')
+  const [originalPrice, setOriginalPrice] = useState('')
+  const [discountPercent, setDiscountPercent] = useState('')
   const [originalPrompt, setOriginalPrompt] = useState('')
   const [loading, setLoading] = useState(false)
   const [generatedDeal, setGeneratedDeal] = useState(null)
-  const [aiImages, setAiImages] = useState([])          // AI-generated images
-  const [uploadedImages, setUploadedImages] = useState([]) // User-uploaded images
+  const [aiImages, setAiImages] = useState([])
+  const [uploadedImages, setUploadedImages] = useState([])
   const [selectedImage, setSelectedImage] = useState(null)
-  const [imagePage, setImagePage] = useState(1)          // <--- NEW: track page
+  const [imagePage, setImagePage] = useState(1)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [confirmationData, setConfirmationData] = useState(null)
   const fileInputRef = useRef(null)
 
-  // --- Generate Deal (AI) ---
+  const finalPrice = originalPrice && discountPercent
+    ? Math.round(Number(originalPrice) * (1 - Number(discountPercent) / 100))
+    : null
+
   async function handleGenerate(e) {
     e.preventDefault()
     if (!prompt.trim()) return
+    if (!originalPrice || Number(originalPrice) <= 0) {
+      setError('Please enter a valid original price.')
+      return
+    }
+    if (discountPercent && (Number(discountPercent) < 0 || Number(discountPercent) > 100)) {
+      setError('Discount must be between 0 and 100.')
+      return
+    }
 
     setLoading(true)
     setError('')
@@ -27,7 +43,8 @@ export default function AIDealGenerator({ onDealCreated }) {
     setAiImages([])
     setUploadedImages([])
     setSelectedImage(null)
-    setImagePage(1)  // Reset to page 1
+    setImagePage(1)
+    setShowConfirm(false)
     setOriginalPrompt(prompt.trim())
 
     try {
@@ -39,7 +56,12 @@ export default function AIDealGenerator({ onDealCreated }) {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
           },
-          body: JSON.stringify({ prompt: prompt.trim(), page: 1 }),
+          body: JSON.stringify({
+            prompt: prompt.trim(),
+            page: 1,
+            originalPrice: Number(originalPrice),
+            discountPercent: Number(discountPercent),
+          }),
         }
       )
 
@@ -58,7 +80,6 @@ export default function AIDealGenerator({ onDealCreated }) {
     }
   }
 
-  // --- Regenerate ONLY images (keeping deal data) ---
   async function handleRegenerateImages() {
     if (!originalPrompt) return
     const nextPage = imagePage + 1
@@ -75,16 +96,19 @@ export default function AIDealGenerator({ onDealCreated }) {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
           },
-          body: JSON.stringify({ prompt: originalPrompt, page: nextPage }),
+          body: JSON.stringify({
+            prompt: originalPrompt,
+            page: nextPage,
+            originalPrice: Number(originalPrice),
+            discountPercent: Number(discountPercent),
+          }),
         }
       )
 
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || 'Generation failed')
 
-      // Replace ONLY the AI images, keep uploaded images
       setAiImages(data.images || [])
-      // If no image is selected, or selected image was AI, select the first new AI image
       if (data.images && data.images.length > 0) {
         const isSelectedFromAi = selectedImage && aiImages.includes(selectedImage)
         if (isSelectedFromAi || !selectedImage) {
@@ -98,7 +122,6 @@ export default function AIDealGenerator({ onDealCreated }) {
     }
   }
 
-  // --- Upload custom image ---
   async function handleImageUpload(e) {
     const file = e.target.files[0]
     if (!file) return
@@ -123,7 +146,6 @@ export default function AIDealGenerator({ onDealCreated }) {
         .from('deal-images')
         .getPublicUrl(filePath)
 
-      // Add to uploaded images
       setUploadedImages((prev) => [...prev, publicUrl])
       setSelectedImage(publicUrl)
 
@@ -140,9 +162,22 @@ export default function AIDealGenerator({ onDealCreated }) {
     }
   }
 
-  // --- Create Deal ---
-  async function handleCreateDeal() {
+  function handleShowConfirmation() {
     if (!generatedDeal || !selectedImage) return
+
+    setConfirmationData({
+      title: generatedDeal.title,
+      description: generatedDeal.description,
+      originalPrice: Number(originalPrice),
+      discountPercent: Number(discountPercent),
+      finalPrice: finalPrice,
+      selectedImage: selectedImage,
+    })
+    setShowConfirm(true)
+  }
+
+  async function handleConfirmDeal() {
+    if (!confirmationData) return
 
     setSaving(true)
     setError('')
@@ -152,23 +187,27 @@ export default function AIDealGenerator({ onDealCreated }) {
       const { error: insertError } = await supabase.from('deals').insert({
         merchant_id: userData.user.id,
         business_name: 'Your Business',
-        title: generatedDeal.title,
-        description: generatedDeal.description,
-        price: generatedDeal.price,
-        discount_percent: generatedDeal.discount_percent,
-        image_url: selectedImage,
+        title: confirmationData.title,
+        description: confirmationData.description,
+        price: confirmationData.originalPrice,
+        discount_percent: confirmationData.discountPercent,
+        image_url: confirmationData.selectedImage,
         active: true,
       })
 
       if (insertError) throw new Error(insertError.message)
 
       setPrompt('')
+      setOriginalPrice('')
+      setDiscountPercent('')
       setOriginalPrompt('')
       setGeneratedDeal(null)
       setAiImages([])
       setUploadedImages([])
       setSelectedImage(null)
       setImagePage(1)
+      setShowConfirm(false)
+      setConfirmationData(null)
 
       if (onDealCreated) onDealCreated()
       alert('🎉 Deal created successfully!')
@@ -179,14 +218,13 @@ export default function AIDealGenerator({ onDealCreated }) {
     }
   }
 
-  // Combine images for display
   const allImages = [...aiImages, ...uploadedImages]
 
   return (
     <div className="space-y-4">
       <h2 className="font-display text-lg font-semibold">✨ AI Deal Generator</h2>
       <p className="text-muted-foreground text-sm">
-        Describe your deal and let AI create a listing for you.
+        Describe your deal, set the price and discount, and let AI create a listing for you.
       </p>
 
       <form onSubmit={handleGenerate} className="space-y-3">
@@ -197,13 +235,45 @@ export default function AIDealGenerator({ onDealCreated }) {
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="e.g., Tacos Tuesday – 20% off all tacos, every Tuesday"
             className="field-input min-h-[80px]"
-            rows={3}
+            rows={2}
           />
         </div>
 
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="field-label">Original Price (RWF)</label>
+            <input
+              type="number"
+              value={originalPrice}
+              onChange={(e) => setOriginalPrice(e.target.value)}
+              placeholder="6000"
+              className="field-input"
+              required
+            />
+          </div>
+          <div>
+            <label className="field-label">Discount (%)</label>
+            <input
+              type="number"
+              value={discountPercent}
+              onChange={(e) => setDiscountPercent(e.target.value)}
+              placeholder="20"
+              className="field-input"
+              min="0"
+              max="100"
+            />
+          </div>
+        </div>
+
+        {finalPrice !== null && Number(originalPrice) > 0 && (
+          <p className="text-sm text-muted-foreground">
+            Final price: <span className="text-primary font-bold">{finalPrice} RWF</span>
+          </p>
+        )}
+
         <button
           type="submit"
-          disabled={loading || !prompt.trim()}
+          disabled={loading || !prompt.trim() || !originalPrice}
           className="w-full bg-accent text-background-foreground font-semibold rounded-lg py-3 transition disabled:opacity-50"
         >
           {loading ? 'Generating...' : '✨ Generate Deal'}
@@ -216,11 +286,12 @@ export default function AIDealGenerator({ onDealCreated }) {
         <div className="border border-border rounded-lg p-4 space-y-3">
           <h3 className="font-medium">AI Suggested Deal</h3>
 
-          <div className="space-y-1">
-            <p><span className="text-muted-foreground text-sm">Title:</span> {generatedDeal.title}</p>
-            <p><span className="text-muted-foreground text-sm">Description:</span> {generatedDeal.description}</p>
-            <p><span className="text-muted-foreground text-sm">Price:</span> {generatedDeal.price} RWF</p>
-            <p><span className="text-muted-foreground text-sm">Discount:</span> {generatedDeal.discount_percent}%</p>
+          <div className="space-y-1 text-sm">
+            <p><span className="text-muted-foreground">Title:</span> {generatedDeal.title}</p>
+            <p><span className="text-muted-foreground">Description:</span> {generatedDeal.description}</p>
+            <p><span className="text-muted-foreground">Original Price:</span> {generatedDeal.price} RWF</p>
+            <p><span className="text-muted-foreground">Discount:</span> {generatedDeal.discount_percent}%</p>
+            <p><span className="text-muted-foreground">Final Price:</span> <span className="text-primary font-bold">{finalPrice || generatedDeal.price} RWF</span></p>
           </div>
 
           <div>
@@ -229,7 +300,7 @@ export default function AIDealGenerator({ onDealCreated }) {
               <div className="flex gap-2">
                 <button
                   onClick={handleRegenerateImages}
-                  disabled={loading || !originalPrompt || aiImages.length === 0}
+                  disabled={loading || !originalPrompt}
                   className="text-xs bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg px-3 py-1 transition disabled:opacity-50"
                 >
                   {loading ? 'Loading...' : '🔄 Regenerate'}
@@ -282,14 +353,68 @@ export default function AIDealGenerator({ onDealCreated }) {
           </div>
 
           <button
-            onClick={handleCreateDeal}
-            disabled={saving || !selectedImage}
+            onClick={handleShowConfirmation}
+            disabled={!selectedImage}
             className="w-full bg-primary text-primary-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
           >
-            {saving ? 'Creating...' : '✅ Create Deal'}
+            Review & Confirm
           </button>
+        </div>
+      )}
+
+      {showConfirm && confirmationData && (
+        <div className="border border-green-500/50 bg-green-500/5 rounded-lg p-5 space-y-4 mt-2">
+          <h3 className="font-display text-xl font-semibold text-green-600">📋 Confirm Your Deal</h3>
+          <p className="text-sm text-muted-foreground">Review the details below before posting.</p>
+
+          <div className="space-y-2 text-sm bg-card/40 p-3 rounded border border-border">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Title</span>
+              <span className="font-medium">{confirmationData.title}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Description</span>
+              <span className="font-medium text-right max-w-[60%]">{confirmationData.description}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Original Price</span>
+              <span className="font-medium">{confirmationData.originalPrice} RWF</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Discount</span>
+              <span className="font-medium">{confirmationData.discountPercent}%</span>
+            </div>
+            <div className="flex justify-between border-t border-border pt-2 mt-1">
+              <span className="text-muted-foreground font-semibold">Final Price</span>
+              <span className="font-bold text-primary text-lg">{confirmationData.finalPrice} RWF</span>
+            </div>
+            <div className="flex justify-center mt-2">
+              <img
+                src={confirmationData.selectedImage}
+                alt="Selected deal image"
+                className="w-24 h-24 object-cover rounded-lg border border-border"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowConfirm(false)}
+              className="flex-1 border border-border text-muted-foreground hover:text-foreground rounded-lg py-2.5 transition"
+            >
+              Edit
+            </button>
+            <button
+              onClick={handleConfirmDeal}
+              disabled={saving}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
+            >
+              {saving ? 'Posting...' : '✅ Confirm & Post Deal'}
+            </button>
+          </div>
         </div>
       )}
     </div>
   )
 }
+EOF

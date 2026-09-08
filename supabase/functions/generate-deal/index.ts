@@ -1,3 +1,4 @@
+cat > supabase/functions/generate-deal/index.ts << 'EOF'
 // supabase/functions/generate-deal/index.ts
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
@@ -34,7 +35,6 @@ serve(async (req) => {
   }
 
   try {
-    // 1. Authenticate
     const authHeader = req.headers.get('Authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new Response(
@@ -52,9 +52,8 @@ serve(async (req) => {
       )
     }
 
-    // 2. Parse request (including page number)
     const body = await req.json()
-    const { prompt, page = 1 } = body   // <--- NEW: page defaults to 1
+    const { prompt, page = 1, originalPrice, discountPercent } = body
     if (!prompt || prompt.trim().length < 3) {
       return new Response(
         JSON.stringify({ error: 'Please provide a description' }),
@@ -62,14 +61,12 @@ serve(async (req) => {
       )
     }
 
-    // 3. Clean prompt for AI
     const cleanPrompt = prompt
       .replace(/show images?/gi, '')
       .replace(/images? of/gi, '')
       .replace(/not restaurant interiors/gi, '')
       .trim()
 
-    // 4. Call OpenAI
     let dealData
     try {
       const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -120,13 +117,18 @@ serve(async (req) => {
       }
     }
 
-    // 5. Extract clean search term for Unsplash
+    // Override price and discount if user provided them
+    if (originalPrice && !isNaN(Number(originalPrice)) && Number(originalPrice) > 0) {
+      dealData.price = Number(originalPrice)
+    }
+    if (discountPercent !== undefined && !isNaN(Number(discountPercent)) && Number(discountPercent) >= 0 && Number(discountPercent) <= 100) {
+      dealData.discount_percent = Number(discountPercent)
+    }
+
     const searchTerm = extractSearchTerm(prompt)
 
-    // 6. Call Unsplash with PAGE parameter to get fresh images
     let images = []
     try {
-      // --- NEW: include page parameter ---
       const unsplashResponse = await fetch(
         `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchTerm)}&per_page=6&orientation=squarish&page=${page}`,
         {
@@ -140,7 +142,6 @@ serve(async (req) => {
         const unsplashData = await unsplashResponse.json()
         images = unsplashData.results.map((img: any) => img.urls.small)
       } else {
-        // Fallback images if Unsplash fails
         images = [
           'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400',
           'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400',
@@ -156,7 +157,6 @@ serve(async (req) => {
       ]
     }
 
-    // 7. Return
     return new Response(
       JSON.stringify({
         success: true,
@@ -174,3 +174,4 @@ serve(async (req) => {
     )
   }
 })
+EOF
