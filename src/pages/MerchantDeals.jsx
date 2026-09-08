@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import VerifyCode from './VerifyCode.jsx'
 import ConfirmModal from '../components/ConfirmModal.jsx'
 
 export default function MerchantDeals() {
-  // --- State ---
+  // --- State for deals and form ---
   const [businessName, setBusinessName] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -19,16 +19,25 @@ export default function MerchantDeals() {
   const [myDeals, setMyDeals] = useState([])
   const [loadingDeals, setLoadingDeals] = useState(true)
 
-  // Edit state
   const [editingId, setEditingId] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
   const [existingImageUrl, setExistingImageUrl] = useState(null)
 
-  // Modal states
+  // --- Modal states ---
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showCheckCodeModal, setShowCheckCodeModal] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [dealToDelete, setDealToDelete] = useState(null)
+
+  // --- AI Generator state ---
+  const [showAIGenerator, setShowAIGenerator] = useState(false)
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiPrice, setAiPrice] = useState('')
+  const [aiDiscount, setAiDiscount] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiGenerated, setAiGenerated] = useState(null)
+  const [aiImages, setAiImages] = useState([])
+  const [aiSelectedImage, setAiSelectedImage] = useState(null)
 
   // --- Load deals and real‑time subscription ---
   useEffect(() => {
@@ -87,7 +96,6 @@ export default function MerchantDeals() {
 
     loadDeals()
 
-    // Real‑time subscription
     async function getUserId() {
       const { data: userData } = await supabase.auth.getUser()
       return userData.user?.id
@@ -298,6 +306,13 @@ export default function MerchantDeals() {
     setIsEditing(false)
     setError('')
     setSuccess('')
+    setShowAIGenerator(false)
+    setAiPrompt('')
+    setAiPrice('')
+    setAiDiscount('')
+    setAiGenerated(null)
+    setAiImages([])
+    setAiSelectedImage(null)
   }
 
   function startEdit(deal) {
@@ -313,6 +328,7 @@ export default function MerchantDeals() {
     setImageFile(null)
     setError('')
     setSuccess('')
+    setShowAIGenerator(false)
     setShowCreateModal(true)
   }
 
@@ -321,10 +337,67 @@ export default function MerchantDeals() {
     reloadDeals()
   }
 
+  // --- AI Generator functions ---
+  async function handleAIGenerate() {
+    if (!aiPrompt.trim()) {
+      setError('Please describe your deal')
+      return
+    }
+    setAiLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch(
+        'https://dylgephsnywowxxasifs.supabase.co/functions/v1/generate-deal',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            prompt: aiPrompt.trim(),
+            page: 1,
+            originalPrice: Number(aiPrice) || 0,
+            discountPercent: Number(aiDiscount) || 0,
+          }),
+        }
+      )
+
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Generation failed')
+
+      setAiGenerated(data.deal)
+      setAiImages(data.images || [])
+      if (data.images && data.images.length > 0) {
+        setAiSelectedImage(data.images[0])
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  function applyAIDeal() {
+    if (!aiGenerated) return
+    setTitle(aiGenerated.title || '')
+    setDescription(aiGenerated.description || '')
+    if (aiPrice) setPrice(aiPrice)
+    else if (aiGenerated.price) setPrice(aiGenerated.price.toString())
+    if (aiDiscount) setDiscountPercent(aiDiscount)
+    else if (aiGenerated.discount_percent) setDiscountPercent(aiGenerated.discount_percent.toString())
+    if (aiSelectedImage) {
+      setExistingImageUrl(aiSelectedImage)
+    }
+    setShowAIGenerator(false)
+    setSuccess('AI deal applied! You can tweak the fields before saving.')
+  }
+
   // --- Render ---
   return (
     <div className="space-y-6">
-      {/* Header with buttons */}
+      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-display text-xl font-semibold">Your Deals</h2>
         <div className="flex gap-2">
@@ -455,10 +528,10 @@ export default function MerchantDeals() {
         </div>
       )}
 
-      {/* --- Create/Edit Modal --- */}
+      {/* --- Create/Edit Modal with AI --- */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 animate-in zoom-in-95 fade-in duration-200">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 animate-in zoom-in-95 fade-in duration-200">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-xl font-semibold">
                 {isEditing ? '✏️ Edit Deal' : '✨ Create a New Deal'}
@@ -471,6 +544,96 @@ export default function MerchantDeals() {
               </button>
             </div>
 
+            {/* AI Generator Toggle */}
+            <button
+              onClick={() => setShowAIGenerator(!showAIGenerator)}
+              className="mb-4 text-sm bg-accent/10 hover:bg-accent/20 text-accent border border-accent/30 rounded-lg px-4 py-2 transition flex items-center gap-2"
+            >
+              {showAIGenerator ? '⬆️ Hide AI Generator' : '✨ Generate with AI'}
+            </button>
+
+            {showAIGenerator && (
+              <div className="border border-border rounded-lg p-4 mb-4 space-y-3 bg-muted/10">
+                <p className="text-sm text-muted-foreground">
+                  Describe your deal and let AI create a title, description, and suggest images.
+                </p>
+                <div>
+                  <label className="field-label">Describe your deal</label>
+                  <textarea
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="e.g., Tacos Tuesday – 20% off all tacos, every Tuesday"
+                    className="field-input min-h-[60px]"
+                    rows={2}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="field-label">Price (RWF)</label>
+                    <input
+                      type="number"
+                      value={aiPrice}
+                      onChange={(e) => setAiPrice(e.target.value)}
+                      placeholder="6000"
+                      className="field-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="field-label">Discount (%)</label>
+                    <input
+                      type="number"
+                      value={aiDiscount}
+                      onChange={(e) => setAiDiscount(e.target.value)}
+                      placeholder="20"
+                      className="field-input"
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={handleAIGenerate}
+                  disabled={aiLoading}
+                  className="bg-accent hover:bg-accent-dim text-background-foreground font-semibold rounded-lg px-4 py-2 transition disabled:opacity-50"
+                >
+                  {aiLoading ? 'Generating...' : '✨ Generate Deal'}
+                </button>
+
+                {aiGenerated && (
+                  <div className="border border-border rounded-lg p-3 mt-2 space-y-2">
+                    <h4 className="font-medium">AI Suggestion</h4>
+                    <p><span className="text-muted-foreground text-sm">Title:</span> {aiGenerated.title}</p>
+                    <p><span className="text-muted-foreground text-sm">Description:</span> {aiGenerated.description}</p>
+                    {aiImages.length > 0 && (
+                      <div>
+                        <p className="text-muted-foreground text-sm">Choose an image:</p>
+                        <div className="grid grid-cols-3 gap-2 mt-1">
+                          {aiImages.map((url, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setAiSelectedImage(url)}
+                              className={`border-2 rounded-lg overflow-hidden transition ${
+                                aiSelectedImage === url ? 'border-accent' : 'border-transparent'
+                              }`}
+                            >
+                              <img src={url} alt="AI suggestion" className="w-full h-16 object-cover" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <button
+                      onClick={applyAIDeal}
+                      className="w-full bg-primary text-primary-foreground font-semibold rounded-lg py-2 transition"
+                    >
+                      Apply to Deal
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Main Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>

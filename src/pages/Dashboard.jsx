@@ -7,7 +7,6 @@ import MerchantDeals from './MerchantDeals.jsx'
 import MerchantAnalytics from './MerchantAnalytics.jsx'
 import MerchantProfile from './MerchantProfile.jsx'
 import MerchantStories from './MerchantStories.jsx'
-import AIDealGenerator from './AIDealGenerator.jsx'
 import AdminAnalytics from './AdminAnalytics.jsx'
 import AdminApprovals from './AdminApprovals.jsx'
 import AdminStudentView from './AdminStudentView.jsx'
@@ -141,16 +140,6 @@ export default function Dashboard() {
             ⚙️ Profile
           </button>
           <button
-            onClick={() => setMerchantTab('ai-deal')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              merchantTab === 'ai-deal'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground border border-border'
-            }`}
-          >
-            ✨ AI Deal
-          </button>
-          <button
             onClick={() => setMerchantTab('stories')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
               merchantTab === 'stories'
@@ -164,7 +153,6 @@ export default function Dashboard() {
         {merchantTab === 'deals' && <MerchantDeals />}
         {merchantTab === 'analytics' && <MerchantAnalytics />}
         {merchantTab === 'profile' && <MerchantProfile merchantId={user.id} />}
-        {merchantTab === 'ai-deal' && <AIDealGenerator />}
         {merchantTab === 'stories' && <MerchantStories merchantId={user.id} />}
       </>
     )
