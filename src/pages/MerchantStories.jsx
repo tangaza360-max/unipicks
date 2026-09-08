@@ -6,7 +6,7 @@ export default function MerchantStories() {
   const [deals, setDeals] = useState([])
   const [caption, setCaption] = useState('')
   const [file, setFile] = useState(null)
-  const [selectedDealId, setSelectedDealId] = useState('')
+  const [fileType, setFileType] = useState('')
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -17,7 +17,6 @@ export default function MerchantStories() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         const uid = session.user.id
-        console.log('🔑 Session user ID:', uid)
         setUserId(uid)
         loadStories(uid)
         loadDeals(uid)
@@ -64,15 +63,29 @@ export default function MerchantStories() {
     return Math.round(deal.price * (1 - deal.discount_percent / 100))
   }
 
+  function handleFileChange(e) {
+    const selected = e.target.files?.[0]
+    if (!selected) return
+    setFile(selected)
+    // Detect file type
+    const type = selected.type
+    if (type.startsWith('video/')) {
+      setFileType('video')
+    } else if (type === 'image/gif') {
+      setFileType('image') // treat as image (will autoplay if GIF)
+    } else {
+      setFileType('image')
+    }
+  }
+
   async function handleUpload(e) {
     e.preventDefault()
-    if (!file) return setError('Please select an image')
+    if (!file) return setError('Please select a file')
 
     const { data: { session } } = await supabase.auth.getSession()
     if (!session?.user) return setError('Not authenticated')
 
     const uid = session.user.id
-    console.log('🆔 Uploading with user ID:', uid)
 
     setUploading(true)
     setError('')
@@ -91,31 +104,25 @@ export default function MerchantStories() {
         .from('story-images')
         .getPublicUrl(filePath)
 
-      // 🔧 REMOVED deal_id from payload to test foreign key issue
       const payload = {
         merchant_id: uid,
         media_url: publicUrlData.publicUrl,
         caption: caption.trim() || null,
-        // deal_id: selectedDealId || null,  // <-- COMMENTED OUT FOR TEST
+        type: fileType,
       }
-      console.log('📦 Insert payload (without deal_id):', payload)
 
       const { error: insertError } = await supabase
         .from('merchant_stories')
         .insert(payload)
 
-      if (insertError) {
-        console.error('❌ Insert error:', insertError)
-        throw insertError
-      }
+      if (insertError) throw insertError
 
-      console.log('✅ Story inserted successfully!')
       setCaption('')
       setFile(null)
-      setSelectedDealId('')
+      setFileType('')
       loadStories(uid)
     } catch (err) {
-      console.error('❌ Upload error:', err)
+      console.error('Upload error:', err)
       setError(err.message || 'Upload failed')
     } finally {
       setUploading(false)
@@ -140,19 +147,20 @@ export default function MerchantStories() {
     <div className="space-y-4">
       <h2 className="font-display text-lg font-semibold">📸 Stories</h2>
       <p className="text-sm text-muted-foreground">
-        Post a story that students will see at the top of their feed. Stories expire after 24 hours.
+        Post a story (image, GIF, or short video) that students will see at the top of their feed. Stories expire after 24 hours.
       </p>
 
       <form onSubmit={handleUpload} className="space-y-3 border border-border rounded-lg p-4">
         <div>
-          <label className="field-label">Image</label>
+          <label className="field-label">Media (image, GIF, or video)</label>
           <input
             type="file"
-            accept="image/*"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            accept="image/*,video/*"
+            onChange={handleFileChange}
             className="text-sm text-muted-foreground"
             required
           />
+          <p className="text-xs text-muted-foreground mt-1">Supported: JPG, PNG, GIF, MP4, MOV</p>
         </div>
 
         <div>
@@ -165,25 +173,6 @@ export default function MerchantStories() {
             className="field-input"
             maxLength="100"
           />
-        </div>
-
-        <div>
-          <label className="field-label">Link to a deal (optional)</label>
-          <select
-            value={selectedDealId}
-            onChange={(e) => setSelectedDealId(e.target.value)}
-            className="field-input"
-          >
-            <option value="">No deal linked</option>
-            {deals.map((deal) => (
-              <option key={deal.id} value={deal.id}>
-                {deal.title} – {finalPrice(deal) || deal.price} RWF
-              </option>
-            ))}
-          </select>
-          <p className="text-xs text-muted-foreground mt-1">
-            Students can order this deal directly from your story.
-          </p>
         </div>
 
         {error && <p className="text-sm text-red-400">{error}</p>}
@@ -207,12 +196,13 @@ export default function MerchantStories() {
           <div className="space-y-2">
             {stories.map((story) => (
               <div key={story.id} className="flex items-center gap-3 border border-border rounded-lg p-3">
-                <img src={story.media_url} alt="Story" className="w-12 h-12 object-cover rounded-full" />
+                {story.type === 'video' ? (
+                  <video src={story.media_url} className="w-12 h-12 object-cover rounded-full" />
+                ) : (
+                  <img src={story.media_url} alt="Story" className="w-12 h-12 object-cover rounded-full" />
+                )}
                 <div className="flex-1">
                   <p className="text-sm font-medium">{story.caption || 'No caption'}</p>
-                  {story.deal_id && (
-                    <p className="text-xs text-accent">🔗 Linked to a deal</p>
-                  )}
                   <p className="text-xs text-muted-foreground">
                     Expires {new Date(story.expires_at).toLocaleString()}
                   </p>

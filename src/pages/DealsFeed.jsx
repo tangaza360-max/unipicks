@@ -31,12 +31,13 @@ export default function DealsFeed() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [ratingStats, setRatingStats] = useState({})
   const [stories, setStories] = useState([])
+  const [merchantNames, setMerchantNames] = useState({})
   const [storyViewerOpen, setStoryViewerOpen] = useState(false)
   const [selectedStoryMerchant, setSelectedStoryMerchant] = useState(null)
 
   const categories = ['all', 'Pizza', 'Tacos', 'Burgers', 'Drinks', 'Desserts', 'Specials']
 
-  // --- Load stories (no relation, just fetch all active) ---
+  // --- Load stories and fetch merchant names ---
   async function loadStories() {
     try {
       const { data, error } = await supabase
@@ -50,7 +51,29 @@ export default function DealsFeed() {
         setStories([])
         return
       }
+
       setStories(data || [])
+
+      // Fetch merchant names for all unique merchant_ids
+      if (data && data.length > 0) {
+        const merchantIds = [...new Set(data.map(s => s.merchant_id))];
+        const { data: profiles, error: profileError } = await supabase
+          .from('merchant_profiles')
+          .select('id, business_name')
+          .in('id', merchantIds)
+
+        if (!profileError && profiles) {
+          const nameMap = {}
+          profiles.forEach(p => { nameMap[p.id] = p.business_name || 'Merchant' })
+          setMerchantNames(nameMap)
+        } else {
+          console.error('Error fetching merchant profiles:', profileError)
+          // Fallback: use placeholder
+          const fallback = {}
+          merchantIds.forEach(id => { fallback[id] = 'Merchant' })
+          setMerchantNames(fallback)
+        }
+      }
     } catch (err) {
       console.error('Unexpected error loading stories:', err)
       setStories([])
@@ -129,7 +152,7 @@ export default function DealsFeed() {
     }
   }, [])
 
-  // --- Group stories by merchant (use merchant_id as key, placeholder name) ---
+  // --- Group stories by merchant with actual names ---
   const groupedStories = useMemo(() => {
     const map = {}
     for (const story of stories) {
@@ -137,14 +160,14 @@ export default function DealsFeed() {
       if (!map[merchantId]) {
         map[merchantId] = {
           merchant_id: merchantId,
-          business_name: 'Merchant', // placeholder until we fetch real name
+          business_name: merchantNames[merchantId] || 'Merchant',
           stories: [],
         }
       }
       map[merchantId].stories.push(story)
     }
     return Object.values(map)
-  }, [stories])
+  }, [stories, merchantNames])
 
   // --- Order handler (for deal cards only) ---
   async function handleOrderFromStory(deal) {
