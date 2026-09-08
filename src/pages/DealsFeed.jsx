@@ -36,15 +36,12 @@ export default function DealsFeed() {
 
   const categories = ['all', 'Pizza', 'Tacos', 'Burgers', 'Drinks', 'Desserts', 'Specials']
 
-  // --- Load stories with correct merchant_profile relation ---
+  // --- Load stories (no relation, just fetch all active) ---
   async function loadStories() {
     try {
       const { data, error } = await supabase
         .from('merchant_stories')
-        .select(`
-          *,
-          merchant_profile:merchant_id ( business_name )
-        `)
+        .select('*')
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
 
@@ -132,6 +129,7 @@ export default function DealsFeed() {
     }
   }, [])
 
+  // --- Group stories by merchant (use merchant_id as key, placeholder name) ---
   const groupedStories = useMemo(() => {
     const map = {}
     for (const story of stories) {
@@ -139,7 +137,7 @@ export default function DealsFeed() {
       if (!map[merchantId]) {
         map[merchantId] = {
           merchant_id: merchantId,
-          business_name: story.merchant_profile?.business_name || 'Merchant',
+          business_name: 'Merchant', // placeholder until we fetch real name
           stories: [],
         }
       }
