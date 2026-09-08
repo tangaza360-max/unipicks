@@ -37,8 +37,10 @@ export default function DealsFeed() {
 
   const categories = ['all', 'Pizza', 'Tacos', 'Burgers', 'Drinks', 'Desserts', 'Specials']
 
+  // --- Load stories and fetch merchant data ---
   async function loadStories() {
     try {
+      // 1. Fetch active stories
       const { data, error } = await supabase
         .from('merchant_stories')
         .select('*')
@@ -54,31 +56,67 @@ export default function DealsFeed() {
       setStories(data || [])
 
       if (data && data.length > 0) {
+        // 2. Get unique merchant IDs
         const merchantIds = [...new Set(data.map(s => s.merchant_id))]
-        const { data: profiles, error: profileError } = await supabase
-          .from('merchant_profiles')
-          .select('id, business_name, logo_url')
-          .in('id', merchantIds)
 
-        if (!profileError && profiles) {
-          const dataMap = {}
-          profiles.forEach(p => {
-            dataMap[p.id] = {
-              business_name: p.business_name || 'Merchant',
-              logo_url: p.logo_url || null,
-            }
-          })
-          setMerchantData(dataMap)
-        } else {
-          const fallback = {}
-          merchantIds.forEach(id => {
-            fallback[id] = { business_name: 'Merchant', logo_url: null }
-          })
-          setMerchantData(fallback)
+        // 3. Try to fetch merchant profiles
+        let merchantMap = {}
+        try {
+          const { data: profiles, error: profileError } = await supabase
+            .from('merchant_profiles')
+            .select('id, business_name, logo_url')
+            .in('id', merchantIds)
+
+          if (!profileError && profiles) {
+            profiles.forEach(p => {
+              merchantMap[p.id] = {
+                business_name: p.business_name || 'Merchant',
+                logo_url: p.logo_url || null,
+              }
+            })
+          } else {
+            console.warn('No merchant profiles found, falling back to deals table')
+          }
+        } catch (err) {
+          console.warn('Error fetching merchant profiles:', err)
         }
+
+        // 4. Fallback: if any merchant missing, try to get business_name from deals
+        const missingIds = merchantIds.filter(id => !merchantMap[id])
+        if (missingIds.length > 0) {
+          const { data: dealsData, error: dealsError } = await supabase
+            .from('deals')
+            .select('merchant_id, business_name')
+            .in('merchant_id', missingIds)
+            .order('created_at', { ascending: true }) // get the oldest deal? any will do
+
+          if (!dealsError && dealsData) {
+            // Deduplicate by merchant_id (take first)
+            const seen = new Set()
+            dealsData.forEach(d => {
+              if (!seen.has(d.merchant_id)) {
+                seen.add(d.merchant_id)
+                merchantMap[d.merchant_id] = {
+                  business_name: d.business_name || 'Merchant',
+                  logo_url: null,
+                }
+              }
+            })
+          }
+        }
+
+        // 5. For any still missing, use placeholder
+        merchantIds.forEach(id => {
+          if (!merchantMap[id]) {
+            merchantMap[id] = { business_name: 'Merchant', logo_url: null }
+          }
+        })
+
+        console.log('Merchant data loaded:', merchantMap)
+        setMerchantData(merchantMap)
       }
     } catch (err) {
-      console.error('Unexpected error loading stories:', err)
+      console.error('Unexpected error in loadStories:', err)
       setStories([])
     }
   }
@@ -155,6 +193,7 @@ export default function DealsFeed() {
     }
   }, [])
 
+  // --- Group stories by merchant with merchant data ---
   const groupedStories = useMemo(() => {
     const map = {}
     for (const story of stories) {
@@ -173,6 +212,7 @@ export default function DealsFeed() {
     return Object.values(map)
   }, [stories, merchantData])
 
+  // --- Order handler (for deal cards only) ---
   async function handleOrderFromStory(deal) {
     alert('This story does not have a linked deal.')
   }
@@ -216,6 +256,7 @@ export default function DealsFeed() {
 
   return (
     <div className="space-y-4 relative">
+      {/* --- STORIES ROW --- */}
       {groupedStories.length > 0 && (
         <div className="pb-2 border-b border-border/50">
           <div className="flex gap-4 overflow-x-auto py-2">
@@ -329,6 +370,7 @@ export default function DealsFeed() {
       <GroupOrders deals={deals} />
       <Advisor deals={deals} onBudget={setBudget} />
 
+      {/* --- Story Viewer Modal --- */}
       {storyViewerOpen && selectedStoryMerchant && (
         <StoryViewer
           stories={selectedStoryMerchant.stories}
