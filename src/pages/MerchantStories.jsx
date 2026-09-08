@@ -67,12 +67,11 @@ export default function MerchantStories() {
     const selected = e.target.files?.[0]
     if (!selected) return
     setFile(selected)
-    // Detect file type
     const type = selected.type
     if (type.startsWith('video/')) {
       setFileType('video')
     } else if (type === 'image/gif') {
-      setFileType('image') // treat as image (will autoplay if GIF)
+      setFileType('image')
     } else {
       setFileType('image')
     }
@@ -144,74 +143,98 @@ export default function MerchantStories() {
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="font-display text-lg font-semibold">📸 Stories</h2>
-      <p className="text-sm text-muted-foreground">
-        Post a story (image, GIF, or short video) that students will see at the top of their feed. Stories expire after 24 hours.
-      </p>
-
-      <form onSubmit={handleUpload} className="space-y-3 border border-border rounded-lg p-4">
-        <div>
-          <label className="field-label">Media (image, GIF, or video)</label>
-          <input
-            type="file"
-            accept="image/*,video/*"
-            onChange={handleFileChange}
-            className="text-sm text-muted-foreground"
-            required
-          />
-          <p className="text-xs text-muted-foreground mt-1">Supported: JPG, PNG, GIF, MP4, MOV</p>
-        </div>
-
-        <div>
-          <label className="field-label">Caption (optional)</label>
-          <input
-            type="text"
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-            placeholder="What's new?"
-            className="field-input"
-            maxLength="100"
-          />
-        </div>
-
-        {error && <p className="text-sm text-red-400">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={uploading || !file}
-          className="w-full bg-accent hover:bg-accent-dim text-background-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
-        >
-          {uploading ? 'Uploading...' : '📤 Post Story'}
-        </button>
-      </form>
-
+    <div className="space-y-6">
+      {/* Header */}
       <div>
-        <h3 className="font-medium text-sm mb-2">Your active stories</h3>
+        <h2 className="font-display text-2xl font-semibold flex items-center gap-2">
+          <span>📸</span> Stories
+        </h2>
+        <p className="text-muted-foreground text-sm">
+          Share what's new with your customers. Stories disappear after 24 hours.
+        </p>
+      </div>
+
+      {/* Upload form */}
+      <div className="bg-card border border-border rounded-xl shadow-sm p-5">
+        <form onSubmit={handleUpload} className="space-y-4">
+          <div className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-6 hover:border-accent transition-colors">
+            <input
+              type="file"
+              accept="image/*,video/*"
+              onChange={handleFileChange}
+              className="text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-accent file:text-background-foreground file:cursor-pointer hover:file:bg-accent-dim"
+            />
+            <p className="text-xs text-muted-foreground mt-2">JPG, PNG, GIF, MP4, MOV • Max 10 MB</p>
+          </div>
+
+          <div>
+            <label className="field-label">Caption (optional)</label>
+            <input
+              type="text"
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="What's new?"
+              className="field-input"
+              maxLength="100"
+            />
+          </div>
+
+          {error && <p className="text-sm text-red-400">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={uploading || !file}
+            className="w-full bg-accent hover:bg-accent-dim text-background-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
+          >
+            {uploading ? 'Uploading...' : '📤 Post Story'}
+          </button>
+        </form>
+      </div>
+
+      {/* Active stories */}
+      <div>
+        <h3 className="font-medium text-sm text-muted-foreground mb-3">
+          Your active stories · {stories.length}
+        </h3>
+
         {loading ? (
           <p className="text-muted-foreground text-sm">Loading...</p>
         ) : stories.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No active stories.</p>
+          <div className="text-center py-8 border border-dashed border-border rounded-xl">
+            <p className="text-muted-foreground text-sm">No active stories.</p>
+          </div>
         ) : (
-          <div className="space-y-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {stories.map((story) => (
-              <div key={story.id} className="flex items-center gap-3 border border-border rounded-lg p-3">
+              <div
+                key={story.id}
+                className="group relative border border-border rounded-xl overflow-hidden bg-card shadow-sm hover:shadow-md transition"
+              >
                 {story.type === 'video' ? (
-                  <video src={story.media_url} className="w-12 h-12 object-cover rounded-full" />
+                  <video
+                    src={story.media_url}
+                    className="w-full aspect-square object-cover"
+                    muted
+                  />
                 ) : (
-                  <img src={story.media_url} alt="Story" className="w-12 h-12 object-cover rounded-full" />
+                  <img
+                    src={story.media_url}
+                    alt="Story"
+                    className="w-full aspect-square object-cover"
+                  />
                 )}
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{story.caption || 'No caption'}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Expires {new Date(story.expires_at).toLocaleString()}
+                {/* Overlay with caption and delete */}
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                  <p className="text-white text-xs truncate">{story.caption || 'Untitled'}</p>
+                  <p className="text-white/60 text-[10px]">
+                    {new Date(story.expires_at).toLocaleString()}
                   </p>
                 </div>
                 <button
                   onClick={() => deleteStory(story.id)}
-                  className="text-red-400 hover:text-red-500 text-sm"
+                  className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs transition"
                 >
-                  Delete
+                  ✕
                 </button>
               </div>
             ))}
