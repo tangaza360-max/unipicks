@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import VerifyCode from './VerifyCode.jsx'
+import ConfirmModal from '../components/ConfirmModal.jsx'
 
 export default function MerchantDeals() {
   const [businessName, setBusinessName] = useState('')
@@ -17,23 +18,115 @@ export default function MerchantDeals() {
   const [myDeals, setMyDeals] = useState([])
   const [loadingDeals, setLoadingDeals] = useState(true)
 
-  // Edit state
   const [editingId, setEditingId] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
   const [existingImageUrl, setExistingImageUrl] = useState(null)
 
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [dealToDelete, setDealToDelete] = useState(null)
+
+  // --- Load initial deals and set up real-time subscription ---
   useEffect(() => {
-    loadMyDeals()
+    let cancelled = false
+    let userId = null
+
+    async function loadDeals() {
+      const { data: userData } = await supabase.auth.getUser()
+      userId = userData.user?.id
+
+      if (userData.user) {
+        setBusinessName(userData.user.user_metadata?.business_name ?? '')
+      }
+
+      const { data, error: fetchError } = await supabase
+        .from('deals')
+        .select('*')
+        .eq('merchant_id', userId)
+        .order('created_at', { ascending: false })
+
+      if (fetchError) {
+        setError(fetchError.message)
+        setLoadingDeals(false)
+        return
+      }
+
+      const dealIds = data?.map(d => d.id) || []
+      let redemptionCounts = {}
+      if (dealIds.length > 0) {
+        const { data: redemptions, error: redemptionError } = await supabase
+          .from('redemptions')
+          .select('deal_id, status')
+          .in('deal_id', dealIds)
+
+        if (!redemptionError) {
+          redemptionCounts = redemptions.reduce((acc, r) => {
+            if (!acc[r.deal_id]) acc[r.deal_id] = { total: 0, redeemed: 0, pending: 0 }
+            acc[r.deal_id].total++
+            if (r.status === 'redeemed') acc[r.deal_id].redeemed++
+            else acc[r.deal_id].pending++
+            return acc
+          }, {})
+        }
+      }
+
+      const dealsWithStats = data?.map(deal => ({
+        ...deal,
+        redemptions: redemptionCounts[deal.id] || { total: 0, redeemed: 0, pending: 0 }
+      })) || []
+
+      if (!cancelled) {
+        setMyDeals(dealsWithStats)
+        setLoadingDeals(false)
+      }
+    }
+
+    loadDeals()
+
+    // --- Real-time subscription ---
+    async function getUserId() {
+      const { data: userData } = await supabase.auth.getUser()
+      return userData.user?.id
+    }
+
+    getUserId().then(userId => {
+      if (!userId) return
+
+      const channel = supabase
+        .channel('merchant-deals')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'deals',
+            filter: `merchant_id=eq.${userId}`,
+          },
+          () => {
+            loadDeals()
+          }
+        )
+        .subscribe()
+
+      return () => {
+        cancelled = true
+        channel.unsubscribe()
+      }
+    })
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
-  async function loadMyDeals() {
+  const finalPrice =
+    price && discountPercent
+      ? Math.round(Number(price) * (1 - Number(discountPercent) / 100))
+      : null
+
+  async function reloadDeals() {
     setLoadingDeals(true)
     const { data: userData } = await supabase.auth.getUser()
     const userId = userData.user?.id
-
-    if (userData.user) {
-      setBusinessName(userData.user.user_metadata?.business_name ?? '')
-    }
 
     const { data, error: fetchError } = await supabase
       .from('deals')
@@ -47,10 +140,8 @@ export default function MerchantDeals() {
       return
     }
 
-    // Fetch redemption counts for each deal
     const dealIds = data?.map(d => d.id) || []
     let redemptionCounts = {}
-
     if (dealIds.length > 0) {
       const { data: redemptions, error: redemptionError } = await supabase
         .from('redemptions')
@@ -58,23 +149,16 @@ export default function MerchantDeals() {
         .in('deal_id', dealIds)
 
       if (!redemptionError) {
-        // Count redemptions per deal
         redemptionCounts = redemptions.reduce((acc, r) => {
-          if (!acc[r.deal_id]) {
-            acc[r.deal_id] = { total: 0, redeemed: 0, pending: 0 }
-          }
+          if (!acc[r.deal_id]) acc[r.deal_id] = { total: 0, redeemed: 0, pending: 0 }
           acc[r.deal_id].total++
-          if (r.status === 'redeemed') {
-            acc[r.deal_id].redeemed++
-          } else {
-            acc[r.deal_id].pending++
-          }
+          if (r.status === 'redeemed') acc[r.deal_id].redeemed++
+          else acc[r.deal_id].pending++
           return acc
         }, {})
       }
     }
 
-    // Attach redemption stats to each deal
     const dealsWithStats = data?.map(deal => ({
       ...deal,
       redemptions: redemptionCounts[deal.id] || { total: 0, redeemed: 0, pending: 0 }
@@ -84,10 +168,29 @@ export default function MerchantDeals() {
     setLoadingDeals(false)
   }
 
-  const finalPrice =
-    price && discountPercent
-      ? Math.round(Number(price) * (1 - Number(discountPercent) / 100))
-      : null
+  function openDeleteModal(dealId) {
+    setDealToDelete(dealId)
+    setDeleteModalOpen(true)
+  }
+
+  async function confirmDeleteDeal() {
+    if (!dealToDelete) return
+
+    const { error: deleteError } = await supabase
+      .from('deals')
+      .delete()
+      .eq('id', dealToDelete)
+
+    setDeleteModalOpen(false)
+    setDealToDelete(null)
+
+    if (deleteError) {
+      setError(deleteError.message)
+    } else {
+      setSuccess('Deal deleted successfully!')
+      reloadDeals()
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -154,14 +257,12 @@ export default function MerchantDeals() {
         .from('deals')
         .update(dealData)
         .eq('id', editingId)
-
       errorResult = updateError
     } else {
       const { error: insertError } = await supabase.from('deals').insert({
         ...dealData,
         active: true,
       })
-
       errorResult = insertError
     }
 
@@ -174,7 +275,7 @@ export default function MerchantDeals() {
 
     setSuccess(isEditing ? 'Deal updated successfully!' : 'Deal created successfully!')
     resetForm()
-    loadMyDeals()
+    reloadDeals()
   }
 
   function resetForm() {
@@ -209,19 +310,7 @@ export default function MerchantDeals() {
 
   async function toggleActive(deal) {
     await supabase.from('deals').update({ active: !deal.active }).eq('id', deal.id)
-    loadMyDeals()
-  }
-
-  async function deleteDeal(dealId) {
-    if (window.confirm('Delete this deal permanently? This action cannot be undone.')) {
-      const { error } = await supabase.from('deals').delete().eq('id', dealId)
-      if (error) {
-        setError(error.message)
-      } else {
-        setSuccess('Deal deleted successfully!')
-        loadMyDeals()
-      }
-    }
+    reloadDeals()
   }
 
   return (
@@ -385,7 +474,6 @@ export default function MerchantDeals() {
                         {deal.discount_percent != null && ` · ${deal.discount_percent}% off`}
                         {deal.price != null && ` · ${deal.price} RWF original`}
                       </p>
-                      {/* Order stats */}
                       {deal.redemptions && deal.redemptions.total > 0 ? (
                         <p className="text-xs mt-1">
                           <span className="text-accent">
@@ -420,7 +508,7 @@ export default function MerchantDeals() {
                       {deal.active ? 'Pause' : 'Activate'}
                     </button>
                     <button
-                      onClick={() => deleteDeal(deal.id)}
+                      onClick={() => openDeleteModal(deal.id)}
                       className="text-sm text-red-400/70 hover:text-red-400 border border-red-400/30 rounded-lg px-3 py-1.5 transition"
                     >
                       Delete
@@ -432,6 +520,20 @@ export default function MerchantDeals() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false)
+          setDealToDelete(null)
+        }}
+        onConfirm={confirmDeleteDeal}
+        title="Delete this deal?"
+        message="This action cannot be undone. The deal will be permanently removed from your list."
+        confirmText="Yes, delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
+      />
     </div>
   )
 }

@@ -1,3 +1,4 @@
+cat > src/pages/DealsFeed.jsx << 'EOF'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
@@ -48,7 +49,6 @@ export default function DealsFeed() {
         setError(fetchError.message)
       } else {
         setDeals(data || [])
-        // Fetch rating stats for each deal
         if (data && data.length > 0) {
           const stats = {}
           for (const deal of data) {
@@ -65,8 +65,27 @@ export default function DealsFeed() {
     }
 
     loadDeals()
+
+    // --- Real-time subscription for active deals ---
+    const channel = supabase
+      .channel('student-feed')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'deals',
+          filter: 'active=eq.true',
+        },
+        () => {
+          loadDeals()
+        }
+      )
+      .subscribe()
+
     return () => {
       cancelled = true
+      channel.unsubscribe()
     }
   }, [])
 
@@ -184,7 +203,6 @@ export default function DealsFeed() {
   )
 }
 
-// --- DealCard component (with payment) ---
 function DealCard({ deal, ratingStats }) {
   const navigate = useNavigate()
   const [ordering, setOrdering] = useState(false)
@@ -333,7 +351,6 @@ function DealCard({ deal, ratingStats }) {
   )
 }
 
-// --- Advisor component (budget helper) ---
 function Advisor({ deals, onBudget }) {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
@@ -468,3 +485,4 @@ function ForkKnifeIcon() {
     </svg>
   )
 }
+EOF
