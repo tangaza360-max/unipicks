@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import StoryViewer from '../components/StoryViewer.jsx'
 
 export default function MerchantStories() {
   const [stories, setStories] = useState([])
-  const [deals, setDeals] = useState([])
   const [caption, setCaption] = useState('')
   const [file, setFile] = useState(null)
   const [fileType, setFileType] = useState('')
@@ -12,6 +12,10 @@ export default function MerchantStories() {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState(null)
 
+  // Story viewer state
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [selectedStories, setSelectedStories] = useState([])
+
   useEffect(() => {
     async function init() {
       const { data: { session } } = await supabase.auth.getSession()
@@ -19,7 +23,6 @@ export default function MerchantStories() {
         const uid = session.user.id
         setUserId(uid)
         loadStories(uid)
-        loadDeals(uid)
       } else {
         console.error('❌ No session found')
       }
@@ -42,25 +45,6 @@ export default function MerchantStories() {
       setStories(data || [])
     }
     setLoading(false)
-  }
-
-  async function loadDeals(uid) {
-    const { data, error } = await supabase
-      .from('deals')
-      .select('id, title, price, discount_percent')
-      .eq('merchant_id', uid)
-      .eq('active', true)
-      .order('created_at', { ascending: false })
-
-    if (!error) {
-      setDeals(data || [])
-    }
-  }
-
-  function finalPrice(deal) {
-    if (!deal) return null
-    if (deal.discount_percent == null) return deal.price
-    return Math.round(deal.price * (1 - deal.discount_percent / 100))
   }
 
   function handleFileChange(e) {
@@ -138,6 +122,16 @@ export default function MerchantStories() {
     if (!error) loadStories(userId)
   }
 
+  function handlePreviewStory(storyId) {
+    // Find the index of the clicked story and open viewer with all stories
+    const index = stories.findIndex(s => s.id === storyId)
+    if (index === -1) return
+    // Reorder stories to start from the clicked one
+    const orderedStories = [...stories.slice(index), ...stories.slice(0, index)]
+    setSelectedStories(orderedStories)
+    setViewerOpen(true)
+  }
+
   if (!userId) {
     return <p className="text-muted-foreground text-sm">Loading user...</p>
   }
@@ -150,7 +144,7 @@ export default function MerchantStories() {
           <span>📸</span> Stories
         </h2>
         <p className="text-muted-foreground text-sm">
-          Share what's new with your customers. Stories disappear after 24 hours.
+          Share what's new with your customers. Stories disappear after 24 hours. Tap a story to preview it as students see it.
         </p>
       </div>
 
@@ -208,7 +202,8 @@ export default function MerchantStories() {
             {stories.map((story) => (
               <div
                 key={story.id}
-                className="group relative border border-border rounded-xl overflow-hidden bg-card shadow-sm hover:shadow-md transition"
+                onClick={() => handlePreviewStory(story.id)}
+                className="group relative border border-border rounded-xl overflow-hidden bg-card shadow-sm hover:shadow-md transition cursor-pointer"
               >
                 {story.type === 'video' ? (
                   <video
@@ -230,8 +225,17 @@ export default function MerchantStories() {
                     {new Date(story.expires_at).toLocaleString()}
                   </p>
                 </div>
+                {/* Preview hint on hover */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full">
+                    👁️ Preview
+                  </span>
+                </div>
                 <button
-                  onClick={() => deleteStory(story.id)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteStory(story.id)
+                  }}
                   className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs transition"
                 >
                   ✕
@@ -241,6 +245,15 @@ export default function MerchantStories() {
           </div>
         )}
       </div>
+
+      {/* Story Viewer (full screen preview) */}
+      {viewerOpen && (
+        <StoryViewer
+          stories={selectedStories}
+          onClose={() => setViewerOpen(false)}
+          initialIndex={0}
+        />
+      )}
     </div>
   )
 }
