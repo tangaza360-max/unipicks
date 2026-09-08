@@ -1,4 +1,3 @@
-cat > src/pages/AIDealGenerator.jsx << 'EOF'
 // src/pages/AIDealGenerator.jsx
 import { useState, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
@@ -417,4 +416,3 @@ export default function AIDealGenerator({ onDealCreated }) {
     </div>
   )
 }
-EOF
