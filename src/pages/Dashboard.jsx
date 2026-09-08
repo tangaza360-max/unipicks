@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext.jsx'
 import DealsFeed from './DealsFeed.jsx'
 import MerchantDeals from './MerchantDeals.jsx'
 import MerchantAnalytics from './MerchantAnalytics.jsx'
+import MerchantProfile from './MerchantProfile.jsx'   // <--- NEW
 import AdminAnalytics from './AdminAnalytics.jsx'
 import AdminApprovals from './AdminApprovals.jsx'
 import AdminStudentView from './AdminStudentView.jsx'
@@ -41,11 +42,9 @@ export default function Dashboard() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          // Update user state with the fresh session user
           setUser(session?.user ?? null)
           setLoading(false)
         } else if (event === 'SIGNED_OUT') {
-          // Clear user state and redirect to login
           setUser(null)
           setLoading(false)
           navigate('/login')
@@ -53,7 +52,6 @@ export default function Dashboard() {
       }
     )
 
-    // Cleanup subscription on unmount
     return () => {
       subscription?.unsubscribe()
     }
@@ -61,8 +59,6 @@ export default function Dashboard() {
 
   async function handleLogout() {
     await supabase.auth.signOut()
-    // The onAuthStateChange listener will handle clearing user and redirecting
-    // but we also manually clear to be safe.
     setUser(null)
     navigate('/login')
   }
@@ -75,7 +71,6 @@ export default function Dashboard() {
     )
   }
 
-  // If user is null after loading, redirect (should already be handled)
   if (!user) {
     navigate('/login')
     return null
@@ -103,8 +98,8 @@ export default function Dashboard() {
     )
   }
 
-  // Render different content based on role
   let content
+
   if (role === 'student') {
     content = (
       <StudentLayout onLogout={handleLogout}>
@@ -112,6 +107,7 @@ export default function Dashboard() {
       </StudentLayout>
     )
   } else if (role === 'merchant') {
+    // --- UPDATED MERCHANT SECTION ---
     content = (
       <>
         <div className="flex gap-2 border-b border-border pb-3 mb-4 flex-wrap">
@@ -135,8 +131,20 @@ export default function Dashboard() {
           >
             📊 Analytics
           </button>
+          <button
+            onClick={() => setMerchantTab('profile')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              merchantTab === 'profile'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground border border-border'
+            }`}
+          >
+            ⚙️ Profile
+          </button>
         </div>
-        {merchantTab === 'deals' ? <MerchantDeals /> : <MerchantAnalytics />}
+        {merchantTab === 'deals' && <MerchantDeals />}
+        {merchantTab === 'analytics' && <MerchantAnalytics />}
+        {merchantTab === 'profile' && <MerchantProfile merchantId={user.id} />}
       </>
     )
   } else if (role === 'delivery') {

@@ -1,0 +1,29 @@
+
+> unipicks@0.1.0 build
+> vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 1915 modules transformed.
+x Build failed in 10m 55s
+error during build:
+src/pages/Dashboard.jsx (5:7): "default" is not exported by "src/pages/DealsFeed.jsx", imported by "src/pages/Dashboard.jsx".
+file: /Users/olivierchristuyishime/Desktop/unipicks/src/pages/Dashboard.jsx:5:7
+
+3: import { supabase } from '../lib/supabaseClient.js'
+4: import { useTheme } from '../context/ThemeContext.jsx'
+5: import DealsFeed from './DealsFeed.jsx'
+          ^
+6: import MerchantDeals from './MerchantDeals.jsx'
+7: import MerchantAnalytics from './MerchantAnalytics.jsx'
+
+    at getRollupError (file:///Users/olivierchristuyishime/Desktop/unipicks/node_modules/rollup/dist/es/shared/parseAst.js:317:41)
+    at error (file:///Users/olivierchristuyishime/Desktop/unipicks/node_modules/rollup/dist/es/shared/parseAst.js:313:42)
+    at Module.error (file:///Users/olivierchristuyishime/Desktop/unipicks/node_modules/rollup/dist/es/shared/node-entry.js:17230:16)
+    at Module.traceVariable (file:///Users/olivierchristuyishime/Desktop/unipicks/node_modules/rollup/dist/es/shared/node-entry.js:17663:29)
+    at ModuleScope.findVariable (file:///Users/olivierchristuyishime/Desktop/unipicks/node_modules/rollup/dist/es/shared/node-entry.js:15253:39)
+    at FunctionScope.findVariable (file:///Users/olivierchristuyishime/Desktop/unipicks/node_modules/rollup/dist/es/shared/node-entry.js:5446:38)
+    at FunctionBodyScope.findVariable (file:///Users/olivierchristuyishime/Desktop/unipicks/node_modules/rollup/dist/es/shared/node-entry.js:5446:38)
+    at TrackingScope.findVariable (file:///Users/olivierchristuyishime/Desktop/unipicks/node_modules/rollup/dist/es/shared/node-entry.js:5446:38)
+    at BlockScope.findVariable (file:///Users/olivierchristuyishime/Desktop/unipicks/node_modules/rollup/dist/es/shared/node-entry.js:5446:38)
+    at Identifier.bind (file:///Users/olivierchristuyishime/Desktop/unipicks/node_modules/rollup/dist/es/shared/node-entry.js:5213:40)
