@@ -68,7 +68,6 @@ export default function MerchantStories() {
     e.preventDefault()
     if (!file) return setError('Please select an image')
 
-    // Get fresh session
     const { data: { session } } = await supabase.auth.getSession()
     if (!session?.user) return setError('Not authenticated')
 
@@ -92,18 +91,18 @@ export default function MerchantStories() {
         .from('story-images')
         .getPublicUrl(filePath)
 
+      // 🔧 REMOVED deal_id from payload to test foreign key issue
       const payload = {
         merchant_id: uid,
         media_url: publicUrlData.publicUrl,
         caption: caption.trim() || null,
-        deal_id: selectedDealId || null,
+        // deal_id: selectedDealId || null,  // <-- COMMENTED OUT FOR TEST
       }
-      console.log('📦 Insert payload:', payload)
+      console.log('📦 Insert payload (without deal_id):', payload)
 
-      // Now insert
       const { error: insertError } = await supabase
         .from('merchant_stories')
-        .insert(payload)  // NO .select()!
+        .insert(payload)
 
       if (insertError) {
         console.error('❌ Insert error:', insertError)
