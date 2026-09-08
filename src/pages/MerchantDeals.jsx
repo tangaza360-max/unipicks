@@ -4,6 +4,7 @@ import VerifyCode from './VerifyCode.jsx'
 import ConfirmModal from '../components/ConfirmModal.jsx'
 
 export default function MerchantDeals() {
+  // --- State ---
   const [businessName, setBusinessName] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -18,14 +19,18 @@ export default function MerchantDeals() {
   const [myDeals, setMyDeals] = useState([])
   const [loadingDeals, setLoadingDeals] = useState(true)
 
+  // Edit state
   const [editingId, setEditingId] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
   const [existingImageUrl, setExistingImageUrl] = useState(null)
 
+  // Modal states
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showCheckCodeModal, setShowCheckCodeModal] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [dealToDelete, setDealToDelete] = useState(null)
 
-  // --- Load initial deals and set up real-time subscription ---
+  // --- Load deals and real‑time subscription ---
   useEffect(() => {
     let cancelled = false
     let userId = null
@@ -82,7 +87,7 @@ export default function MerchantDeals() {
 
     loadDeals()
 
-    // --- Real-time subscription ---
+    // Real‑time subscription
     async function getUserId() {
       const { data: userData } = await supabase.auth.getUser()
       return userData.user?.id
@@ -168,6 +173,7 @@ export default function MerchantDeals() {
     setLoadingDeals(false)
   }
 
+  // --- Delete handlers ---
   function openDeleteModal(dealId) {
     setDealToDelete(dealId)
     setDeleteModalOpen(true)
@@ -192,6 +198,7 @@ export default function MerchantDeals() {
     }
   }
 
+  // --- Submit create/edit ---
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
@@ -276,6 +283,7 @@ export default function MerchantDeals() {
     setSuccess(isEditing ? 'Deal updated successfully!' : 'Deal created successfully!')
     resetForm()
     reloadDeals()
+    setShowCreateModal(false)
   }
 
   function resetForm() {
@@ -305,7 +313,7 @@ export default function MerchantDeals() {
     setImageFile(null)
     setError('')
     setSuccess('')
-    document.getElementById('deal-form')?.scrollIntoView({ behavior: 'smooth' })
+    setShowCreateModal(true)
   }
 
   async function toggleActive(deal) {
@@ -313,172 +321,98 @@ export default function MerchantDeals() {
     reloadDeals()
   }
 
+  // --- Render ---
   return (
-    <div className="space-y-8">
-      <VerifyCode />
-
-      <div id="deal-form">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-lg font-semibold">
-            {isEditing ? 'Edit deal' : 'Create a deal'}
-          </h2>
-          {isEditing && (
-            <button
-              onClick={resetForm}
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              Cancel editing
-            </button>
-          )}
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="field-label">Business name</label>
-            <input
-              className="field-input"
-              value={businessName}
-              onChange={(e) => setBusinessName(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="field-label">Deal title</label>
-            <input
-              className="field-input"
-              placeholder="Tacos Tuesday"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="field-label">Description</label>
-            <textarea
-              className="field-input"
-              rows={3}
-              placeholder="20% off all tacos, every Tuesday"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="field-label">Original price (RWF)</label>
-              <input
-                className="field-input"
-                type="number"
-                min="0"
-                placeholder="2000"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="field-label">Discount %</label>
-              <input
-                className="field-input"
-                type="number"
-                min="0"
-                max="100"
-                placeholder="20"
-                value={discountPercent}
-                onChange={(e) => setDiscountPercent(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="field-label">Expires on</label>
-              <input
-                className="field-input"
-                type="date"
-                value={expiresAt}
-                onChange={(e) => setExpiresAt(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {finalPrice != null && (
-            <p className="text-sm text-muted-foreground">
-              Students will see: <span className="line-through text-muted-foreground">{price} RWF</span>{' '}
-              <span className="text-accent font-semibold">{finalPrice} RWF</span>
-            </p>
-          )}
-
-          <div>
-            <label className="field-label">Photo</label>
-            {existingImageUrl && (
-              <div className="mb-2">
-                <img
-                  src={existingImageUrl}
-                  alt="Current deal image"
-                  className="w-32 h-20 object-cover rounded-lg"
-                />
-                <p className="text-muted-foreground text-xs mt-1">Current image</p>
-              </div>
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-              className="text-sm text-muted-foreground"
-            />
-            <p className="text-muted-foreground text-xs mt-1">
-              {existingImageUrl ? 'Upload a new image to replace it' : 'Upload an image for your deal'}
-            </p>
-          </div>
-
-          {error && <p className="text-sm text-red-400">{error}</p>}
-          {success && <p className="text-sm text-accent">{success}</p>}
-
+    <div className="space-y-6">
+      {/* Header with buttons */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-display text-xl font-semibold">Your Deals</h2>
+        <div className="flex gap-2">
           <button
-            type="submit"
-            disabled={saving}
-            className="bg-accent hover:bg-accent-dim text-background-foreground font-semibold rounded-lg px-5 py-2.5 transition disabled:opacity-50"
+            onClick={() => setShowCheckCodeModal(true)}
+            className="bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg px-4 py-2 text-sm font-medium transition"
           >
-            {saving ? 'Saving…' : isEditing ? 'Update deal' : 'Post deal'}
+            🔍 Check Code
           </button>
-        </form>
+          <button
+            onClick={() => {
+              resetForm()
+              setShowCreateModal(true)
+            }}
+            className="bg-accent hover:bg-accent-dim text-background-foreground rounded-lg px-4 py-2 text-sm font-medium transition"
+          >
+            ✨ Create Deal
+          </button>
+        </div>
       </div>
 
-      <div>
-        <h2 className="font-display text-lg font-semibold mb-3">Your deals</h2>
-        {loadingDeals ? (
-          <p className="text-muted-foreground text-sm">Loading…</p>
-        ) : myDeals.length === 0 ? (
-          <p className="text-muted-foreground text-sm">You haven't posted any deals yet.</p>
-        ) : (
-          <div className="space-y-2">
-            {myDeals.map((deal) => (
+      {/* Deal grid */}
+      {loadingDeals ? (
+        <p className="text-muted-foreground text-sm">Loading deals…</p>
+      ) : myDeals.length === 0 ? (
+        <div className="text-center py-12 border border-dashed border-border rounded-xl">
+          <p className="text-muted-foreground">No deals yet. Create your first deal!</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {myDeals.map((deal) => {
+            const finalPrice = deal.discount_percent
+              ? Math.round(deal.price * (1 - deal.discount_percent / 100))
+              : deal.price
+
+            return (
               <div
                 key={deal.id}
-                className={`border rounded-lg p-3 transition ${
-                  editingId === deal.id
-                    ? 'border-accent bg-accent/5'
-                    : 'border-border'
-                }`}
+                className="border border-border rounded-xl overflow-hidden bg-card shadow-sm hover:shadow-md transition-all duration-200"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1">
-                    {deal.image_url && (
-                      <img
-                        src={deal.image_url}
-                        alt={deal.title}
-                        className="w-12 h-12 object-cover rounded-lg"
-                      />
-                    )}
+                <div className="relative h-40 w-full">
+                  {deal.image_url ? (
+                    <img src={deal.image_url} alt={deal.title} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-accent/30 via-muted to-card flex items-center justify-center text-4xl">
+                      🍔
+                    </div>
+                  )}
+                  <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/35 to-transparent" />
+                  {deal.discount_percent != null && (
+                    <div className="absolute top-3 right-3 bg-accent text-background-foreground font-display font-semibold text-sm rounded-lg px-3 py-1.5 shadow-lg">
+                      {deal.discount_percent}% off
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4">
+                  <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-medium">{deal.title}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {deal.active ? 'Active' : 'Paused'}
-                        {deal.discount_percent != null && ` · ${deal.discount_percent}% off`}
-                        {deal.price != null && ` · ${deal.price} RWF original`}
-                      </p>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wide">{deal.business_name}</p>
+                      <h3 className="font-display font-semibold text-lg">{deal.title}</h3>
+                      {deal.description && (
+                        <p className="text-muted-foreground text-sm line-clamp-2">{deal.description}</p>
+                      )}
+                    </div>
+                    <span
+                      className={`text-xs font-medium px-2 py-1 rounded-full ${
+                        deal.active
+                          ? 'bg-green-500/20 text-green-700'
+                          : 'bg-yellow-500/20 text-yellow-700'
+                      }`}
+                    >
+                      {deal.active ? 'Active' : 'Paused'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs pt-2">
+                    <span className="text-primary font-bold text-sm">{finalPrice} RWF</span>
+                    {deal.discount_percent != null && (
+                      <span className="line-through text-muted-foreground">{deal.price} RWF</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
+                    <div>
                       {deal.redemptions && deal.redemptions.total > 0 ? (
-                        <p className="text-xs mt-1">
-                          <span className="text-accent">
-                            {deal.redemptions.redeemed} ordered
-                          </span>
+                        <p className="text-xs">
+                          <span className="text-accent">{deal.redemptions.redeemed} ordered</span>
                           {deal.redemptions.pending > 0 && (
                             <span className="text-muted-foreground ml-2">
                               · {deal.redemptions.pending} pending
@@ -486,41 +420,203 @@ export default function MerchantDeals() {
                           )}
                         </p>
                       ) : (
-                        <p className="text-muted-foreground text-xs mt-1">No orders yet</p>
+                        <p className="text-muted-foreground text-xs">No orders yet</p>
                       )}
                     </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => startEdit(deal)}
-                      className="text-sm text-muted-foreground hover:text-foreground border border-border rounded-lg px-3 py-1.5 transition"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => toggleActive(deal)}
-                      className={`text-sm rounded-lg px-3 py-1.5 transition ${
-                        deal.active
-                          ? 'text-muted-foreground hover:text-foreground border border-border'
-                          : 'bg-accent text-background-foreground font-medium'
-                      }`}
-                    >
-                      {deal.active ? 'Pause' : 'Activate'}
-                    </button>
-                    <button
-                      onClick={() => openDeleteModal(deal.id)}
-                      className="text-sm text-red-400/70 hover:text-red-400 border border-red-400/30 rounded-lg px-3 py-1.5 transition"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => startEdit(deal)}
+                        className="text-xs bg-muted/40 hover:bg-muted text-foreground rounded-lg px-3 py-1.5 transition"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => toggleActive(deal)}
+                        className={`text-xs rounded-lg px-3 py-1.5 transition ${
+                          deal.active
+                            ? 'bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30'
+                            : 'bg-green-500/20 text-green-700 hover:bg-green-500/30'
+                        }`}
+                      >
+                        {deal.active ? 'Pause' : 'Activate'}
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(deal.id)}
+                        className="text-xs bg-red-500/10 text-red-600 hover:bg-red-500/20 rounded-lg px-3 py-1.5 transition"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            )
+          })}
+        </div>
+      )}
 
+      {/* --- Create/Edit Modal --- */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 animate-in zoom-in-95 fade-in duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-xl font-semibold">
+                {isEditing ? '✏️ Edit Deal' : '✨ Create a New Deal'}
+              </h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-muted-foreground hover:text-foreground text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="field-label">Business name</label>
+                  <input
+                    className="field-input"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="field-label">Deal title</label>
+                  <input
+                    className="field-input"
+                    placeholder="Tacos Tuesday"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="field-label">Description</label>
+                <textarea
+                  className="field-input"
+                  rows={3}
+                  placeholder="20% off all tacos, every Tuesday"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="field-label">Original price (RWF)</label>
+                  <input
+                    className="field-input"
+                    type="number"
+                    min="0"
+                    placeholder="2000"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="field-label">Discount %</label>
+                  <input
+                    className="field-input"
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="20"
+                    value={discountPercent}
+                    onChange={(e) => setDiscountPercent(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="field-label">Expires on</label>
+                  <input
+                    className="field-input"
+                    type="date"
+                    value={expiresAt}
+                    onChange={(e) => setExpiresAt(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {finalPrice != null && (
+                <p className="text-sm text-muted-foreground bg-muted/20 p-2 rounded-lg border border-border">
+                  Students will see: <span className="line-through text-muted-foreground">{price} RWF</span>{' '}
+                  <span className="text-accent font-semibold">{finalPrice} RWF</span>
+                </p>
+              )}
+
+              <div>
+                <label className="field-label">Photo</label>
+                {existingImageUrl && (
+                  <div className="mb-2">
+                    <img
+                      src={existingImageUrl}
+                      alt="Current deal image"
+                      className="w-24 h-16 object-cover rounded-lg border border-border"
+                    />
+                    <p className="text-muted-foreground text-xs mt-1">Current image</p>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                  className="text-sm text-muted-foreground"
+                />
+                <p className="text-muted-foreground text-xs mt-1">
+                  {existingImageUrl ? 'Upload a new image to replace it' : 'Upload an image for your deal'}
+                </p>
+              </div>
+
+              {error && <p className="text-sm text-red-400">{error}</p>}
+              {success && <p className="text-sm text-green-400">{success}</p>}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 bg-accent hover:bg-accent-dim text-background-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
+                >
+                  {saving ? 'Saving…' : isEditing ? 'Update Deal' : 'Post Deal'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 border border-border text-muted-foreground hover:text-foreground rounded-lg py-2.5 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- Check Code Modal --- */}
+      {showCheckCodeModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 fade-in duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-xl font-semibold">🔍 Check Student Code</h2>
+              <button
+                onClick={() => setShowCheckCodeModal(false)}
+                className="text-muted-foreground hover:text-foreground text-xl"
+              >
+                ✕
+              </button>
+            </div>
+            <VerifyCode />
+            <button
+              onClick={() => setShowCheckCodeModal(false)}
+              className="mt-4 w-full border border-border text-muted-foreground hover:text-foreground rounded-lg py-2.5 transition"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- Delete Confirmation Modal --- */}
       <ConfirmModal
         isOpen={deleteModalOpen}
         onClose={() => {
