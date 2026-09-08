@@ -16,9 +16,12 @@ export default function MerchantStories() {
     async function getUserId() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
+        console.log('🔑 User ID from auth:', user.id)
         setUserId(user.id)
         loadStories(user.id)
         loadDeals(user.id)
+      } else {
+        console.error('❌ No user found')
       }
     }
     getUserId()
@@ -63,14 +66,20 @@ export default function MerchantStories() {
   async function handleUpload(e) {
     e.preventDefault()
     if (!file) return setError('Please select an image')
-    if (!userId) return setError('User not authenticated')
+
+    // 🔍 Get fresh user ID at the time of upload
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return setError('User not authenticated')
+
+    const uid = user.id
+    console.log('🆔 Uploading with user ID:', uid)
 
     setUploading(true)
     setError('')
 
     try {
       const fileExt = file.name.split('.').pop()
-      const filePath = `merchants/${userId}/${Date.now()}.${fileExt}`
+      const filePath = `merchants/${uid}/${Date.now()}.${fileExt}`
 
       const { error: uploadError } = await supabase.storage
         .from('story-images')
@@ -83,24 +92,30 @@ export default function MerchantStories() {
         .getPublicUrl(filePath)
 
       const storyData = {
-        merchant_id: userId,
+        merchant_id: uid,
         media_url: publicUrlData.publicUrl,
         caption: caption.trim() || null,
         deal_id: selectedDealId || null,
       }
 
+      console.log('📦 Story data being sent:', storyData)
+
       const { error: insertError } = await supabase
         .from('merchant_stories')
         .insert(storyData)
 
-      if (insertError) throw insertError
+      if (insertError) {
+        console.error('❌ Insert error:', insertError)
+        throw insertError
+      }
 
       setCaption('')
       setFile(null)
       setSelectedDealId('')
-      loadStories(userId)
+      loadStories(uid)
     } catch (err) {
-      setError(err.message)
+      console.error('❌ Upload error:', err)
+      setError(err.message || 'Upload failed')
     } finally {
       setUploading(false)
     }
