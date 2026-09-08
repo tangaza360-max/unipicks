@@ -108,52 +108,32 @@ export default function Dashboard() {
   } else if (role === 'merchant') {
     content = (
       <>
-        <div className="flex gap-2 border-b border-border pb-3 mb-4 flex-wrap">
-          <button
-            onClick={() => setMerchantTab('deals')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              merchantTab === 'deals'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground border border-border'
-            }`}
-          >
-            My Deals
-          </button>
-          <button
-            onClick={() => setMerchantTab('analytics')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              merchantTab === 'analytics'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground border border-border'
-            }`}
-          >
-            📊 Analytics
-          </button>
-          <button
-            onClick={() => setMerchantTab('profile')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              merchantTab === 'profile'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground border border-border'
-            }`}
-          >
-            ⚙️ Profile
-          </button>
-          <button
-            onClick={() => setMerchantTab('stories')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              merchantTab === 'stories'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground border border-border'
-            }`}
-          >
-            📸 Stories
-          </button>
+        {/* --- Improved merchant tabs (pill style) --- */}
+        <div className="flex flex-wrap gap-2 border-b border-border pb-4 mb-4">
+          {[
+            { id: 'deals', label: '📋 Deals' },
+            { id: 'stats', label: '📊 Stats' },
+            { id: 'profile', label: '⚙️ Profile' },
+            { id: 'stories', label: '📸 Stories' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setMerchantTab(tab.id)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                merchantTab === tab.id
+                  ? 'bg-accent text-background-foreground shadow-sm'
+                  : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
+
         {merchantTab === 'deals' && <MerchantDeals />}
-        {merchantTab === 'analytics' && <MerchantAnalytics />}
+        {merchantTab === 'stats' && <MerchantAnalytics />}
         {merchantTab === 'profile' && <MerchantProfile merchantId={user.id} />}
-        {merchantTab === 'stories' && <MerchantStories merchantId={user.id} />}
+        {merchantTab === 'stories' && <MerchantStories />}
       </>
     )
   } else if (role === 'delivery') {
