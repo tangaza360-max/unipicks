@@ -5,7 +5,8 @@ import { useTheme } from '../context/ThemeContext.jsx'
 import DealsFeed from './DealsFeed.jsx'
 import MerchantDeals from './MerchantDeals.jsx'
 import MerchantAnalytics from './MerchantAnalytics.jsx'
-import MerchantProfile from './MerchantProfile.jsx'   // <--- NEW
+import MerchantProfile from './MerchantProfile.jsx'
+import AIDealGenerator from './AIDealGenerator.jsx'     // <--- ADDED
 import AdminAnalytics from './AdminAnalytics.jsx'
 import AdminApprovals from './AdminApprovals.jsx'
 import AdminStudentView from './AdminStudentView.jsx'
@@ -24,7 +25,6 @@ export default function Dashboard() {
   const [merchantTab, setMerchantTab] = useState('deals')
   const { theme, toggleTheme } = useTheme()
 
-  // ✅ FIX: On mount, fetch the current session (not cached user)
   useEffect(() => {
     const fetchSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -38,7 +38,6 @@ export default function Dashboard() {
     }
     fetchSession()
 
-    // ✅ FIX: Subscribe to auth changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -107,7 +106,6 @@ export default function Dashboard() {
       </StudentLayout>
     )
   } else if (role === 'merchant') {
-    // --- UPDATED MERCHANT SECTION ---
     content = (
       <>
         <div className="flex gap-2 border-b border-border pb-3 mb-4 flex-wrap">
@@ -141,10 +139,23 @@ export default function Dashboard() {
           >
             ⚙️ Profile
           </button>
+          {/* --- NEW AI DEAL BUTTON --- */}
+          <button
+            onClick={() => setMerchantTab('ai-deal')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              merchantTab === 'ai-deal'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground border border-border'
+            }`}
+          >
+            ✨ AI Deal
+          </button>
         </div>
         {merchantTab === 'deals' && <MerchantDeals />}
         {merchantTab === 'analytics' && <MerchantAnalytics />}
         {merchantTab === 'profile' && <MerchantProfile merchantId={user.id} />}
+        {/* --- NEW AI DEAL RENDER --- */}
+        {merchantTab === 'ai-deal' && <AIDealGenerator />}
       </>
     )
   } else if (role === 'delivery') {
