@@ -14,14 +14,13 @@ export default function MerchantStories() {
 
   useEffect(() => {
     async function getUserId() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        console.log('🔑 User ID from auth:', user.id)
-        setUserId(user.id)
-        loadStories(user.id)
-        loadDeals(user.id)
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        setUserId(session.user.id)
+        loadStories(session.user.id)
+        loadDeals(session.user.id)
       } else {
-        console.error('❌ No user found')
+        console.error('No session found')
       }
     }
     getUserId()
@@ -67,11 +66,10 @@ export default function MerchantStories() {
     e.preventDefault()
     if (!file) return setError('Please select an image')
 
-    // 🔍 Get fresh user ID at the time of upload
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return setError('User not authenticated')
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) return setError('Not authenticated')
 
-    const uid = user.id
+    const uid = session.user.id
     console.log('🆔 Uploading with user ID:', uid)
 
     setUploading(true)
@@ -91,21 +89,19 @@ export default function MerchantStories() {
         .from('story-images')
         .getPublicUrl(filePath)
 
-      const storyData = {
-        merchant_id: uid,
-        media_url: publicUrlData.publicUrl,
-        caption: caption.trim() || null,
-        deal_id: selectedDealId || null,
-      }
-
-      console.log('📦 Story data being sent:', storyData)
-
+      // --- IMPORTANT: Do NOT use .select() here ---
       const { error: insertError } = await supabase
         .from('merchant_stories')
-        .insert(storyData)
+        .insert({
+          merchant_id: uid,
+          media_url: publicUrlData.publicUrl,
+          caption: caption.trim() || null,
+          deal_id: selectedDealId || null,
+        })
+        // ⚠️ NO .select() — this avoids the RLS return issue!
 
       if (insertError) {
-        console.error('❌ Insert error:', insertError)
+        console.error('Insert error:', insertError)
         throw insertError
       }
 
@@ -114,7 +110,7 @@ export default function MerchantStories() {
       setSelectedDealId('')
       loadStories(uid)
     } catch (err) {
-      console.error('❌ Upload error:', err)
+      console.error('Upload error:', err)
       setError(err.message || 'Upload failed')
     } finally {
       setUploading(false)
