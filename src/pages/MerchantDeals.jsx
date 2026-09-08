@@ -29,8 +29,8 @@ export default function MerchantDeals() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [dealToDelete, setDealToDelete] = useState(null)
 
-  // --- AI Generator state ---
-  const [showAIGenerator, setShowAIGenerator] = useState(false)
+  // --- AI Generator state (full screen) ---
+  const [showAIFullScreen, setShowAIFullScreen] = useState(false)
   const [aiPrompt, setAiPrompt] = useState('')
   const [aiPrice, setAiPrice] = useState('')
   const [aiDiscount, setAiDiscount] = useState('')
@@ -306,7 +306,7 @@ export default function MerchantDeals() {
     setIsEditing(false)
     setError('')
     setSuccess('')
-    setShowAIGenerator(false)
+    // Reset AI state when closing
     setAiPrompt('')
     setAiPrice('')
     setAiDiscount('')
@@ -328,7 +328,6 @@ export default function MerchantDeals() {
     setImageFile(null)
     setError('')
     setSuccess('')
-    setShowAIGenerator(false)
     setShowCreateModal(true)
   }
 
@@ -390,7 +389,9 @@ export default function MerchantDeals() {
     if (aiSelectedImage) {
       setExistingImageUrl(aiSelectedImage)
     }
-    setShowAIGenerator(false)
+    // Close the full-screen AI modal
+    setShowAIFullScreen(false)
+    // Show a success message
     setSuccess('AI deal applied! You can tweak the fields before saving.')
   }
 
@@ -528,7 +529,7 @@ export default function MerchantDeals() {
         </div>
       )}
 
-      {/* --- Create/Edit Modal with AI --- */}
+      {/* --- Create/Edit Modal --- */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 animate-in zoom-in-95 fade-in duration-200">
@@ -544,94 +545,23 @@ export default function MerchantDeals() {
               </button>
             </div>
 
-            {/* AI Generator Toggle */}
+            {/* Button to open full-screen AI generator */}
             <button
-              onClick={() => setShowAIGenerator(!showAIGenerator)}
+              onClick={() => {
+                // Reset AI state when opening
+                setAiPrompt('')
+                setAiPrice('')
+                setAiDiscount('')
+                setAiGenerated(null)
+                setAiImages([])
+                setAiSelectedImage(null)
+                setError('')
+                setShowAIFullScreen(true)
+              }}
               className="mb-4 text-sm bg-accent/10 hover:bg-accent/20 text-accent border border-accent/30 rounded-lg px-4 py-2 transition flex items-center gap-2"
             >
-              {showAIGenerator ? '⬆️ Hide AI Generator' : '✨ Generate with AI'}
+              ✨ Generate with AI (Full page)
             </button>
-
-            {showAIGenerator && (
-              <div className="border border-border rounded-lg p-4 mb-4 space-y-3 bg-muted/10">
-                <p className="text-sm text-muted-foreground">
-                  Describe your deal and let AI create a title, description, and suggest images.
-                </p>
-                <div>
-                  <label className="field-label">Describe your deal</label>
-                  <textarea
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                    placeholder="e.g., Tacos Tuesday – 20% off all tacos, every Tuesday"
-                    className="field-input min-h-[60px]"
-                    rows={2}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="field-label">Price (RWF)</label>
-                    <input
-                      type="number"
-                      value={aiPrice}
-                      onChange={(e) => setAiPrice(e.target.value)}
-                      placeholder="6000"
-                      className="field-input"
-                    />
-                  </div>
-                  <div>
-                    <label className="field-label">Discount (%)</label>
-                    <input
-                      type="number"
-                      value={aiDiscount}
-                      onChange={(e) => setAiDiscount(e.target.value)}
-                      placeholder="20"
-                      className="field-input"
-                      min="0"
-                      max="100"
-                    />
-                  </div>
-                </div>
-                <button
-                  onClick={handleAIGenerate}
-                  disabled={aiLoading}
-                  className="bg-accent hover:bg-accent-dim text-background-foreground font-semibold rounded-lg px-4 py-2 transition disabled:opacity-50"
-                >
-                  {aiLoading ? 'Generating...' : '✨ Generate Deal'}
-                </button>
-
-                {aiGenerated && (
-                  <div className="border border-border rounded-lg p-3 mt-2 space-y-2">
-                    <h4 className="font-medium">AI Suggestion</h4>
-                    <p><span className="text-muted-foreground text-sm">Title:</span> {aiGenerated.title}</p>
-                    <p><span className="text-muted-foreground text-sm">Description:</span> {aiGenerated.description}</p>
-                    {aiImages.length > 0 && (
-                      <div>
-                        <p className="text-muted-foreground text-sm">Choose an image:</p>
-                        <div className="grid grid-cols-3 gap-2 mt-1">
-                          {aiImages.map((url, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => setAiSelectedImage(url)}
-                              className={`border-2 rounded-lg overflow-hidden transition ${
-                                aiSelectedImage === url ? 'border-accent' : 'border-transparent'
-                              }`}
-                            >
-                              <img src={url} alt="AI suggestion" className="w-full h-16 object-cover" />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <button
-                      onClick={applyAIDeal}
-                      className="w-full bg-primary text-primary-foreground font-semibold rounded-lg py-2 transition"
-                    >
-                      Apply to Deal
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Main Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -751,6 +681,113 @@ export default function MerchantDeals() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- Full-Screen AI Generator Modal --- */}
+      {showAIFullScreen && (
+        <div className="fixed inset-0 z-[60] bg-card flex flex-col animate-in fade-in duration-200">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-border bg-muted/20">
+            <h2 className="font-display text-xl font-semibold">✨ AI Deal Generator</h2>
+            <button
+              onClick={() => setShowAIFullScreen(false)}
+              className="text-muted-foreground hover:text-foreground text-xl"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-6 max-w-2xl mx-auto w-full space-y-4">
+            <p className="text-muted-foreground text-sm">
+              Describe your deal, set the price and discount, and let AI create a listing for you.
+            </p>
+
+            <div>
+              <label className="field-label">Describe your deal</label>
+              <textarea
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="e.g., Tacos Tuesday – 20% off all tacos, every Tuesday"
+                className="field-input min-h-[80px]"
+                rows={2}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="field-label">Original Price (RWF)</label>
+                <input
+                  type="number"
+                  value={aiPrice}
+                  onChange={(e) => setAiPrice(e.target.value)}
+                  placeholder="6000"
+                  className="field-input"
+                />
+              </div>
+              <div>
+                <label className="field-label">Discount (%)</label>
+                <input
+                  type="number"
+                  value={aiDiscount}
+                  onChange={(e) => setAiDiscount(e.target.value)}
+                  placeholder="20"
+                  className="field-input"
+                  min="0"
+                  max="100"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleAIGenerate}
+              disabled={aiLoading}
+              className="w-full bg-accent hover:bg-accent-dim text-background-foreground font-semibold rounded-lg py-3 transition disabled:opacity-50"
+            >
+              {aiLoading ? 'Generating...' : '✨ Generate Deal'}
+            </button>
+
+            {error && <p className="text-sm text-red-400">{error}</p>}
+
+            {aiGenerated && (
+              <div className="border border-border rounded-lg p-4 space-y-3 bg-muted/10">
+                <h3 className="font-medium">AI Suggested Deal</h3>
+                <div className="space-y-1 text-sm">
+                  <p><span className="text-muted-foreground">Title:</span> {aiGenerated.title}</p>
+                  <p><span className="text-muted-foreground">Description:</span> {aiGenerated.description}</p>
+                  <p><span className="text-muted-foreground">Original Price:</span> {aiGenerated.price} RWF</p>
+                  <p><span className="text-muted-foreground">Discount:</span> {aiGenerated.discount_percent}%</p>
+                </div>
+
+                {aiImages.length > 0 && (
+                  <div>
+                    <p className="text-muted-foreground text-sm">Choose an image:</p>
+                    <div className="grid grid-cols-3 gap-2 mt-1">
+                      {aiImages.map((url, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setAiSelectedImage(url)}
+                          className={`border-2 rounded-lg overflow-hidden transition ${
+                            aiSelectedImage === url ? 'border-accent ring-2 ring-accent/30' : 'border-transparent'
+                          }`}
+                        >
+                          <img src={url} alt="AI suggestion" className="w-full h-20 object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={applyAIDeal}
+                  className="w-full bg-primary text-primary-foreground font-semibold rounded-lg py-2.5 transition"
+                >
+                  ✅ Apply to Deal
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
