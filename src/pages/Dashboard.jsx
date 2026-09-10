@@ -7,6 +7,7 @@ import MerchantDeals from './MerchantDeals.jsx'
 import MerchantAnalytics from './MerchantAnalytics.jsx'
 import MerchantProfile from './MerchantProfile.jsx'
 import MerchantStories from './MerchantStories.jsx'
+import Messages from './Messages.jsx'
 import AdminAnalytics from './AdminAnalytics.jsx'
 import AdminApprovals from './AdminApprovals.jsx'
 import AdminStudentView from './AdminStudentView.jsx'
@@ -115,6 +116,7 @@ export default function Dashboard() {
             { id: 'stats', label: '📊 Stats' },
             { id: 'profile', label: '⚙️ Profile' },
             { id: 'stories', label: '📸 Stories' },
+            { id: 'messages', label: '💬 Messages' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -134,6 +136,7 @@ export default function Dashboard() {
         {merchantTab === 'stats' && <MerchantAnalytics />}
         {merchantTab === 'profile' && <MerchantProfile merchantId={user.id} />}
         {merchantTab === 'stories' && <MerchantStories />}
+        {merchantTab === 'messages' && <Messages />}
       </>
     )
   } else if (role === 'delivery') {

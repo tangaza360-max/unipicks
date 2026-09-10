@@ -37,13 +37,15 @@ serve(async (request) => {
 
   try {
     // 1. Verify webhook signature (security)
-    // 🔧 Replace this with the actual signature verification logic from UmunotaPay
+    // 🔧 Replace this with the actual signature verification logic from UmunotaPay once their docs specify the exact scheme (HMAC, etc.)
     const expectedSecret = Deno.env.get('UMUNOTA_WEBHOOK_SECRET');
     const providedSignature = request.headers.get('X-Webhook-Signature') || request.headers.get('X-Umunota-Signature');
-    // Uncomment this when you have the actual secret:
-    // if (expectedSecret && providedSignature !== expectedSecret) {
-    //   return json({ error: 'Unauthorized - Invalid signature' }, 401);
-    // }
+    // Enforced only once UMUNOTA_WEBHOOK_SECRET is set (so local/mock testing without a secret still works).
+    // Once UmunotaPay gives you the real secret, set it as an env var and this check activates automatically.
+    if (expectedSecret && providedSignature !== expectedSecret) {
+      console.error('❌ Webhook signature mismatch');
+      return json({ error: 'Unauthorized - Invalid signature' }, 401);
+    }
 
     // 2. Parse the payload
     const payload = await request.json();
@@ -75,6 +77,12 @@ serve(async (request) => {
     }
 
     console.log(`✅ Found transaction: ${transaction.id}, current status: ${transaction.status}`);
+
+    // 4b. Idempotency check: skip if this transaction was already marked paid
+    if (transaction.status === 'paid') {
+      console.log(`⏭️ Transaction ${transaction.id} already marked paid, skipping duplicate webhook`);
+      return json({ success: true, message: 'Already processed' });
+    }
 
     // 5. Map UmunotaPay status to our internal status
     let new_status = 'failed';

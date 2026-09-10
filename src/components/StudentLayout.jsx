@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Home, ShoppingBag, User } from 'lucide-react'
+import { Home, ShoppingBag, User, MessageCircle } from 'lucide-react'
 import OrdersTab from './OrdersTab.jsx'
 import ProfileTab from './ProfileTab.jsx'
 import DesktopNav from './DesktopNav.jsx'
+import Messages from '../pages/Messages.jsx'
 
 export default function StudentLayout({ children, onLogout }) {
   const [activeTab, setActiveTab] = useState('home')
@@ -15,6 +16,8 @@ export default function StudentLayout({ children, onLogout }) {
         return <OrdersTab />
       case 'profile':
         return <ProfileTab />
+      case 'messages':
+        return <Messages />
       default:
         return children
     }
@@ -70,6 +73,17 @@ export default function StudentLayout({ children, onLogout }) {
           <ShoppingBag size={22} />
           <span className="text-[10px] font-medium">Orders</span>
           {activeTab === 'orders' && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('messages')}
+          className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-colors select-none relative ${
+            activeTab === 'messages' ? 'text-primary' : 'text-muted-foreground'
+          }`}
+        >
+          <MessageCircle size={22} />
+          <span className="text-[10px] font-medium">Messages</span>
+          {activeTab === 'messages' && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />}
         </button>
 
         <button
