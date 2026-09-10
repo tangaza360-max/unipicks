@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import StoryViewer from '../components/StoryViewer.jsx'
+import { Camera, Upload, Eye, X } from 'lucide-react'
 
 export default function MerchantStories() {
   const [stories, setStories] = useState([])
@@ -24,7 +25,7 @@ export default function MerchantStories() {
         setUserId(uid)
         loadStories(uid)
       } else {
-        console.error('❌ No session found')
+        console.error('No session found')
       }
     }
     init()
@@ -141,7 +142,7 @@ export default function MerchantStories() {
       {/* Header */}
       <div>
         <h2 className="font-display text-2xl font-semibold flex items-center gap-2">
-          <span>📸</span> Stories
+          <Camera size={22} /> Stories
         </h2>
         <p className="text-muted-foreground text-sm">
           Share what's new with your customers. Stories disappear after 24 hours. Tap a story to preview it as students see it.
@@ -180,7 +181,13 @@ export default function MerchantStories() {
             disabled={uploading || !file}
             className="w-full bg-accent hover:bg-accent-dim text-background-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
           >
-            {uploading ? 'Uploading...' : '📤 Post Story'}
+            {uploading ? (
+              'Uploading...'
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <Upload size={16} /> Post story
+              </span>
+            )}
           </button>
         </form>
       </div>
@@ -227,8 +234,8 @@ export default function MerchantStories() {
                 </div>
                 {/* Preview hint on hover */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full">
-                    👁️ Preview
+                  <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <Eye size={13} /> Preview
                   </span>
                 </div>
                 <button
@@ -236,9 +243,10 @@ export default function MerchantStories() {
                     e.stopPropagation()
                     deleteStory(story.id)
                   }}
-                  className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs transition"
+                  aria-label="Delete story"
+                  className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center transition"
                 >
-                  ✕
+                  <X size={14} />
                 </button>
               </div>
             ))}

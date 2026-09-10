@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { Store } from 'lucide-react'
 
 export default function MerchantProfile({ merchantId }) {
   const [loading, setLoading] = useState(true)
@@ -164,7 +165,7 @@ export default function MerchantProfile({ merchantId }) {
               />
             ) : (
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-2xl">
-                {profile.business_name?.charAt(0) || '🏪'}
+                {profile.business_name?.charAt(0) || <Store size={24} className="text-muted-foreground" />}
               </div>
             )}
             <div>

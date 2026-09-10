@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { CheckCircle2, Clock, Eye } from 'lucide-react'
 
 export default function AdminStudentView() {
   const [students, setStudents] = useState([])
@@ -250,8 +251,12 @@ export default function AdminStudentView() {
                 {studentData.redemptions.map((redemption) => (
                   <div key={redemption.id} className="border border-border rounded-lg p-2 text-sm">
                     <span className="font-medium">{redemption.deals?.title}</span>
-                    <span className="text-muted-foreground text-xs ml-2">
-                      {redemption.status === 'redeemed' ? '✅ Ordered' : '⏳ Pending'}
+                    <span className="text-muted-foreground text-xs ml-2 inline-flex items-center gap-1">
+                      {redemption.status === 'redeemed' ? (
+                        <><CheckCircle2 size={12} /> Ordered</>
+                      ) : (
+                        <><Clock size={12} /> Pending</>
+                      )}
                     </span>
                     {redemption.redeemed_at && (
                       <span className="text-muted-foreground text-xs ml-2">
@@ -264,8 +269,8 @@ export default function AdminStudentView() {
             )}
           </div>
 
-          <p className="text-muted-foreground text-xs text-center border-t border-border pt-3">
-            👁️ Read-only preview — you're viewing this student's dashboard as an admin
+          <p className="text-muted-foreground text-xs text-center border-t border-border pt-3 flex items-center justify-center gap-1.5">
+            <Eye size={13} /> Read-only preview — you're viewing this student's dashboard as an admin
           </p>
         </div>
       ) : null}

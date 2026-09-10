@@ -188,9 +188,9 @@ export default function NotificationBell() {
           {loading ? (
             <div className="p-4 text-center text-muted-foreground text-sm">Loading…</div>
           ) : notifications.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground text-sm">
-              <div className="text-4xl mb-2">🔔</div>
-              No notifications yet
+            <div className="p-8 text-center text-muted-foreground text-sm flex flex-col items-center gap-2">
+              <Bell size={32} className="text-muted-foreground/50" />
+              <span>No notifications yet</span>
             </div>
           ) : (
             <div className="divide-y divide-base-700">

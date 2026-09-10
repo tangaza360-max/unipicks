@@ -8,6 +8,7 @@ import MerchantAnalytics from './MerchantAnalytics.jsx'
 import MerchantProfile from './MerchantProfile.jsx'
 import MerchantStories from './MerchantStories.jsx'
 import Messages from './Messages.jsx'
+import { ClipboardCheck, ClipboardList, GraduationCap, BarChart3, Users, Settings, FileClock, FileText, Camera, MessageCircle, Sun, Moon, LogOut } from 'lucide-react'
 import AdminAnalytics from './AdminAnalytics.jsx'
 import AdminApprovals from './AdminApprovals.jsx'
 import AdminStudentView from './AdminStudentView.jsx'
@@ -112,24 +113,28 @@ export default function Dashboard() {
         {/* --- Improved merchant tabs (pill style) --- */}
         <div className="flex flex-wrap gap-2 border-b border-border pb-4 mb-4">
           {[
-            { id: 'deals', label: '📋 Deals' },
-            { id: 'stats', label: '📊 Stats' },
-            { id: 'profile', label: '⚙️ Profile' },
-            { id: 'stories', label: '📸 Stories' },
-            { id: 'messages', label: '💬 Messages' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setMerchantTab(tab.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                merchantTab === tab.id
-                  ? 'bg-accent text-background-foreground shadow-sm'
-                  : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+            { id: 'deals', label: 'Deals', icon: ClipboardList },
+            { id: 'stats', label: 'Stats', icon: BarChart3 },
+            { id: 'profile', label: 'Profile', icon: Settings },
+            { id: 'stories', label: 'Stories', icon: Camera },
+            { id: 'messages', label: 'Messages', icon: MessageCircle },
+          ].map((tab) => {
+            const Icon = tab.icon
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setMerchantTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  merchantTab === tab.id
+                    ? 'bg-accent text-background-foreground shadow-sm'
+                    : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <Icon size={16} />
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
         </div>
 
         {merchantTab === 'deals' && <MerchantDeals />}
@@ -145,76 +150,31 @@ export default function Dashboard() {
     content = (
       <>
         <div className="flex gap-2 border-b border-border pb-3 mb-4 flex-wrap">
-          <button
-            onClick={() => setAdminTab('approvals')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              adminTab === 'approvals'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground border border-border'
-            }`}
-          >
-            Merchant Approvals
-          </button>
-          <button
-            onClick={() => setAdminTab('student-view')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              adminTab === 'student-view'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground border border-border'
-            }`}
-          >
-            Student Lookup
-          </button>
-          <button
-            onClick={() => setAdminTab('analytics')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              adminTab === 'analytics'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground border border-border'
-            }`}
-          >
-            📊 Analytics
-          </button>
-          <button
-            onClick={() => setAdminTab('users')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              adminTab === 'users'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground border border-border'
-            }`}
-          >
-            👥 Users
-          </button>
-          <button
-            onClick={() => setAdminTab('settings')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              adminTab === 'settings'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground border border-border'
-            }`}
-          >
-            ⚙️ Settings
-          </button>
-          <button
-            onClick={() => setAdminTab('activity-logs')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              adminTab === 'activity-logs'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground border border-border'
-            }`}
-          >
-            📋 Activity Logs
-          </button>
-          <button
-            onClick={() => setAdminTab('reviews')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              adminTab === 'reviews'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground border border-border'
-            }`}
-          >
-            📝 Reviews
-          </button>
+          {[
+            { id: 'approvals', label: 'Approvals', icon: ClipboardCheck },
+            { id: 'student-view', label: 'Students', icon: GraduationCap },
+            { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+            { id: 'users', label: 'Users', icon: Users },
+            { id: 'settings', label: 'Settings', icon: Settings },
+            { id: 'activity-logs', label: 'Activity logs', icon: FileClock },
+            { id: 'reviews', label: 'Reviews', icon: FileText },
+          ].map((tab) => {
+            const Icon = tab.icon
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setAdminTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${
+                  adminTab === tab.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground border border-border'
+                }`}
+              >
+                <Icon size={16} />
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
         </div>
         {adminTab === 'approvals' ? <AdminApprovals /> : 
          adminTab === 'student-view' ? <AdminStudentView /> : 
@@ -235,20 +195,22 @@ export default function Dashboard() {
             <h1 className="font-display text-2xl font-semibold">Hi, {name}</h1>
             <p className="text-muted-foreground text-sm capitalize">{role} account</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {role === 'merchant' && <NotificationBell />}
             <button
               onClick={toggleTheme}
-              className="text-sm text-muted-foreground hover:text-foreground border border-border rounded-lg px-3 py-2 transition"
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="flex items-center justify-center w-10 h-10 text-muted-foreground hover:text-foreground border border-border rounded-lg transition"
             >
-              {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             {role !== 'student' && (
               <button
                 onClick={handleLogout}
-                className="text-sm text-muted-foreground hover:text-foreground border border-border rounded-lg px-4 py-2 transition"
+                aria-label="Log out"
+                className="flex items-center justify-center w-10 h-10 text-muted-foreground hover:text-foreground border border-border rounded-lg transition"
               >
-                Log out
+                <LogOut size={18} />
               </button>
             )}
           </div>

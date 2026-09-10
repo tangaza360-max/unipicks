@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Mail, MapPin, Moon, Phone, Sun, GraduationCap, IdCard } from 'lucide-react'
+import { Mail, MapPin, Moon, Phone, Sun, GraduationCap, IdCard, Star } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { useTheme } from '../context/ThemeContext.jsx'
 
@@ -260,7 +260,7 @@ export default function ProfileTab() {
                 </div>
                 <div className="flex items-center justify-between gap-4 border-b border-border/60 pb-3">
                   <span className="text-muted-foreground">Rating</span>
-                  <span className="text-amber-500">★ {ratingStats?.average || '0.0'} <span className="text-muted-foreground">({ratingStats?.count || 0})</span></span>
+                  <span className="text-amber-500 flex items-center gap-1"><Star size={14} className="fill-amber-500" /> {ratingStats?.average || '0.0'} <span className="text-muted-foreground">({ratingStats?.count || 0})</span></span>
                 </div>
               </>
             )}

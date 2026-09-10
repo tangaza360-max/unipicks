@@ -15,7 +15,7 @@ export default {
         card: 'hsl(var(--color-bg-surface) / <alpha-value>)',
         input: 'hsl(var(--color-bg-input) / <alpha-value>)',
         border: 'hsl(var(--color-border) / <alpha-value>)',
-        ring: '#3ecf7e',
+        ring: '#DE4E32',
         primary: {
           DEFAULT: 'hsl(var(--color-primary) / <alpha-value>)',
           foreground: 'hsl(var(--color-primary-foreground) / <alpha-value>)',
@@ -38,8 +38,8 @@ export default {
           700: 'hsl(var(--color-bg-interactive) / <alpha-value>)',
         },
         accent: {
-          DEFAULT: '#3ecf7e',
-          dim: '#2c9b5e',
+          DEFAULT: '#DE4E32',
+          dim: '#B83E27',
         },
       },
       fontFamily: {

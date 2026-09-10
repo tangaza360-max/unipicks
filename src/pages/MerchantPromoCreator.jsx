@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { PartyPopper } from 'lucide-react'
 
 export default function MerchantPromoCreator() {
   const [prompt, setPrompt] = useState('')
@@ -172,7 +173,7 @@ export default function MerchantPromoCreator() {
   // STEP 3: Success
   return (
     <div className="text-center space-y-4 py-8">
-      <div className="text-5xl">🎉</div>
+      <div className="flex justify-center"><PartyPopper size={48} className="text-accent" /></div>
       <h2 className="font-display text-2xl font-semibold">Deal Published!</h2>
       <p className="text-muted-foreground">
         Your deal is now live. Students can see it in their feed.

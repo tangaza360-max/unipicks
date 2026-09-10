@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { X } from 'lucide-react'
 
 export default function StoryViewer({ stories, onClose, initialIndex = 0 }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
@@ -73,8 +74,8 @@ export default function StoryViewer({ stories, onClose, initialIndex = 0 }) {
               <p className="text-sm opacity-80">{currentStory.caption}</p>
             )}
           </div>
-          <button onClick={onClose} className="text-white text-2xl hover:text-gray-300">
-            ✕
+          <button onClick={onClose} aria-label="Close" className="text-white hover:text-gray-300">
+            <X size={24} />
           </button>
         </div>
 

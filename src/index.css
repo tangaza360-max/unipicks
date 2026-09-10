@@ -1,35 +1,35 @@
 :root {
   --radius: 0.5rem;
-  --color-primary: 152 70% 50%;
+  --color-primary: 9 70% 58%;
   --color-primary-foreground: 0 0% 100%;
   --color-destructive: 0 72% 51%;
-  --color-text-primary: 0 0% 95%;
-  --color-text-secondary: 0 0% 65%;
-  --color-text-muted: 0 0% 55%;
-  --color-bg-body: 240 4% 8%;
-  --color-bg-surface: 240 4% 12%;
-  --color-bg-surface-alt: 240 4% 16%;
-  --color-bg-interactive: 240 4% 20%;
-  --color-bg-input: 240 4% 12%;
-  --color-text-input: 0 0% 95%;
-  --color-border: 240 4% 20%;
-  --color-border-input: 240 4% 25%;
+  --color-text-primary: 30 10% 93%;
+  --color-text-secondary: 30 8% 65%;
+  --color-text-muted: 30 6% 50%;
+  --color-bg-body: 20 6% 10%;
+  --color-bg-surface: 20 6% 14%;
+  --color-bg-surface-alt: 20 6% 18%;
+  --color-bg-interactive: 20 6% 22%;
+  --color-bg-input: 20 6% 14%;
+  --color-text-input: 30 10% 93%;
+  --color-border: 20 6% 19%;
+  --color-border-input: 20 6% 24%;
 }
 
 .light {
-  --color-primary: 152 70% 50%;
+  --color-primary: 9 75% 52%;
   --color-primary-foreground: 0 0% 100%;
-  --color-text-primary: 30 10% 15%;
-  --color-text-secondary: 30 8% 45%;
-  --color-text-muted: 30 6% 55%;
-  --color-bg-body: 40 20% 96%;
-  --color-bg-surface: 40 15% 98%;
-  --color-bg-surface-alt: 40 10% 90%;
-  --color-bg-interactive: 40 10% 85%;
-  --color-bg-input: 40 15% 98%;
-  --color-text-input: 30 10% 15%;
-  --color-border: 40 10% 85%;
-  --color-border-input: 40 10% 80%;
+  --color-text-primary: 20 12% 16%;
+  --color-text-secondary: 20 10% 40%;
+  --color-text-muted: 20 8% 55%;
+  --color-bg-body: 40 30% 98%;
+  --color-bg-surface: 0 0% 100%;
+  --color-bg-surface-alt: 35 15% 91%;
+  --color-bg-interactive: 35 12% 87%;
+  --color-bg-input: 0 0% 100%;
+  --color-text-input: 20 12% 16%;
+  --color-border: 35 15% 91%;
+  --color-border-input: 35 12% 85%;
 }
 
 @tailwind base;
@@ -78,6 +78,6 @@ body {
 }
 
 .field-input:focus {
-  border-color: #3ecf7e;
-  box-shadow: 0 0 0 2px rgba(62, 207, 126, 0.4);
+  border-color: hsl(9, 75%, 52%);
+  box-shadow: 0 0 0 2px hsla(9, 75%, 52%, 0.3);
 }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import RatingPrompt from './RatingPrompt.jsx'
 import StatusBadge from './StatusBadge.jsx'
+import { Package } from 'lucide-react'
 
 export default function OrdersTab() {
   const [hostedOrders, setHostedOrders] = useState([])
@@ -115,7 +116,7 @@ export default function OrdersTab() {
         </div>
 
         <div className="text-center py-12">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted text-3xl">📦</div>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted"><Package size={28} className="text-muted-foreground" /></div>
           <h3 className="font-display text-lg font-semibold">No orders yet</h3>
           <p className="text-muted-foreground text-sm">
             You haven't hosted or joined any group orders yet. Start one from the Home tab!

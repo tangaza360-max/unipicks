@@ -49,7 +49,7 @@ export default function AdminReviews() {
                 <div>
                   <p className="font-medium text-foreground">{review.deals?.title || 'Deleted deal'}</p>
                   <p className="text-muted-foreground text-xs">{review.deals?.business_name || 'Unknown business'} · {new Date(review.created_at).toLocaleString()}</p>
-                  <StarRating value={review.rating} readonly size="text-base" />
+                  <StarRating value={review.rating} readonly iconSize={16} />
                   {review.review && <p className="text-sm text-foreground mt-2">{review.review}</p>}
                 </div>
                 <button type="button" onClick={() => deleteReview(review)} className="self-start rounded-lg border border-destructive/40 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10">Delete</button>

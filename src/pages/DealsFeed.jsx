@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import GroupOrders from './GroupOrders.jsx'
 import StoryViewer from '../components/StoryViewer.jsx'
+import { Store, Search, X, Star } from 'lucide-react'
 
 function makeCode() {
   return String(Math.floor(1000 + Math.random() * 9000))
@@ -283,7 +284,7 @@ export default function DealsFeed() {
                         />
                       ) : (
                         <span className="text-xl font-bold text-foreground">
-                          {initial || '🏪'}
+                          {initial || <Store size={20} />}
                         </span>
                       )}
                     </div>
@@ -319,13 +320,14 @@ export default function DealsFeed() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-input border border-input rounded-lg px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
-              ✕
+              <X size={16} />
             </button>
           )}
         </div>
@@ -495,7 +497,7 @@ function DealCard({ deal, ratingStats }) {
         <h3 className="font-display font-semibold text-lg">{deal.title}</h3>
         {deal.description && <p className="text-muted-foreground text-sm">{deal.description}</p>}
         {ratingStats?.review_count > 0 && (
-          <p className="text-amber-500 text-sm">★ {ratingStats.average_rating} <span className="text-muted-foreground">({ratingStats.review_count} reviews)</span></p>
+          <p className="text-amber-500 text-sm flex items-center gap-1"><Star size={14} className="fill-amber-500" /> {ratingStats.average_rating} <span className="text-muted-foreground">({ratingStats.review_count} reviews)</span></p>
         )}
         <div className="flex items-center gap-2 text-xs pt-1">
           {finalPrice != null && (

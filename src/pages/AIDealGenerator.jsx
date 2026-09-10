@@ -1,6 +1,7 @@
 // src/pages/AIDealGenerator.jsx
 import { useState, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { Sparkles, ClipboardCheck, RefreshCw, Upload, CheckCircle2 } from 'lucide-react'
 
 export default function AIDealGenerator({ onDealCreated }) {
   const [prompt, setPrompt] = useState('')
@@ -209,7 +210,7 @@ export default function AIDealGenerator({ onDealCreated }) {
       setConfirmationData(null)
 
       if (onDealCreated) onDealCreated()
-      alert('🎉 Deal created successfully!')
+      alert('Deal created successfully!')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -221,7 +222,7 @@ export default function AIDealGenerator({ onDealCreated }) {
 
   return (
     <div className="space-y-4">
-      <h2 className="font-display text-lg font-semibold">✨ AI Deal Generator</h2>
+      <h2 className="font-display text-lg font-semibold flex items-center gap-2"><Sparkles size={18} /> AI Deal Generator</h2>
       <p className="text-muted-foreground text-sm">
         Describe your deal, set the price and discount, and let AI create a listing for you.
       </p>
@@ -275,7 +276,13 @@ export default function AIDealGenerator({ onDealCreated }) {
           disabled={loading || !prompt.trim() || !originalPrice}
           className="w-full bg-accent text-background-foreground font-semibold rounded-lg py-3 transition disabled:opacity-50"
         >
-          {loading ? 'Generating...' : '✨ Generate Deal'}
+          {loading ? (
+            'Generating...'
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              <Sparkles size={16} /> Generate deal
+            </span>
+          )}
         </button>
       </form>
 
@@ -300,16 +307,16 @@ export default function AIDealGenerator({ onDealCreated }) {
                 <button
                   onClick={handleRegenerateImages}
                   disabled={loading || !originalPrompt}
-                  className="text-xs bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg px-3 py-1 transition disabled:opacity-50"
+                  className="flex items-center gap-1.5 text-xs bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg px-3 py-1 transition disabled:opacity-50"
                 >
-                  {loading ? 'Loading...' : '🔄 Regenerate'}
+                  {loading ? 'Loading...' : (<><RefreshCw size={13} /> Regenerate</>)}
                 </button>
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="text-xs bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg px-3 py-1 transition disabled:opacity-50"
+                  className="flex items-center gap-1.5 text-xs bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg px-3 py-1 transition disabled:opacity-50"
                 >
-                  {uploading ? 'Uploading...' : '📤 Upload'}
+                  {uploading ? 'Uploading...' : (<><Upload size={13} /> Upload</>)}
                 </button>
                 <input
                   ref={fileInputRef}
@@ -363,7 +370,7 @@ export default function AIDealGenerator({ onDealCreated }) {
 
       {showConfirm && confirmationData && (
         <div className="border border-green-500/50 bg-green-500/5 rounded-lg p-5 space-y-4 mt-2">
-          <h3 className="font-display text-xl font-semibold text-green-600">📋 Confirm Your Deal</h3>
+          <h3 className="font-display text-xl font-semibold text-green-600 flex items-center gap-2"><ClipboardCheck size={20} /> Confirm your deal</h3>
           <p className="text-sm text-muted-foreground">Review the details below before posting.</p>
 
           <div className="space-y-2 text-sm bg-card/40 p-3 rounded border border-border">
@@ -406,9 +413,9 @@ export default function AIDealGenerator({ onDealCreated }) {
             <button
               onClick={handleConfirmDeal}
               disabled={saving}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
             >
-              {saving ? 'Posting...' : '✅ Confirm & Post Deal'}
+              {saving ? 'Posting...' : (<><CheckCircle2 size={16} /> Confirm and post deal</>)}
             </button>
           </div>
         </div>

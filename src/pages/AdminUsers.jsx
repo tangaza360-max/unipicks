@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { X } from 'lucide-react'
 
 export default function AdminUsers() {
   const [students, setStudents] = useState([])
@@ -63,7 +64,7 @@ export default function AdminUsers() {
   }
 
   async function deleteUser(userId) {
-    const confirmed = window.confirm('⚠️ Permanently delete this user? This action cannot be undone.')
+    const confirmed = window.confirm('Permanently delete this user? This action cannot be undone.')
     if (!confirmed) return
 
     const { data, error } = await supabase.rpc('admin_delete_user', {
@@ -129,9 +130,10 @@ export default function AdminUsers() {
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
+            aria-label="Clear search"
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
-            ✕
+            <X size={16} />
           </button>
         )}
       </div>

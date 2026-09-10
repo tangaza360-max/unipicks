@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import VerifyCode from './VerifyCode.jsx'
 import ConfirmModal from '../components/ConfirmModal.jsx'
+import { Search, Sparkles, X, Pencil, UtensilsCrossed, CheckCircle2 } from 'lucide-react'
 
 export default function MerchantDeals() {
   // --- State for deals and form ---
@@ -404,18 +405,18 @@ export default function MerchantDeals() {
         <div className="flex gap-2">
           <button
             onClick={() => setShowCheckCodeModal(true)}
-            className="bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg px-4 py-2 text-sm font-medium transition"
+            className="flex items-center gap-2 bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg px-4 py-2 text-sm font-medium transition"
           >
-            🔍 Check Code
+            <Search size={16} /> Check code
           </button>
           <button
             onClick={() => {
               resetForm()
               setShowCreateModal(true)
             }}
-            className="bg-accent hover:bg-accent-dim text-background-foreground rounded-lg px-4 py-2 text-sm font-medium transition"
+            className="flex items-center gap-2 bg-accent hover:bg-accent-dim text-background-foreground rounded-lg px-4 py-2 text-sm font-medium transition"
           >
-            ✨ Create Deal
+            <Sparkles size={16} /> Create deal
           </button>
         </div>
       </div>
@@ -443,8 +444,8 @@ export default function MerchantDeals() {
                   {deal.image_url ? (
                     <img src={deal.image_url} alt={deal.title} className="h-full w-full object-cover" />
                   ) : (
-                    <div className="h-full w-full bg-gradient-to-br from-accent/30 via-muted to-card flex items-center justify-center text-4xl">
-                      🍔
+                    <div className="h-full w-full bg-gradient-to-br from-accent/30 via-muted to-card flex items-center justify-center">
+                      <UtensilsCrossed size={36} className="text-muted-foreground/40" />
                     </div>
                   )}
                   <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/35 to-transparent" />
@@ -534,14 +535,15 @@ export default function MerchantDeals() {
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 animate-in zoom-in-95 fade-in duration-200">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-xl font-semibold">
-                {isEditing ? '✏️ Edit Deal' : '✨ Create a New Deal'}
+              <h2 className="font-display text-xl font-semibold flex items-center gap-2">
+                {isEditing ? <><Pencil size={18} /> Edit deal</> : <><Sparkles size={18} /> Create a new deal</>}
               </h2>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-muted-foreground hover:text-foreground text-xl"
+                aria-label="Close"
+                className="text-muted-foreground hover:text-foreground"
               >
-                ✕
+                <X size={20} />
               </button>
             </div>
 
@@ -560,7 +562,7 @@ export default function MerchantDeals() {
               }}
               className="mb-4 text-sm bg-accent/10 hover:bg-accent/20 text-accent border border-accent/30 rounded-lg px-4 py-2 transition flex items-center gap-2"
             >
-              ✨ Generate with AI (Full page)
+              <Sparkles size={16} /> Generate with AI (full page)
             </button>
 
             {/* Main Form */}
@@ -690,12 +692,15 @@ export default function MerchantDeals() {
         <div className="fixed inset-0 z-[60] bg-card flex flex-col animate-in fade-in duration-200">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-border bg-muted/20">
-            <h2 className="font-display text-xl font-semibold">✨ AI Deal Generator</h2>
+            <h2 className="font-display text-xl font-semibold flex items-center gap-2">
+              <Sparkles size={18} /> AI deal generator
+            </h2>
             <button
               onClick={() => setShowAIFullScreen(false)}
-              className="text-muted-foreground hover:text-foreground text-xl"
+              aria-label="Close"
+              className="text-muted-foreground hover:text-foreground"
             >
-              ✕
+              <X size={20} />
             </button>
           </div>
 
@@ -746,7 +751,13 @@ export default function MerchantDeals() {
               disabled={aiLoading}
               className="w-full bg-accent hover:bg-accent-dim text-background-foreground font-semibold rounded-lg py-3 transition disabled:opacity-50"
             >
-              {aiLoading ? 'Generating...' : '✨ Generate Deal'}
+              {aiLoading ? (
+                'Generating...'
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <Sparkles size={16} /> Generate deal
+                </span>
+              )}
             </button>
 
             {error && <p className="text-sm text-red-400">{error}</p>}
@@ -782,9 +793,9 @@ export default function MerchantDeals() {
 
                 <button
                   onClick={applyAIDeal}
-                  className="w-full bg-primary text-primary-foreground font-semibold rounded-lg py-2.5 transition"
+                  className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold rounded-lg py-2.5 transition"
                 >
-                  ✅ Apply to Deal
+                  <CheckCircle2 size={16} /> Apply to deal
                 </button>
               </div>
             )}
@@ -797,12 +808,15 @@ export default function MerchantDeals() {
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 fade-in duration-200">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-xl font-semibold">🔍 Check Student Code</h2>
+              <h2 className="font-display text-xl font-semibold flex items-center gap-2">
+                <Search size={18} /> Check student code
+              </h2>
               <button
                 onClick={() => setShowCheckCodeModal(false)}
-                className="text-muted-foreground hover:text-foreground text-xl"
+                aria-label="Close"
+                className="text-muted-foreground hover:text-foreground"
               >
-                ✕
+                <X size={20} />
               </button>
             </div>
             <VerifyCode />
