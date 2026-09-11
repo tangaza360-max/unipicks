@@ -1,5 +1,5 @@
-const CACHE_NAME = 'unipicks-shell-v1'
-const APP_SHELL = ['/', '/index.html', '/manifest.json', '/icon-192.svg', '/icon-512.svg']
+const CACHE_NAME = 'unipicks-shell-v2'
+const APP_SHELL = ['/manifest.json', '/icon-192.svg', '/icon-512.svg']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)))
@@ -18,6 +18,16 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
+  // Navigation requests (the HTML document): always try network first,
+  // so users get the latest deploy. Fall back to cache only if offline.
+  if (event.request.mode === 'navigate') {
+    // Your app needs live data anyway (deals, payments), so there's no
+    // meaningful offline fallback here — just always fetch fresh.
+    event.respondWith(fetch(event.request))
+    return
+  }
+
+  // Static assets: cache-first for speed, since these rarely change mid-session.
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached
@@ -27,7 +37,7 @@ self.addEventListener('fetch', (event) => {
         const copy = response.clone()
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy))
         return response
-      }).catch(() => caches.match('/index.html'))
+      })
     }),
   )
 })
