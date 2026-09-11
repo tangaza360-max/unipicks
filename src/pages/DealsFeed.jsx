@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import GroupOrders from './GroupOrders.jsx'
 import StoryViewer from '../components/StoryViewer.jsx'
-import { Store, Search, X, Star } from 'lucide-react'
+import { Store, Search, X, Star, Smartphone, CheckCircle2 } from 'lucide-react'
 
 function makeCode() {
   return String(Math.floor(1000 + Math.random() * 9000))
@@ -458,13 +458,30 @@ function DealCard({ deal, ratingStats }) {
       }
 
       setTransactionId(data.transaction_id)
-      setPaymentStatus('pending')
+      setPaymentStatus('waiting_for_phone')
 
-      if (data.payment_url) {
-        window.location.href = data.payment_url
-      } else {
-        throw new Error('No payment URL received from provider')
-      }
+      // Poll the transaction for a status update (webhook confirms payment async)
+      const pollInterval = setInterval(async () => {
+        const { data: txn } = await supabase
+          .from('transactions')
+          .select('status')
+          .eq('id', data.transaction_id)
+          .single()
+
+        if (txn?.status === 'paid') {
+          clearInterval(pollInterval)
+          setPaymentStatus('paid')
+          setOrdering(false)
+        } else if (txn?.status === 'failed') {
+          clearInterval(pollInterval)
+          setPaymentStatus(null)
+          setOrdering(false)
+          setError('Payment failed or was cancelled. Please try again.')
+        }
+      }, 3000)
+
+      // Stop polling after 2 minutes if nothing happened
+      setTimeout(() => clearInterval(pollInterval), 120000)
     } catch (err) {
       console.error('Payment error:', err.message)
       setError(err.message || 'Something went wrong. Please try again.')
@@ -511,12 +528,23 @@ function DealCard({ deal, ratingStats }) {
           {expiresLabel && <span className="text-muted-foreground">Valid until {expiresLabel}</span>}
         </div>
 
-        {paymentStatus === 'pending' ? (
-          <div className="mt-3 bg-accent/10 border border-accent/40 rounded-lg p-4 text-center">
-            <p className="text-muted-foreground text-sm">⏳ Redirecting to payment...</p>
+        {paymentStatus === 'waiting_for_phone' ? (
+          <div className="mt-3 bg-accent/10 border border-accent/40 rounded-lg p-4 text-center space-y-2">
+            <p className="text-foreground text-sm font-medium flex items-center justify-center gap-2">
+              <Smartphone size={16} /> Check your phone
+            </p>
+            <p className="text-muted-foreground text-xs">
+              Approve the payment prompt on your phone to complete this order.
+            </p>
             <div className="mt-2 h-1 w-full bg-muted rounded-full overflow-hidden">
               <div className="h-full w-1/2 bg-accent animate-pulse rounded-full" />
             </div>
+          </div>
+        ) : paymentStatus === 'paid' ? (
+          <div className="mt-3 bg-green-500/10 border border-green-500/40 rounded-lg p-4 text-center">
+            <p className="text-green-600 text-sm font-medium flex items-center justify-center gap-2">
+              <CheckCircle2 size={16} /> Payment confirmed
+            </p>
           </div>
         ) : (
           <button
