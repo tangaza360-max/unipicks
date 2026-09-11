@@ -218,11 +218,13 @@ export default function Register() {
           </div>
 
           <div>
-            <label className="field-label">Email</label>
+            <label className="field-label">
+              {accountType === 'student' ? 'Student email' : 'Email'}
+            </label>
             <input
               className="field-input"
               type="email"
-              placeholder="you@example.com"
+              placeholder={accountType === 'student' ? 'Enter your student email' : 'you@example.com'}
               value={form.email}
               onChange={(e) => update('email', e.target.value)}
             />
