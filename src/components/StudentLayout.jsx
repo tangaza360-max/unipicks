@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Home, ShoppingBag, User, MessageCircle } from 'lucide-react'
+import { Home, ShoppingBag, User, MessageCircle, LogOut } from 'lucide-react'
 import OrdersTab from './OrdersTab.jsx'
 import ProfileTab from './ProfileTab.jsx'
 import DesktopNav from './DesktopNav.jsx'
@@ -34,15 +34,16 @@ export default function StudentLayout({ children, onLogout }) {
         <div className="flex items-center gap-2">
           <button
             onClick={onLogout}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg hover:bg-muted/50"
+            aria-label="Log out"
+            className="flex items-center justify-center w-10 h-10 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50"
           >
-            Log out
+            <LogOut size={18} />
           </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 pb-20 md:pb-0 overflow-y-auto">
+      <div className="flex-1 px-4 md:px-6 py-4 pb-24 md:pb-6 overflow-y-auto">
         <div className="animate-fadeIn">
           {renderContent()}
         </div>

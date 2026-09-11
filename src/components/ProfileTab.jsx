@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Mail, MapPin, Moon, Phone, Sun, GraduationCap, IdCard, Star } from 'lucide-react'
+import { Mail, MapPin, Moon, Phone, Sun, GraduationCap, IdCard, Star, LogOut } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { useTheme } from '../context/ThemeContext.jsx'
 
@@ -285,9 +285,9 @@ export default function ProfileTab() {
 
       <button
         onClick={handleLogout}
-        className="w-full border border-red-400/30 text-red-400 hover:text-red-300 hover:border-red-400/50 rounded-lg py-2.5 transition text-sm font-medium"
+        className="w-full flex items-center justify-center gap-2 border border-red-400/30 text-red-400 hover:text-red-300 hover:border-red-400/50 rounded-lg py-2.5 transition text-sm font-medium"
       >
-        Log out
+        <LogOut size={16} /> Log out
       </button>
     </div>
   )

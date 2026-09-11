@@ -90,9 +90,9 @@ export default function Dashboard() {
           </p>
           <button
             onClick={handleLogout}
-            className="mt-4 bg-primary text-primary-foreground rounded-lg px-6 py-2"
+            className="mt-4 flex items-center gap-2 mx-auto bg-primary text-primary-foreground rounded-lg px-6 py-2"
           >
-            Sign Out
+            <LogOut size={16} /> Sign out
           </button>
         </div>
       </div>
