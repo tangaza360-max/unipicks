@@ -362,7 +362,7 @@ function HostedOrderCard({ order, onChanged }) {
       {total != null && total > 0 && (
         <button
           type="button"
-          onClick={() => navigate(`/payment?amount=${total}&order_id=${order.id}&description=${encodeURIComponent(order.deals?.title || 'Group order')}`)}
+          onClick={() => navigate(`/payment?amount=${total}&order_id=${order.id}&deal_id=${order.deal_id}&description=${encodeURIComponent(order.deals?.title || 'Group order')}`)}
           className="w-full bg-primary text-primary-foreground font-semibold rounded-lg py-2.5 transition"
         >
           Pay Now · {total.toLocaleString()} RWF

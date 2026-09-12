@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { createPendingTransaction, initiatePayment } from '../lib/payment.js'
+import { createRedemption, initiatePayment } from '../lib/payment.js'
 
 const phonePattern = /^(078|079|072|073)\d{7}$/
 
@@ -31,17 +31,21 @@ export default function PaymentCheckout() {
       return
     }
 
+    if (!dealId) {
+      setError('This payment link is missing the deal reference. Go back and try again.')
+      return
+    }
+
     setLoading(true)
     setError('')
     try {
-      const pending = await createPendingTransaction({ amount, dealId, orderId, description })
-      setTransaction(pending)
+      const redemption = await createRedemption({ dealId })
+      setTransaction(redemption)
       const result = await initiatePayment({
-        transactionId: pending.id,
+        redemptionId: redemption.id,
+        dealId,
         amount,
-        phoneNumber: normalizedPhone,
-        reference: pending.reference,
-        description,
+        phone: normalizedPhone,
       })
       setPayment(result)
     } catch (paymentError) {
@@ -82,9 +86,8 @@ export default function PaymentCheckout() {
           {payment ? (
             <div className="rounded-lg bg-primary/10 border border-primary/30 p-4 space-y-2">
               <p className="font-semibold text-primary">Payment request sent</p>
-              <p className="text-muted-foreground text-sm">Status: {payment.status || 'pending'}. Check your phone to approve the sandbox payment.</p>
-              {payment.payment_url && <a className="text-primary text-sm underline" href={payment.payment_url}>Open payment page</a>}
-              <p className="text-muted-foreground text-xs">Reference: {transaction?.reference}</p>
+              <p className="text-muted-foreground text-sm">Check your phone to approve the sandbox payment.</p>
+              <p className="text-muted-foreground text-xs">Pickup code: <span className="font-mono font-semibold text-foreground">{transaction?.code}</span></p>
             </div>
           ) : (
             <button type="submit" disabled={loading || Boolean(error && !Number.isFinite(amount))} className="w-full bg-primary text-primary-foreground font-semibold rounded-lg py-3 transition disabled:opacity-50">

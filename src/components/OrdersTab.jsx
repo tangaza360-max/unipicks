@@ -257,7 +257,7 @@ function OrderCard({ order, type, quantity }) {
       {payableAmount != null && (
         <button
           type="button"
-          onClick={() => navigate(`/payment?amount=${payableAmount}&order_id=${order.id}&description=${encodeURIComponent(deal?.title || 'Group order')}`)}
+          onClick={() => navigate(`/payment?amount=${payableAmount}&order_id=${order.id}&deal_id=${order.deal_id}&description=${encodeURIComponent(deal?.title || 'Group order')}`)}
           className="mt-3 w-full bg-primary text-primary-foreground font-semibold rounded-lg py-2.5 transition"
         >
           Pay Now · {payableAmount.toLocaleString()} RWF

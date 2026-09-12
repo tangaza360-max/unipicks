@@ -1,33 +1,33 @@
 import { supabase } from './supabaseClient.js'
 
-export async function createPendingTransaction({ amount, dealId = null, orderId = null, description }) {
+function generateCode() {
+  return String(Math.floor(1000 + Math.random() * 9000))
+}
+
+export async function createRedemption({ dealId }) {
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError || !user) throw new Error('Please sign in before starting a payment.')
+  if (!dealId) throw new Error('Missing deal reference for this order.')
 
-  const reference = `unipicks-${crypto.randomUUID()}`
-  const { data, error } = await supabase.from('transactions').insert({
-    student_id: user.id,
+  const { data, error } = await supabase.from('redemptions').insert({
     deal_id: dealId,
-    order_id: orderId,
-    amount: Math.round(Number(amount)),
-    phone_number: '',
-    reference,
+    student_id: user.id,
+    code: generateCode(),
     status: 'pending',
-    provider_response: { description },
-  }).select('id, reference').single()
+  }).select('id, code').single()
 
   if (error) throw error
   return data
 }
 
-export async function initiatePayment({ transactionId, amount, phoneNumber, reference, description }) {
+export async function initiatePayment({ redemptionId, dealId, amount, phone, currency = 'RWF' }) {
   const { data, error } = await supabase.functions.invoke('process-payment', {
     body: {
-      transaction_id: transactionId,
+      redemption_id: redemptionId,
+      deal_id: dealId,
       amount,
-      phone_number: phoneNumber,
-      reference,
-      description,
+      phone,
+      currency,
     },
   })
   if (error) throw error
