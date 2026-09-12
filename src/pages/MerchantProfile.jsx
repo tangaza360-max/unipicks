@@ -13,6 +13,7 @@ export default function MerchantProfile({ merchantId }) {
     address: '',
     rdb_number: '',
     logo_url: '',
+    momo_pay_code: '',
   })
   const [originalProfile, setOriginalProfile] = useState({})
   const [error, setError] = useState('')
@@ -37,6 +38,7 @@ export default function MerchantProfile({ merchantId }) {
           address: data.address || '',
           rdb_number: data.rdb_number || '',
           logo_url: data.logo_url || '',
+          momo_pay_code: data.momo_pay_code || '',
         }
         setProfile(profileData)
         setOriginalProfile(profileData)
@@ -65,6 +67,7 @@ export default function MerchantProfile({ merchantId }) {
         address: profile.address.trim(),
         rdb_number: profile.rdb_number.trim(),
         logo_url: profile.logo_url.trim() || null,
+        momo_pay_code: profile.momo_pay_code.trim() || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', merchantId)
@@ -183,6 +186,10 @@ export default function MerchantProfile({ merchantId }) {
               <span className="text-muted-foreground">RDB Number</span>
               <p className="font-medium">{profile.rdb_number || 'Not set'}</p>
             </div>
+            <div className="col-span-2">
+              <span className="text-muted-foreground">MoMo Pay Code</span>
+              <p className="font-medium">{profile.momo_pay_code || 'Not set'}</p>
+            </div>
           </div>
         </div>
 
@@ -237,6 +244,18 @@ export default function MerchantProfile({ merchantId }) {
               placeholder="RDB/..."
             />
           </div>
+        </div>
+
+        <div>
+          <label className="field-label">MoMo Pay Code</label>
+          <input
+            name="momo_pay_code"
+            value={profile.momo_pay_code}
+            onChange={handleChange}
+            className="field-input"
+            placeholder="e.g. 123456"
+          />
+          <p className="text-muted-foreground text-xs mt-1">This is where your share of each payment will be sent.</p>
         </div>
 
         <div>
