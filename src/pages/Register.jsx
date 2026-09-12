@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { UNIVERSITIES, domainForUniversity } from '../lib/universities.js'
+import Logo from '../components/Logo.jsx'
 
 const initialStudentForm = {
   fullName: '',
@@ -158,7 +159,7 @@ export default function Register() {
       <div className="w-full max-w-md space-y-6">
         <div className="flex flex-col items-center text-center gap-3">
           <div className="w-14 h-14 rounded-full bg-accent/20 flex items-center justify-center text-accent">
-            <PersonAddIcon />
+            <Logo size={28} />
           </div>
           <h1 className="font-display text-3xl font-semibold">Join Unipicks</h1>
           <p className="text-muted-foreground text-sm">Affordable campus meals, student deals</p>
@@ -350,16 +351,6 @@ export default function Register() {
         </p>
       </div>
     </div>
-  )
-}
-
-function PersonAddIcon() {
-  return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-      <circle cx="10" cy="8" r="3.5" />
-      <path d="M3.5 20a6.5 6.5 0 0 1 13 0" />
-      <path d="M18 8v6M15 11h6" />
-    </svg>
   )
 }
 

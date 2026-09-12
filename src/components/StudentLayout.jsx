@@ -4,6 +4,7 @@ import OrdersTab from './OrdersTab.jsx'
 import ProfileTab from './ProfileTab.jsx'
 import DesktopNav from './DesktopNav.jsx'
 import Messages from '../pages/Messages.jsx'
+import Logo from './Logo'
 
 export default function StudentLayout({ children, onLogout }) {
   const [activeTab, setActiveTab] = useState('home')
@@ -28,6 +29,7 @@ export default function StudentLayout({ children, onLogout }) {
       {/* Desktop Header with Navigation */}
       <header className="hidden md:flex items-center justify-between px-4 md:px-6 py-3 border-b border-border/40 bg-card/60 sticky top-0 z-40 backdrop-blur-sm">
         <div className="flex items-center gap-2">
+          <Logo size={24} className="text-accent" />
           <span className="font-display text-xl font-bold text-foreground">Unipicks</span>
         </div>
         <DesktopNav activeTab={activeTab} setActiveTab={setActiveTab} />

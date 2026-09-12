@@ -9,6 +9,7 @@ import MerchantProfile from './MerchantProfile.jsx'
 import MerchantStories from './MerchantStories.jsx'
 import Messages from './Messages.jsx'
 import { ClipboardCheck, ClipboardList, GraduationCap, BarChart3, Users, Settings, FileClock, FileText, Camera, MessageCircle, Sun, Moon, LogOut } from 'lucide-react'
+import Logo from '../components/Logo.jsx'
 import AdminAnalytics from './AdminAnalytics.jsx'
 import AdminApprovals from './AdminApprovals.jsx'
 import AdminStudentView from './AdminStudentView.jsx'
@@ -191,9 +192,12 @@ export default function Dashboard() {
     <div className="min-h-screen px-4 py-10">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-semibold">Hi, {name}</h1>
-            <p className="text-muted-foreground text-sm capitalize">{role} account</p>
+          <div className="flex items-center gap-3">
+            <Logo size={32} className="text-accent" />
+            <div>
+              <h1 className="font-display text-2xl font-semibold">Hi, {name}</h1>
+              <p className="text-muted-foreground text-sm capitalize">{role} account</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {role === 'merchant' && <NotificationBell />}
