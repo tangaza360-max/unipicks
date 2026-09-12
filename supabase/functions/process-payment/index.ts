@@ -177,30 +177,71 @@ serve(async (req) => {
       );
     }
 
-    // 5. Update transaction with UmunotaPay reference and mark as processing
+    // 5. UmunotaPay's sandbox resolves instantly and returns the final status
+    // right in this response (no webhook fires for test transactions). In
+    // production with a real phone, this will likely come back "pending" and
+    // the payment-webhook function will confirm it later instead.
     const umunota_ref =
       umunotaResponse.reference ||
       umunotaResponse.id ||
       umunotaResponse.transaction_id ||
       merchant_reference;
 
+    const immediateStatus = String(umunotaResponse.status || '').toLowerCase();
+    const isImmediatelyPaid = ['success', 'completed', 'paid', 'approved'].includes(immediateStatus);
+    const isImmediatelyFailed = ['failed', 'cancelled', 'canceled', 'declined'].includes(immediateStatus);
+    const finalStatus = isImmediatelyPaid ? 'paid' : isImmediatelyFailed ? 'failed' : 'processing';
+
     await supabaseAdmin
       .from('transactions')
       .update({
         umunota_reference: umunota_ref,
         merchant_reference,
-        status: 'processing',
+        status: finalStatus,
+        webhook_payload: isImmediatelyPaid || isImmediatelyFailed ? umunotaResponse : null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', transaction.id);
 
-    // 6. Tell the frontend the prompt was sent — the webhook will confirm payment later
-    console.log(`📲 Payment prompt sent for transaction ${transaction.id}, reference ${umunota_ref}`);
+    if (isImmediatelyPaid || isImmediatelyFailed) {
+      await supabaseAdmin
+        .from('redemptions')
+        .update({
+          payment_status: isImmediatelyPaid ? 'paid' : 'failed',
+          status: isImmediatelyPaid ? 'confirmed' : 'failed',
+        })
+        .eq('id', redemption_id);
+
+      if (isImmediatelyPaid) {
+        const { data: dealRow } = await supabaseAdmin
+          .from('deals')
+          .select('merchant_id')
+          .eq('id', deal_id)
+          .single();
+
+        if (dealRow?.merchant_id) {
+          await supabaseAdmin.from('notifications').insert({
+            merchant_id: dealRow.merchant_id,
+            deal_id,
+            student_name: 'Student',
+            student_email: 'student@email.com',
+            message: `💰 Payment received for order #${redemption_id}`,
+            type: 'payment_received',
+            read: false,
+          });
+        }
+      }
+    }
+
+    // 6. Tell the frontend what happened — either it's already resolved, or
+    // the webhook will confirm payment later.
+    console.log(`📲 Payment ${finalStatus} for transaction ${transaction.id}, reference ${umunota_ref}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        prompt_sent: true,
+        prompt_sent: finalStatus === 'processing',
+        status: finalStatus,
         transaction_id: transaction.id,
         umunota_reference: umunota_ref,
       }),
