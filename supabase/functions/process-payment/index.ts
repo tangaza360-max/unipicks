@@ -82,6 +82,8 @@ async function callUmunotaPay(payload: {
     throw new Error(data?.error || data?.message || `UmunotaPay returned status ${response.status}`);
   }
 
+  console.log('🔎 Full UmunotaPay response:', JSON.stringify(data));
+
   return data;
 }
 
