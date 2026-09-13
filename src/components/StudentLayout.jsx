@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Home, ShoppingBag, User, MessageCircle, LogOut } from 'lucide-react'
+import { useState, cloneElement } from 'react'
+import { Home, ShoppingBag, User, MessageCircle, LogOut, Search, Sparkles } from 'lucide-react'
 import OrdersTab from './OrdersTab.jsx'
 import ProfileTab from './ProfileTab.jsx'
 import DesktopNav from './DesktopNav.jsx'
@@ -13,6 +13,10 @@ export default function StudentLayout({ children, onLogout }) {
     switch (activeTab) {
       case 'home':
         return children
+      case 'search':
+        return children
+      case 'advisor':
+        return cloneElement(children, { advisorOpen: true })
       case 'orders':
         return <OrdersTab />
       case 'profile':
@@ -35,6 +39,15 @@ export default function StudentLayout({ children, onLogout }) {
         <DesktopNav activeTab={activeTab} setActiveTab={setActiveTab} />
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setActiveTab('messages')}
+            aria-label="Messages"
+            className={`flex items-center justify-center w-10 h-10 transition-colors rounded-lg hover:bg-muted/50 ${
+              activeTab === 'messages' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <MessageCircle size={18} />
+          </button>
+          <button
             onClick={onLogout}
             aria-label="Log out"
             className="flex items-center justify-center w-10 h-10 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50"
@@ -42,6 +55,26 @@ export default function StudentLayout({ children, onLogout }) {
             <LogOut size={18} />
           </button>
         </div>
+      </header>
+
+      {/* Mobile Header */}
+      <header
+        className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border/40 bg-card/60 sticky top-0 z-40 backdrop-blur-sm"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
+        <div className="flex items-center gap-2">
+          <Logo size={22} className="text-accent" />
+          <span className="font-display text-lg font-bold text-foreground">Unipicks</span>
+        </div>
+        <button
+          onClick={() => setActiveTab('messages')}
+          aria-label="Messages"
+          className={`flex items-center justify-center w-9 h-9 transition-colors rounded-lg ${
+            activeTab === 'messages' ? 'text-primary' : 'text-muted-foreground'
+          }`}
+        >
+          <MessageCircle size={22} />
+        </button>
       </header>
 
       {/* Main Content */}
@@ -68,6 +101,28 @@ export default function StudentLayout({ children, onLogout }) {
         </button>
 
         <button
+          onClick={() => setActiveTab('search')}
+          className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-colors select-none relative ${
+            activeTab === 'search' ? 'text-primary' : 'text-muted-foreground'
+          }`}
+        >
+          <Search size={22} />
+          <span className="text-[10px] font-medium">Search</span>
+          {activeTab === 'search' && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('advisor')}
+          className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-colors select-none relative ${
+            activeTab === 'advisor' ? 'text-primary' : 'text-muted-foreground'
+          }`}
+        >
+          <Sparkles size={22} />
+          <span className="text-[10px] font-medium">Advisor</span>
+          {activeTab === 'advisor' && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />}
+        </button>
+
+        <button
           onClick={() => setActiveTab('orders')}
           className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-colors select-none relative ${
             activeTab === 'orders' ? 'text-primary' : 'text-muted-foreground'
@@ -76,17 +131,6 @@ export default function StudentLayout({ children, onLogout }) {
           <ShoppingBag size={22} />
           <span className="text-[10px] font-medium">Orders</span>
           {activeTab === 'orders' && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />}
-        </button>
-
-        <button
-          onClick={() => setActiveTab('messages')}
-          className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-colors select-none relative ${
-            activeTab === 'messages' ? 'text-primary' : 'text-muted-foreground'
-          }`}
-        >
-          <MessageCircle size={22} />
-          <span className="text-[10px] font-medium">Messages</span>
-          {activeTab === 'messages' && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />}
         </button>
 
         <button

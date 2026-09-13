@@ -23,7 +23,7 @@ function extractBudget(text) {
   return null
 }
 
-export default function DealsFeed() {
+export default function DealsFeed({ advisorOpen = false } = {}) {
   const [deals, setDeals] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -255,6 +255,10 @@ export default function DealsFeed() {
     return <p className="text-sm text-destructive">Couldn't load deals: {error}</p>
   }
 
+  if (advisorOpen) {
+    return <Advisor deals={deals} onBudget={setBudget} />
+  }
+
   return (
     <div className="space-y-4 relative">
       {/* --- STORIES ROW --- */}
@@ -356,21 +360,22 @@ export default function DealsFeed() {
       ) : visibleDeals.length === 0 ? (
         <p className="text-muted-foreground text-sm">Nothing fits that budget right now — try raising it.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {visibleDeals.map((deal, index) => (
-            <div
-              key={deal.id}
-              className="animate-slideUp"
-              style={{ animationDelay: `${index * 80}ms` }}
-            >
-              <DealCard deal={deal} ratingStats={ratingStats[deal.id]} />
-            </div>
-          ))}
+        <div className="-mx-4 md:mx-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {visibleDeals.map((deal, index) => (
+              <div
+                key={deal.id}
+                className="animate-slideUp"
+                style={{ animationDelay: `${index * 80}ms` }}
+              >
+                <DealCard deal={deal} ratingStats={ratingStats[deal.id]} />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       <GroupOrders deals={deals} />
-      <Advisor deals={deals} onBudget={setBudget} />
 
       {/* --- Story Viewer Modal --- */}
       {storyViewerOpen && selectedStoryMerchant && (
@@ -564,7 +569,6 @@ function DealCard({ deal, ratingStats }) {
 
 // --- Advisor component (unchanged) ---
 function Advisor({ deals, onBudget }) {
-  const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState([
     {
@@ -592,7 +596,7 @@ function Advisor({ deals, onBudget }) {
         .slice(0, 3)
         .map((d) => `${d.title} (${d.finalPrice} RWF)`)
         .join(', ')
-      let reply = `With ${found} RWF you can get: ${names}. I've filtered the feed below to match.`
+      let reply = `With ${found} RWF you can get: ${names}. Check the Home tab — I've filtered the feed to match.`
       if (closeCall.length > 0) {
         reply += ` A couple of things are just a bit over — team up with a friend to split one and it fits easily.`
       }
@@ -621,54 +625,39 @@ function Advisor({ deals, onBudget }) {
   }
 
   return (
-    <>
-      {open && (
-        <div className="fixed bottom-24 right-4 w-80 max-w-[calc(100vw-2rem)] bg-card border border-border rounded-lg shadow-2xl flex flex-col overflow-hidden z-50">
-          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-            <p className="font-display font-semibold text-sm">Deal Advisor</p>
-            <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground text-lg leading-none">
-              ×
-            </button>
+    <div className="flex flex-col h-[calc(100vh-11rem)] md:h-[calc(100vh-8rem)] bg-card border border-border rounded-lg overflow-hidden">
+      <div className="px-4 py-3 border-b border-border">
+        <p className="font-display font-semibold text-sm flex items-center gap-2"><SparkleIcon /> Deal Advisor</p>
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+        {messages.map((m, i) => (
+          <div
+            key={i}
+            className={`text-sm rounded-lg px-3 py-2 max-w-[85%] ${
+              m.from === 'bot'
+                ? 'bg-muted text-foreground'
+                : 'bg-primary text-primary-foreground ml-auto'
+            }`}
+          >
+            {m.text}
           </div>
-          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 max-h-80">
-            {messages.map((m, i) => (
-              <div
-                key={i}
-                className={`text-sm rounded-lg px-3 py-2 max-w-[85%] ${
-                  m.from === 'bot'
-                    ? 'bg-muted text-foreground'
-                    : 'bg-primary text-primary-foreground ml-auto'
-                }`}
-              >
-                {m.text}
-              </div>
-            ))}
-          </div>
-          <form onSubmit={handleSend} className="p-3 border-t border-border flex gap-2">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="I have 2000 rwf..."
-              className="flex-1 bg-input border border-input rounded-lg px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <button
-              type="submit"
-              className="bg-primary text-primary-foreground font-semibold rounded-lg px-3 text-sm"
-            >
-              Send
-            </button>
-          </form>
-        </div>
-      )}
-
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="fixed bottom-6 right-4 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center z-50 hover:bg-accent-dim transition"
-        aria-label="Deal advisor"
-      >
-        <SparkleIcon />
-      </button>
-    </>
+        ))}
+      </div>
+      <form onSubmit={handleSend} className="p-3 border-t border-border flex gap-2">
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="I have 2000 rwf..."
+          className="flex-1 bg-input border border-input rounded-lg px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+        <button
+          type="submit"
+          className="bg-primary text-primary-foreground font-semibold rounded-lg px-3 text-sm"
+        >
+          Send
+        </button>
+      </form>
+    </div>
   )
 }
 
