@@ -244,39 +244,59 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
       )
     }
 
-    // Smart Discovery v1:
-    // Show fresh deals and deals that are close to expiry.
-    const now = Date.now()
+    // Smart Discovery v2:
+  // Balance freshness, expiry urgency, and affordability.
+  const now = Date.now()
 
-    const getDiscoveryScore = (deal) => {
-      const createdAt = deal.created_at
-        ? new Date(deal.created_at).getTime()
-        : now
+  const prices = filtered
+    .map((deal) => finalPriceOf(deal))
+    .filter((price) => price != null && price > 0)
 
-      const expiresAt = deal.expires_at
-        ? new Date(deal.expires_at).getTime()
-        : null
+  const averagePrice =
+    prices.length > 0
+      ? prices.reduce((sum, price) => sum + price, 0) / prices.length
+      : null
 
-      const ageHours = Math.max(
-        0,
-        (now - createdAt) / (1000 * 60 * 60)
-      )
+  const getDiscoveryScore = (deal) => {
+    const createdAt = deal.created_at
+      ? new Date(deal.created_at).getTime()
+      : now
 
-      const hoursUntilExpiry = expiresAt
-        ? Math.max(0, (expiresAt - now) / (1000 * 60 * 60))
-        : null
+    const expiresAt = deal.expires_at
+      ? new Date(deal.expires_at).getTime()
+      : null
 
-      const freshnessScore = Math.max(0, 48 - ageHours) / 48
+    const ageHours = Math.max(
+      0,
+      (now - createdAt) / (1000 * 60 * 60)
+    )
 
-      const expiryScore =
-        hoursUntilExpiry !== null
-          ? Math.max(0, 48 - hoursUntilExpiry) / 48
-          : 0
+    const hoursUntilExpiry = expiresAt
+      ? Math.max(0, (expiresAt - now) / (1000 * 60 * 60))
+      : null
 
-      return freshnessScore * 0.4 + expiryScore * 0.6
-    }
+    const freshnessScore = Math.max(0, 48 - ageHours) / 48
 
-    return [...filtered].sort(
+    const expiryScore =
+      hoursUntilExpiry !== null
+        ? Math.max(0, 48 - hoursUntilExpiry) / 48
+        : 0
+
+    const finalPrice = finalPriceOf(deal)
+
+    const affordabilityScore =
+      averagePrice && finalPrice != null
+        ? Math.min(1, averagePrice / finalPrice)
+        : 0
+
+    return (
+      freshnessScore * 0.3 +
+      expiryScore * 0.4 +
+      affordabilityScore * 0.3
+    )
+  }
+
+  return [...filtered].sort(
       (a, b) => getDiscoveryScore(b) - getDiscoveryScore(a)
     )
   }, [deals, budget, searchQuery, selectedCategory])
