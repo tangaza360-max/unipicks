@@ -298,11 +298,45 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
         ? (averageRating / 5) * Math.min(1, reviewCount / 10)
         : 0.5
 
+    const weekdayNames = [
+      'sunday',
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+    ]
+
+    const todayIndex = new Date().getDay()
+    const todayName = weekdayNames[todayIndex]
+    const availableDays = Array.isArray(deal.available_days)
+      ? deal.available_days
+      : []
+
+    const dayScore =
+      availableDays.length === 0 || availableDays.length === 7
+        ? 1
+        : Math.max(
+            0.1,
+            1 -
+              Math.min(
+                ...availableDays.map((day) => {
+                  const dayIndex = weekdayNames.indexOf(day)
+                  if (dayIndex === -1) return 6
+
+                  return (dayIndex - todayIndex + 7) % 7
+                })
+              ) *
+                0.15
+          )
+
     return (
-      freshnessScore * 0.25 +
-      expiryScore * 0.35 +
-      affordabilityScore * 0.25 +
-      qualityScore * 0.15
+      dayScore * 0.35 +
+      expiryScore * 0.25 +
+      affordabilityScore * 0.2 +
+      freshnessScore * 0.1 +
+      qualityScore * 0.1
     )
   }
 

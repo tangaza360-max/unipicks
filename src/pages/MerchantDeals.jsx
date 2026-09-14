@@ -12,6 +12,15 @@ export default function MerchantDeals() {
   const [discountPercent, setDiscountPercent] = useState('')
   const [price, setPrice] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
+  const [availableDays, setAvailableDays] = useState([
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday',
+  ])
   const [imageFile, setImageFile] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -263,6 +272,7 @@ export default function MerchantDeals() {
       discount_percent: discountPercent ? Number(discountPercent) : null,
       price: price ? Number(price) : null,
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+  available_days: availableDays,
       image_url: imageUrl,
     }
 
@@ -301,6 +311,15 @@ export default function MerchantDeals() {
     setDiscountPercent('')
     setPrice('')
     setExpiresAt('')
+    setAvailableDays([
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ])
     setImageFile(null)
     setExistingImageUrl(null)
     setEditingId(null)
@@ -325,6 +344,7 @@ export default function MerchantDeals() {
     setDiscountPercent(deal.discount_percent?.toString() || '')
     setPrice(deal.price?.toString() || '')
     setExpiresAt(deal.expires_at ? new Date(deal.expires_at).toISOString().split('T')[0] : '')
+    setAvailableDays(deal.available_days?.length ? deal.available_days : ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])
     setExistingImageUrl(deal.image_url || null)
     setImageFile(null)
     setError('')
@@ -633,7 +653,48 @@ export default function MerchantDeals() {
                 </div>
               </div>
 
-              {finalPrice != null && (
+                        <div>
+              <label className="field-label">Available days</label>
+              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                {[
+                  ['monday', 'Mon'],
+                  ['tuesday', 'Tue'],
+                  ['wednesday', 'Wed'],
+                  ['thursday', 'Thu'],
+                  ['friday', 'Fri'],
+                  ['saturday', 'Sat'],
+                  ['sunday', 'Sun'],
+                ].map(([day, label]) => {
+                  const selected = availableDays.includes(day)
+
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() =>
+                        setAvailableDays((current) =>
+                          selected
+                            ? current.filter((item) => item !== day)
+                            : [...current, day]
+                        )
+                      }
+                      className={`rounded-lg border px-2 py-2 text-sm font-medium transition ${
+                        selected
+                          ? 'bg-accent text-background-foreground border-accent'
+                          : 'border-border text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-muted-foreground text-xs mt-1">
+                Choose the days when students can use this deal.
+              </p>
+            </div>
+
+{finalPrice != null && (
                 <p className="text-sm text-muted-foreground bg-muted/20 p-2 rounded-lg border border-border">
                   Students will see: <span className="line-through text-muted-foreground">{price} RWF</span>{' '}
                   <span className="text-accent font-semibold">{finalPrice} RWF</span>
