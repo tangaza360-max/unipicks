@@ -244,7 +244,41 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
       )
     }
 
-    return filtered
+    // Smart Discovery v1:
+    // Show fresh deals and deals that are close to expiry.
+    const now = Date.now()
+
+    const getDiscoveryScore = (deal) => {
+      const createdAt = deal.created_at
+        ? new Date(deal.created_at).getTime()
+        : now
+
+      const expiresAt = deal.expires_at
+        ? new Date(deal.expires_at).getTime()
+        : null
+
+      const ageHours = Math.max(
+        0,
+        (now - createdAt) / (1000 * 60 * 60)
+      )
+
+      const hoursUntilExpiry = expiresAt
+        ? Math.max(0, (expiresAt - now) / (1000 * 60 * 60))
+        : null
+
+      const freshnessScore = Math.max(0, 48 - ageHours) / 48
+
+      const expiryScore =
+        hoursUntilExpiry !== null
+          ? Math.max(0, 48 - hoursUntilExpiry) / 48
+          : 0
+
+      return freshnessScore * 0.4 + expiryScore * 0.6
+    }
+
+    return [...filtered].sort(
+      (a, b) => getDiscoveryScore(b) - getDiscoveryScore(a)
+    )
   }, [deals, budget, searchQuery, selectedCategory])
 
   if (loading) {
