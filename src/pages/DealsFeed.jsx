@@ -257,7 +257,43 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
       ? prices.reduce((sum, price) => sum + price, 0) / prices.length
       : null
 
-  const getDiscoveryScore = (deal) => {
+  const getTimeScore = (deal) => {
+  const from = deal.available_from
+  const until = deal.available_until
+
+  if (!from || !until) return 1
+
+  const [fromHour, fromMinute] = from.split(':').map(Number)
+  const [untilHour, untilMinute] = until.split(':').map(Number)
+
+  const nowDate = new Date()
+  const currentMinutes =
+    nowDate.getHours() * 60 + nowDate.getMinutes()
+
+  const fromMinutes = fromHour * 60 + fromMinute
+  const untilMinutes = untilHour * 60 + untilMinute
+
+  if (fromMinutes <= untilMinutes) {
+    if (currentMinutes >= fromMinutes && currentMinutes <= untilMinutes) {
+      return 1
+    }
+
+    if (currentMinutes < fromMinutes) {
+      return 0.75
+    }
+
+    return 0.2
+  }
+
+  // Overnight window, for example 20:00 -> 02:00.
+  if (currentMinutes >= fromMinutes || currentMinutes <= untilMinutes) {
+    return 1
+  }
+
+  return 0.2
+}
+
+const getDiscoveryScore = (deal) => {
     const createdAt = deal.created_at
       ? new Date(deal.created_at).getTime()
       : now
@@ -309,7 +345,6 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
     ]
 
     const todayIndex = new Date().getDay()
-    const todayName = weekdayNames[todayIndex]
     const availableDays = Array.isArray(deal.available_days)
       ? deal.available_days
       : []
@@ -331,13 +366,16 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
                 0.15
           )
 
-    return (
-      dayScore * 0.35 +
-      expiryScore * 0.25 +
-      affordabilityScore * 0.2 +
-      freshnessScore * 0.1 +
-      qualityScore * 0.1
-    )
+  const timeScore = getTimeScore(deal)
+
+  return (
+    dayScore * 0.25 +
+    timeScore * 0.25 +
+    expiryScore * 0.2 +
+    affordabilityScore * 0.15 +
+    freshnessScore * 0.1 +
+    qualityScore * 0.05
+  )
   }
 
   return [...filtered].sort(

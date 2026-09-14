@@ -21,6 +21,8 @@ export default function MerchantDeals() {
     'saturday',
     'sunday',
   ])
+  const [availableFrom, setAvailableFrom] = useState('')
+  const [availableUntil, setAvailableUntil] = useState('')
   const [imageFile, setImageFile] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -273,6 +275,8 @@ export default function MerchantDeals() {
       price: price ? Number(price) : null,
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
   available_days: availableDays,
+      available_from: availableFrom || null,
+      available_until: availableUntil || null,
       image_url: imageUrl,
     }
 
@@ -311,6 +315,8 @@ export default function MerchantDeals() {
     setDiscountPercent('')
     setPrice('')
     setExpiresAt('')
+  setAvailableFrom('')
+  setAvailableUntil('')
     setAvailableDays([
       'monday',
       'tuesday',
@@ -693,6 +699,33 @@ export default function MerchantDeals() {
                 Choose the days when students can use this deal.
               </p>
             </div>
+
+          <div>
+            <label className="field-label">Available time</label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground">From</label>
+                <input
+                  type="time"
+                  value={availableFrom}
+                  onChange={(e) => setAvailableFrom(e.target.value)}
+                  className="input-field w-full"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Until</label>
+                <input
+                  type="time"
+                  value={availableUntil}
+                  onChange={(e) => setAvailableUntil(e.target.value)}
+                  className="input-field w-full"
+                />
+              </div>
+            </div>
+            <p className="text-muted-foreground text-xs mt-1">
+              Leave both empty if students can use this deal all day.
+            </p>
+          </div>
 
 {finalPrice != null && (
                 <p className="text-sm text-muted-foreground bg-muted/20 p-2 rounded-lg border border-border">
