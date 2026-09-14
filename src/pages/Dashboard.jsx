@@ -23,6 +23,7 @@ import NotificationBell from '../components/NotificationBell.jsx'
 export default function Dashboard() {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
+  const [role, setRole] = useState(null)
   const [loading, setLoading] = useState(true)
   const [adminTab, setAdminTab] = useState('approvals')
   const [merchantTab, setMerchantTab] = useState('deals')
@@ -33,6 +34,8 @@ export default function Dashboard() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setUser(session.user)
+      const { data: trustedRole } = await supabase.rpc('get_my_role')
+      setRole(trustedRole)
       } else {
         setUser(null)
         navigate('/login')
@@ -42,19 +45,24 @@ export default function Dashboard() {
     fetchSession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          setUser(session?.user ?? null)
-          setLoading(false)
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null)
-          setLoading(false)
-          navigate('/login')
-        }
-      }
-    )
+  async (event, session) => {
+    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      setUser(session?.user ?? null)
+      const { data: trustedRole } = session
+        ? await supabase.rpc('get_my_role')
+        : { data: null }
+      setRole(trustedRole)
+      setLoading(false)
+    } else if (event === 'SIGNED_OUT') {
+      setUser(null)
+      setRole(null)
+      setLoading(false)
+      navigate('/login')
+    }
+  }
+)
 
-    return () => {
+return () => {
       subscription?.unsubscribe()
     }
   }, [navigate])
@@ -78,7 +86,6 @@ export default function Dashboard() {
     return null
   }
 
-  const role = user.user_metadata?.role
   const name = user.user_metadata?.full_name ?? user.email
 
   if (!role) {

@@ -22,6 +22,7 @@ export default function ProfileTab() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [ratingStats, setRatingStats] = useState(null)
+  const [role, setRole] = useState(null)
 
   useEffect(() => {
     loadUser()
@@ -37,7 +38,8 @@ export default function ProfileTab() {
     }
     setUser(data.user)
     const meta = data.user.user_metadata || {}
-    if (meta.role === 'merchant') {
+    const { data: trustedRole } = await supabase.rpc('get_my_role')
+  if (trustedRole === 'merchant') {
       const { data: ratings } = await supabase
         .from('ratings')
         .select('rating')
@@ -102,7 +104,6 @@ export default function ProfileTab() {
     return <p className="text-sm text-red-400">Could not load profile: {error}</p>
   }
 
-  const role = user?.user_metadata?.role || 'student'
   const isStudent = role === 'student'
   const isMerchant = role === 'merchant'
 
