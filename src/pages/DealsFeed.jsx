@@ -244,8 +244,8 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
       )
     }
 
-    // Smart Discovery v2:
-  // Balance freshness, expiry urgency, and affordability.
+    // Smart Discovery v3:
+  // Balance freshness, expiry urgency, affordability, and quality.
   const now = Date.now()
 
   const prices = filtered
@@ -289,10 +289,20 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
         ? Math.min(1, averagePrice / finalPrice)
         : 0
 
+    const stats = ratingStats[deal.id]
+    const reviewCount = Number(stats?.review_count || 0)
+    const averageRating = Number(stats?.average_rating || 0)
+
+    const qualityScore =
+      reviewCount > 0
+        ? (averageRating / 5) * Math.min(1, reviewCount / 10)
+        : 0.5
+
     return (
-      freshnessScore * 0.3 +
-      expiryScore * 0.4 +
-      affordabilityScore * 0.3
+      freshnessScore * 0.25 +
+      expiryScore * 0.35 +
+      affordabilityScore * 0.25 +
+      qualityScore * 0.15
     )
   }
 
