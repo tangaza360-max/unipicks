@@ -185,20 +185,29 @@ function JoinOrder() {
     setError('')
     setChecking(true)
 
-    const { data, error: fetchError } = await supabase
-      .from('group_orders')
-      .select('*, deals(title, business_name, price, discount_percent)')
-      .eq('join_code', code.trim().toUpperCase())
-      .eq('status', 'open')
-      .maybeSingle()
+    const { data, error: fetchError } = await supabase.rpc(
+      'find_open_group_order_by_code',
+      { p_join_code: code.trim().toUpperCase() }
+    )
 
     setChecking(false)
 
-    if (fetchError || !data) {
+    const order = Array.isArray(data) ? data[0] : data
+
+    if (fetchError || !order) {
       setError('No open group order found with that code.')
       return
     }
-    setFound(data)
+
+    setFound({
+      ...order,
+      deals: {
+        title: order.title,
+        business_name: order.business_name,
+        price: order.price,
+        discount_percent: order.discount_percent,
+      },
+    })
   }
 
   async function handleJoin(e) {
