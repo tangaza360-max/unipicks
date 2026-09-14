@@ -541,6 +541,22 @@ function DealCard({ deal, ratingStats }) {
       })
     : null
 
+  useEffect(() => {
+    async function recordView() {
+      if (!deal?.id) return
+
+      const { error } = await supabase.rpc('record_deal_view', {
+        p_deal_id: deal.id,
+      })
+
+      if (error) {
+        console.warn('Could not record deal view:', error.message)
+      }
+    }
+
+    recordView()
+  }, [deal?.id])
+
   const finalPrice = finalPriceOf(deal)
   const hasDiscount = deal.discount_percent != null && deal.price != null
 
