@@ -38,6 +38,25 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
 
   const categories = ['all', 'Pizza', 'Tacos', 'Burgers', 'Drinks', 'Desserts', 'Specials']
 
+  useEffect(() => {
+    const query = searchQuery.trim()
+
+    if (query.length < 2) return
+
+    const timer = setTimeout(async () => {
+      const { error } = await supabase.rpc('record_deal_search', {
+        p_search_query: query,
+      })
+
+      if (error) {
+        console.warn('Could not record deal search:', error.message)
+      }
+    }, 700)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+
   // --- Load stories and fetch merchant data ---
   async function loadStories() {
     try {
