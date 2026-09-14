@@ -72,7 +72,7 @@ export default function ChatThread({ currentUserId, otherUserId, otherUserName, 
   }
 
   return (
-    <div className="flex flex-col h-[70vh] border border-border rounded-lg overflow-hidden bg-card">
+    <div className="flex flex-col h-[calc(100vh-16rem)] md:h-[70vh] bg-card">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
         <button onClick={onBack} className="text-muted-foreground hover:text-foreground text-lg leading-none">
           Back
