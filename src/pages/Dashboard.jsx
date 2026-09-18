@@ -4,11 +4,12 @@ import { supabase } from '../lib/supabaseClient.js'
 import { useTheme } from '../context/ThemeContext.jsx'
 import DealsFeed from './DealsFeed.jsx'
 import MerchantDeals from './MerchantDeals.jsx'
+import MerchantOrders from './MerchantOrders.jsx'
 import MerchantAnalytics from './MerchantAnalytics.jsx'
 import MerchantProfile from './MerchantProfile.jsx'
 import MerchantStories from './MerchantStories.jsx'
 import Messages from './Messages.jsx'
-import { ClipboardCheck, ClipboardList, GraduationCap, BarChart3, Users, Settings, FileClock, FileText, Camera, MessageCircle, Sun, Moon, LogOut } from 'lucide-react'
+import { ClipboardCheck, ClipboardList, GraduationCap, BarChart3, Users, Settings, FileClock, FileText, Camera, MessageCircle, ShoppingBag, Sun, Moon, LogOut } from 'lucide-react'
 import Logo from '../components/Logo.jsx'
 import AdminAnalytics from './AdminAnalytics.jsx'
 import AdminApprovals from './AdminApprovals.jsx'
@@ -122,6 +123,7 @@ return () => {
         <div className="flex flex-wrap gap-2 border-b border-border pb-4 mb-4">
           {[
             { id: 'deals', label: 'Deals', icon: ClipboardList },
+            { id: 'orders', label: 'Orders', icon: ShoppingBag },
             { id: 'stats', label: 'Stats', icon: BarChart3 },
             { id: 'profile', label: 'Profile', icon: Settings },
             { id: 'stories', label: 'Stories', icon: Camera },
@@ -146,6 +148,7 @@ return () => {
         </div>
 
         {merchantTab === 'deals' && <MerchantDeals />}
+          {merchantTab === 'orders' && <MerchantOrders />}
         {merchantTab === 'stats' && <MerchantAnalytics />}
         {merchantTab === 'profile' && <MerchantProfile merchantId={user.id} />}
         {merchantTab === 'stories' && <MerchantStories />}

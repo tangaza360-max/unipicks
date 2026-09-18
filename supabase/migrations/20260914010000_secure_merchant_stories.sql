@@ -12,7 +12,7 @@ CREATE POLICY "Authenticated users can view active merchant stories"
 
 DROP POLICY IF EXISTS "Approved merchants can create their own stories" ON public.merchant_stories;
 CREATE POLICY "Approved merchants can create their own stories"
-  ON public.merchant_stories
+ ON public.merchant_stories
   FOR INSERT
   TO authenticated
   WITH CHECK (

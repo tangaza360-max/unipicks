@@ -15,3 +15,11 @@ dist/
 
 # Local design assets (not app code)
 Unipicks Branding(Logo)/
+
+# Local backups and Supabase temp files
+*.backup
+*.order-backup
+*.before-role-inbox-fix
+supabase/.temp/
+*.backup-*
+*.corrupted-backup

@@ -63,29 +63,3 @@ The complete product vision is documented in:
 Future product development must follow that document.
 
 ---
-
-## 4. Trusted Authorization Architecture
-
-A major authorization/security overhaul was completed in September 2026.
-
-The previous system relied too heavily on:
-
-`auth.users.raw_user_meta_data.role`
-
-User metadata should not be treated as the application's authoritative permission system.
-
-The new architecture is:
-
-```text
-auth.users
-    |
-    | identity
-    v
-user_roles
-    |
-    | trusted authorization
-    v
-RLS / SECURITY DEFINER functions
-    |
-    v
-application permissions

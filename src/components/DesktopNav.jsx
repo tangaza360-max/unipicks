@@ -1,9 +1,10 @@
-import { Home, ShoppingBag, User, MessageCircle } from 'lucide-react'
+import { Home, Users, User, MessageCircle, Sparkles } from 'lucide-react'
 
 export default function DesktopNav({ activeTab, setActiveTab }) {
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'orders', label: 'Orders', icon: ShoppingBag },
+    { id: 'social', label: 'Social', icon: Sparkles },
+    { id: 'orders', label: 'Group Orders', icon: Users },
     { id: 'messages', label: 'Messages', icon: MessageCircle },
     { id: 'profile', label: 'Profile', icon: User },
   ]
@@ -13,6 +14,7 @@ export default function DesktopNav({ activeTab, setActiveTab }) {
       {tabs.map((tab) => {
         const Icon = tab.icon
         const isActive = activeTab === tab.id
+
         return (
           <button
             key={tab.id}

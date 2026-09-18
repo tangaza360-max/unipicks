@@ -18,14 +18,24 @@ function finalPriceOf(deal) {
   return Math.round(deal.price * (1 - deal.discount_percent / 100))
 }
 
-export default function GroupOrders({ deals }) {
-  const [tab, setTab] = useState('start') // 'start' | 'join'
+export default function GroupOrders() {
+const [deals, setDeals] = useState([])
+const [tab, setTab] = useState('start') // 'start' | 'join'
   const [myOrders, setMyOrders] = useState([])
   const [loadingOrders, setLoadingOrders] = useState(true)
-
-  useEffect(() => {
-    loadMyOrders()
-  }, [])
+useEffect(() => {
+loadDeals()
+loadMyOrders()
+}, [])
+async function loadDeals() {
+const { data } = await supabase
+.from('deals')
+.select('*')
+.order('created_at', { ascending: false })
+```
+setDeals(data ?? [])
+```
+}
 
   async function loadMyOrders() {
     setLoadingOrders(true)
@@ -110,19 +120,13 @@ function StartOrder({ deals, onCreated }) {
     if (!dealId) return
     setCreating(true)
 
-    const { data: userData } = await supabase.auth.getUser()
     const code = makeJoinCode()
 
     const { data, error } = await supabase
-      .from('group_orders')
-      .insert({
-        deal_id: dealId,
-        created_by: userData.user.id,
-        host_name: userData.user.user_metadata?.full_name ?? userData.user.email,
-        join_code: code,
+      .rpc('create_group_order_with_host', {
+        p_deal_id: dealId,
+        p_join_code: code,
       })
-      .select()
-      .single()
 
     setCreating(false)
 

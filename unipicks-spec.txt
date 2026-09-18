@@ -1,0 +1,1638 @@
+What is Unipicks?
+And we now have that answer saved in docs/01-product.md.
+Our next question — only one
+Think about the student.
+Imagine you are a Kepler student opening Unipicks for the first time.
+What do you want that student to feel or think when they see Unipicks?
+For example, it could be:
+“I can find things here that are cheaper because I'm a student.”
+But don't use my example if it doesn't feel right.
+What do you want the student to think?
+
+I want a university student to feel thought of, because they live in an economy
+that doesn't consider them here in Rwanda they are basically treated like any
+other that works for a living yet with high unemployment rate in Rwanda they
+fully parents dependents making fair prices is the way forward so that they can
+as well enjoy products service at an affordable price...... they should think of
+unipicks as a go to.
+
+Yes. I understand the feeling behind Unipicks much better now.
+The important part is not simply “cheap food.” It's:
+“Someone actually thought about me as a student.”
+You want a student to feel that Unipicks understands their situation and gives
+them access to products, services, and experiences at prices that make sense
+for their stage of life.
+And then, over time, you want the habit to become:
+“If I want something, let me check Unipicks first.”
+That is what “go-to” means.
+So I would capture the student experience like this:
+Feel: “I am thought of.”
+Believe: “These offers are actually for people like me.”
+Behavior: “Before I spend money, I check Unipicks.”
+Long-term habit: “Unipicks is my go-to place for student deals and
+experiences.”
+That's a strong product direction because it gives us something deeper to
+measure than just downloads.
+Next question — one only
+Now let's switch sides.
+Imagine Mr. Chips is using Unipicks as a business owner.
+What do you want Mr. Chips to feel or think after using Unipicks?
+
+I want Mr. Chips to feel connected connected to student a different market
+segment, customers that can affect his demand on days that he doesn't have
+many clients.
+
+Exactly. That gives us the other half of the Unipicks idea.
+For the student:
+“Unipicks thinks about me.”
+For the business:
+“Unipicks connects me to a market I can reach when I need more demand.”
+Mr. Chips shouldn't just see Unipicks as another place to post advertisements.
+He should see it as a connection to the student market.
+The business value becomes:
+Low-demand period → create student offer → reach students → increase
+demand → make more sales.
+And this is important: the business doesn't necessarily need to lower its normal
+price for everyone. It can create a student-specific offer for a specific time,
+product, or situation.
+That connects directly to your original price-discrimination idea.
+So we're starting to see the two-sided product clearly:
+Unipicks helps students access affordable experiences while helping
+businesses reach student demand when and where they need it.
+That's much stronger than simply saying “Unipicks gives students discounts.”
+Next question — one only
+If Unipicks becomes successful in Rwanda, what do you want Unipicks to be
+known for?
+Not what it does technically.
+What do you want people to say when they hear “Unipicks”?
+
+quality, location and discount %
+
+Exactly. That tells us something important: “better deal” does not simply
+mean “cheapest.”
+For Unipicks, a better deal could mean:
+ ● Quality — Is the product/service actually good?
+ ● Location — Is it convenient for the student?
+ ● Discount % — How much value are they getting compared with the
+
+   normal price?
+So a student might choose a 10% discount nearby with excellent quality over a
+30% discount that is far away or poor quality.
+That means Unipicks could eventually help students answer:
+“Which deal gives me the best value for my money?”
+That's much more interesting than simply sorting by discount percentage.
+Next question — one only
+For the first version we are focusing on food, what do you think is the most
+important thing a student should see immediately on a food deal card?
+Imagine they are scrolling through Unipicks on their phone. What must they see
+before they decide whether to tap it?
+
+like i said it has to be like instagram, views, likes, and comments from fella
+students because this is what make business focus on quality because they
+know a feedback affects the business reputation
+
+Yes    — now I understand why you kept bringing up the Instagram-like
+experience.
+You don't want Instagram just because it looks nice. You want the social layer
+to create accountability.
+The idea is:
+Business posts deal → students see it → students interact → students rate/
+comment → other students see the reputation → business has an incentive
+to maintain quality.
+So views, likes, comments, ratings, and eventually other signals aren't just
+“features.” They create a feedback loop.
+The loop you're imagining
+Business quality → Student experience → Student feedback → Public
+reputation → Business behavior → Better quality
+That is powerful because Unipicks could become more than a discount
+marketplace.
+It could become a place where businesses earn trust from students.
+And this connects beautifully to your earlier point about knowing the difference
+between a good deal and a better deal.
+A deal could have:
+ ● Price/discount
+ ● Quality/reputation
+ ● Distance/location
+ ● Views
+ ● Likes
+ ● Student comments
+ ● Ratings
+
+So instead of Unipicks saying:
+“This is a 30% discount, therefore it's good.”
+The student community helps determine whether it's actually good.
+That's a much stronger product philosophy.
+One important thing
+We should be careful with likes and views. We shouldn't add them simply
+because Instagram has them.
+For every social feature, we should eventually ask:
+Does this help students make better decisions, help businesses improve,
+or increase useful engagement?
+If yes, keep it. If not, don't add it.
+
+Next question — one only
+If students can publicly comment and rate businesses, what should stop a
+business from deleting bad feedback or manipulating its reputation?
+In other words: How should Unipicks make student feedback trustworthy?
+
+It is simply the ability of the business to communicate to the admin because the
+business should not delete anything all they do is to read and reply that's it
+
+Yes. That's actually a very clean rule.
+Businesses don't control the reputation layer.
+Their role is:
+ ●      Read student feedback
+ ●      Reply to students
+ ●      Report/appeal a problem to Unipicks admin
+ ●      Cannot delete student feedback
+ ●      Cannot hide negative feedback
+The admin becomes the neutral party that handles disputes, abuse, fake
+reviews, or content that breaks the rules.
+That creates an important trust principle:
+Students control the feedback. Businesses control their response.
+Unipicks controls moderation.
+And it supports the quality idea you described:
+Good business → good student experience → good feedback → stronger
+reputation → more students → more demand.
+While:
+Poor quality → poor feedback → visible reputation → pressure to improve.
+That's a very interesting part of the Unipicks model.
+Next question — one only
+Now let's think about the deal itself.
+Should a business be able to create any deal it wants, or should Unipicks have
+rules for what counts as a good student deal?
+
+
+
+I have been thinking on that but i want all parties to use the app/platform for
+free, but i charge a business that needs a verified features that comes with a
+follow option and everything they post they stay at the top, other business that
+use the platform for free they stay down, also i thought of using ads between
+stories even between deals but this something i can implement once i know the
+app has a good visiting traffic daily
+
+Yes. And this is starting to look like a real business model, not just an app
+monetization idea.
+Your thinking is:
+Free marketplace
+Students: free
+Businesses: free
+That helps you get both sides onto the platform and reduces the barrier to
+adoption.
+Then businesses can pay for visibility and stronger presence, rather than
+paying simply to exist.
+For example, your future paid business features could be:
+Verified business
+ ● Verified badge
+ ● Students can follow the business
+ ● Business content gets stronger visibility
+ ● Posts can stay higher in the feed
+ ●    Potentially better analytics/tools
+And your second revenue stream could eventually be:
+Advertising
+ ● Ads between Stories
+ ● Ads between deals
+ ● Possibly targeted advertising to the student market
+
+But, as you said, not now.
+You first need to prove that students actually come back to Unipicks every day.
+Advertising before you have meaningful traffic would probably hurt the
+experience more than it helps.
+I would capture the principle as:
+Build the audience first. Monetize attention later.
+There is also an interesting connection to your original idea:
+Students get free access → businesses get free access → activity creates
+a student marketplace → businesses compete for student attention →
+businesses pay for additional visibility → Unipicks earns revenue without
+putting the basic student experience behind a paywall.
+That's a strong direction.
+One thing we'll need to think about later is making sure paid visibility doesn't
+destroy trust. A paid business being higher in the feed shouldn't automatically
+make its deal look better than an organic deal. We can solve that when we
+design the ranking system.
+Next question — one only
+If two businesses pay for verified/greater visibility, and both want to be at
+the top, how should Unipicks decide which one appears first?
+
+to be honest i questioned that and i came to a conclusion that all student
+should not see a single but different paying business to different students that
+opens the app, do you have a different idea of how it could be done?
+
+Yes. And honestly, I think your conclusion is stronger than simply putting all
+paying businesses at the top.
+Your idea is basically:
+Unipicks should not show every student the exact same marketplace. It
+should personalize what each student sees.
+That fits your price-discrimination idea very well.
+I would consider 3 ways to do it:
+1. Personalized feed — my favorite
+Instead of:
+Student A sees
+     . Mr. Chips
+     . Restaurant B
+     . Restaurant C
+Student B sees the exact same thing
+Unipicks could decide:
+Student A
+ ●    Mr. Chips — because they often buy there
+ ● A cheap lunch deal nearby
+ ● A deal that matches their budget
+ ● A new business they haven't tried
+
+Student B
+ ● Restaurant B — because it is closer
+ ● A different affordable meal
+ ● A deal they have shown interest in
+ ● A new business
+
+So the paid business doesn't simply "buy #1."
+It pays for more chances to be discovered by the right students.
+
+2. Sponsored discovery
+A business could pay Unipicks to promote a deal, but instead of saying:
+"This business is #1 for everyone."
+Unipicks says internally:
+"This business is relevant to these students."
+For example, Mr. Chips could pay to reach students who:
+ ● are near the business
+ ● usually buy food around that time
+ ● like similar deals
+ ● have never tried Mr. Chips
+ ● regularly look for cheap meals
+
+That is much more valuable to the business than simply being at the top.
+
+3. A hybrid system — what I would choose
+I think Unipicks could eventually have three types of visibility:
+Organic
+"This is genuinely a good/relevant deal for you."
+Personalized sponsored
+"This business paid to reach students like you."
+Trending/social
+"Students around you are interacting with this."
+And importantly, paying should never allow a bad deal to completely
+overpower a good one.
+For example:
+Business A pays a lot but has terrible ratings.
+Business B doesn't pay but students love it.
+Business A can get extra exposure, but Business B can still naturally rise
+because students actually like it.
+That protects the trust you want Unipicks to have.
+
+And this gives you a much more interesting answer to the
+question:
+"If two businesses pay, who comes first?"
+You don't necessarily need one universal ranking.
+There is no single "top."
+The feed can be different for every student.
+That is actually closer to how social platforms work: the system decides what is
+relevant to this particular person, rather than showing everybody the same
+thing.
+And it connects beautifully with your original idea:
+Different students can receive different offers from different businesses.
+But I would add one important rule:
+Don't personalize only based on what the student will buy. Personalize
+based on what creates value for both sides.
+Student value + business value + Unipicks trust.
+
+So before we decide the exact algorithm, I want to ask you one question:
+Should a student know that the deal they are seeing was specifically
+selected for them, or should it feel like Unipicks is simply showing them
+the best deals available?
+
+3. A hybrid system — what I would choose
+I think Unipicks could eventually have three types of visibility:
+Organic
+"This is genuinely a good/relevant deal for you."
+Personalized sponsored
+"This business paid to reach students like you."
+Trending/social
+"Students around you are interacting with this."
+And importantly, paying should never allow a bad deal to completely
+overpower a good one.
+For example:
+Business A pays a lot but has terrible ratings.
+Business B doesn't pay but students love it.
+Business A can get extra exposure, but Business B can still naturally rise
+because students actually like it.
+That protects the trust you want Unipicks to have.
+i like this indeed, i always have a philosophy that tells me it never about the
+money that one can work better
+Show more
+
+Exactly. And I think that philosophy can become one of the core principles of
+Unipicks.
+Money can buy more opportunity to be seen, but it should not buy trust or
+guarantee that a business is better.
+That creates a very interesting system:
+Pay for exposure. Earn your reputation.
+A business can pay to introduce itself to students, but after that, students
+decide what happens through views, likes, purchases, ratings, comments, and
+repeat visits.
+So over time:
+Money → Exposure → Student experience → Feedback → Reputation →
+Organic growth
+And this is where your philosophy becomes powerful: the business that works
+better can eventually outperform the business that simply pays more.
+I would write this into the blueprint as a principle:
+Unipicks Principle: Money can buy visibility, but performance earns trust.
+That is much stronger than simply saying "paid businesses appear at the top."
+Now, one question:
+When a student opens Unipicks, what should be the first thing they see: a
+personalized feed of deals, or a more Instagram-like feed of business
+posts/stories where deals are mixed naturally into the content?
+
+Students should not see how many purchases thou because the competition is
+not a thing Rwandans value they could even say it is fake
+
+Yes. That is an important distinction.
+Purchases can be useful data for Unipicks, but they don't need to be
+public data for students.
+I would separate internal analytics from public social proof.
+What Unipicks sees internally
+Unipicks can use:
+ ● purchases
+ ● views
+ ● clicks
+ ● repeat purchases
+ ● ratings
+ ● comments
+ ● time of day
+ ● day of week
+ ● price
+ ● discount
+ ● location
+ ● deal age
+
+This helps the ranking system make better decisions.
+What students see
+Students could see things that help them judge the deal without creating a
+popularity competition:
+ ●     Student rating
+ ●     Student comments
+ ●     Location
+ ●     Price
+ ●     Discount
+ ●     When the deal expires
+ ●     New deal
+ ●     Popular with students (only if we can define this carefully)
+But not:
+"327 students bought this"
+or
+"Mr. Chips sold 500 meals today."
+I agree that could create the wrong feeling, and students might question
+whether the numbers are real.
+The important principle becomes:
+Use behavioral data to make Unipicks smarter, not necessarily to show
+students everything the system knows.
+That is actually a very good Business Analytics principle.
+And there is another benefit: businesses don't need to compete publicly
+against each other on sales numbers either. They compete by improving
+their actual offer and student experience.
+So our model is becoming:
+Businesses → create offers
+Students → experience and give feedback
+Unipicks → collects data, analyzes it, and improves discovery
+That's a much cleaner system.
+Next question: For students, do you want ratings and written comments to
+be visible to everyone, or should some feedback remain private between the
+student and Unipicks?
+
+It should be visible for everyone th
+
+Good. Then we have a clear trust principle for Unipicks:
+Student feedback is public. Business sales data is private.
+That creates an interesting balance.
+Public
+Students can see:
+ ●    Ratings
+ ●    Comments
+ ● Business replies
+ ● Deal price
+ ● Discount
+ ● Location
+ ● Deal availability/expiry
+
+So a student can ask:
+"Is this actually a good deal?"
+and use other students' experiences to decide.
+Private/internal
+Unipicks keeps:
+ ● Number of purchases
+ ● Conversion rate
+ ● Views
+ ● Clicks
+ ● Repeat purchases
+ ● Performance by time/day
+ ● Business performance data
+Those numbers help the algorithm and business analytics, without turning
+Unipicks into a popularity competition.
+And I think this connects strongly to what you said earlier:
+Money can buy visibility, but performance earns trust.
+A business can pay for exposure, but if students consistently leave poor
+feedback, that reputation becomes visible.
+Likewise, a business that doesn't pay can build a strong reputation through
+actual student experiences.
+One question for the blueprint
+If a student leaves a negative comment, should the business be allowed to
+reply publicly, but never delete or hide the student's comment?
+
+they can only reply but they can hide as well i think they should also feel like
+the app is for them as well
+
+Yes — I think that is a better balance.
+If Unipicks is supposed to be a companion for students and a connection to
+students for businesses, businesses should also feel that the platform is fair
+to them.
+So I would define it like this:
+Student feedback
+Student can:
+ ● Leave a rating
+ ● Write a comment
+ ● Edit their own feedback
+ ● Report a problem
+
+Business can:
+ ● Reply publicly
+ ● Hide a comment from their public business page
+ ● Report the comment to Unipicks/admin
+
+Business cannot:
+ ● Delete the student's feedback permanently
+ ● Change the student's rating
+ ● Prevent the student from reporting an issue
+
+Unipicks/admin can:
+ ● Review reported content
+ ● Remove content that breaks platform rules
+ ● Handle disputes and abuse
+
+This gives businesses some control over how their page looks, while Unipicks
+still protects the student's voice.
+But I would make one important rule:
+A business hiding a comment should not make the feedback disappear
+from Unipicks' records.
+That data is valuable for moderation and Business Analytics. If a business is
+repeatedly hiding legitimate negative feedback, that itself could become a
+signal.
+So we now have another strong principle:
+Businesses can manage their space, but they cannot rewrite their
+reputation.
+I like where the blueprint is going. We're not just designing screens anymore —
+we're defining how the Unipicks marketplace should behave.
+Next question: When a business hides a student's comment, should the
+student be notified that the business hid it?
+
+
+specific reasons they can choose from
+
+Yes. That's much better than giving businesses a simple "Hide" button.
+It makes the system more fair and gives the admin useful data.
+Feedback moderation rule
+A business can hide a comment only by selecting a reason, for example:
+ ● Spam
+ ● Abusive/offensive language
+ ● False or misleading information
+ ● Unrelated to the business/deal
+ ● Personal information
+ ● Duplicate comment
+ ● Other → explain why
+
+The comment disappears from the public page and doesn't affect the public
+rating, but Unipicks keeps it for admin review.
+The admin can then see:
+Business: Mr. Chips
+Action: Comment hidden
+Reason: False or misleading information
+Comment: [hidden from students]
+Date: ...
+This is becoming a proper marketplace governance system rather than just a
+social feature.
+And there is an important analytics opportunity here: Unipicks can learn which
+businesses frequently hide feedback and why. That can help identify
+businesses that are protecting their reputation responsibly versus businesses
+that may be abusing the feature.
+Next question
+Should students also be able to report comments from other students if
+they believe a comment is spam, abusive, fake, etc.?
+
+sure why not they need to feel at home on the app
+
+Exactly. That's the feeling we want: students should feel that Unipicks
+belongs to them too, not like they are just customers using a business
+platform.
+So now the community system has three levels:
+     Students
+They can:
+ ● Post ratings and comments
+ ● Edit their own feedback
+ ● Report another student's comment
+ ● Report a business/deal
+ ● See public feedback and business replies
+
+     Businesses
+They can:
+ ● Reply to comments
+ ● Hide comments only with a specific reason
+ ● Report comments
+ ● Manage their business profile and deals
+
+     Unipicks Admin
+Admin can:
+ ● Review reports
+ ● Review hidden comments
+ ● Remove content when necessary
+ ● Watch for abuse from either students or businesses
+ ● Protect the trust of the platform
+
+And I think there's a bigger principle emerging:
+Unipicks is a shared space, not a business advertising board.
+Students should feel at home. Businesses should feel welcome. Unipicks
+protects the relationship between them.
+That is a strong foundation for your "University Student Companion" idea.
+Next question
+When students report a comment, should the comment stay visible while the
+admin reviews it, or should it temporarily disappear until the admin makes a
+decision?
+
+the admin should be flagged but it stays
+
+Yes. I think that's the better approach.
+The rule becomes:
+A report creates a flag for the admin; it does not automatically remove the
+content.
+That protects against people abusing the reporting system simply because they
+disagree with someone's opinion.
+Our moderation system now
+Student reports comment
+→ Comment stays visible
+→ Admin receives a flag
+→ Admin reviews it
+→ Admin decides whether action is needed
+Business hides comment
+→ Comment disappears publicly
+→ Business must give a reason
+→ Admin is notified
+→ Hidden comment does not affect public rating
+This gives Unipicks a nice balance:
+Freedom to speak + responsibility to moderate.
+And I especially like that you're thinking about how the different sides feel
+when using the platform. That's important product thinking.
+Next question
+Let's move back to the Smart Discovery Feed.
+You mentioned that the system should consider day, time, price, and when
+the deal was posted.
+What do you think should matter most when Unipicks decides which deal
+to show a student first?
+
+Day time
+
+Exactly. Day and time should be the strongest signals.
+That makes the feed more useful because Unipicks is answering:
+"What is useful to this student right now?"
+For example:
+Monday, 7:30 AM
+Breakfast / morning offers could have higher priority.
+Tuesday, 12:30 PM
+Lunch deals become much more relevant.
+Friday, 6:00 PM
+Food, entertainment, events, or evening activities could become more relevant.
+Sunday, 3:00 PM
+The system may behave differently because student activity patterns change.
+And importantly, the algorithm doesn't need to guess everything from the
+beginning. It can learn from actual Unipicks data over time.
+That gives us a very good Business Analytics foundation:
+Day + Time → Context → Deal relevance → Ranking → Student action →
+Data → Better ranking
+Next question
+Between price and discount percentage, which one should matter more when
+Unipicks decides whether a deal is a good deal for a student?
+
+
+the price
+
+Yes. That gives us another clear rule:
+The actual student price matters more than the advertised discount
+percentage.
+For example:
+ ● Deal A: 5,000 RWF → 4,000 RWF (20% off)
+ ● Deal B: 8,000 RWF → 5,000 RWF (37.5% off)
+
+Even though Deal B has the bigger discount, a student may prefer Deal A
+because it costs less.
+So Unipicks should not tell students:
+"37.5% = better deal."
+Instead, it can use price as a major ranking signal, while still considering
+quality, location, discount, day, and time.
+We're slowly defining an actual deal-ranking model, which is exactly the kind
+of thinking I want you to practice as a Business Analytics student.
+Next question
+Should location be a major factor too?
+For example, if two meals cost the same, should Unipicks prefer the one closer
+to the student?
+
+Yes indeed i wanted to add a feature for students when they get open the app/
+platform before they get to deals it first asks them if they are on campus or off
+campus
+
+Yes — that fits the model very well. And I think it is better than trying to use
+precise GPS automatically.
+The first question could be very simple:
+Where are you today?
+    On Campus
+    Off Campus
+Then Unipicks uses that as context, not as a permanent profile setting.
+For example:
+On Campus
+ ● Prioritize deals around the campus.
+ ● Consider what students usually want at that time.
+ ● Lunch deals around lunchtime become highly relevant.
+ ● Deals that require going far away rank lower.
+
+Off Campus
+ ● Show deals around the student's current chosen area.
+ ● Give more weight to location and travel distance.
+ ● Potentially include businesses outside the campus ecosystem.
+
+And I especially like "Where are you today?" rather than "Where do you
+live?"
+Because a student can be:
+Monday → On campus
+Tuesday → Off campus
+Weekend → Somewhere else
+So the information stays useful without forcing the student to constantly
+change their profile.
+This gives us a stronger ranking foundation
+Context
+→ Day
+→ Time
+→ On/Off campus
+→ Location
+Deal value
+→ Actual price
+→ Discount
+→ Quality
+→ Availability/expiry
+Freshness
+→ When posted
+Trust
+→ Student ratings/comments
+Business visibility
+→ Sponsored exposure, within limits
+Then Unipicks can calculate which deals deserve attention right now.
+And there is a nice product detail we should think about later: don't make the
+student answer "On campus / Off campus" every single time they open the
+app. We could remember their last choice and let them change it easily.
+Next question
+When a student chooses "Off Campus," should Unipicks ask them to choose
+their area manually (for example, a neighborhood/area), or should it use their
+phone's location if they allow location access?
+
+It would be nice at the checkout when they are ordering only no any other time
+
+Yes — I think that's cleaner.
+So Unipicks should not ask for location when the student opens the app.
+We only need location when it becomes useful: at checkout/order time.
+That keeps the experience simple.
+The flow could be:
+Open Unipicks
+→ See Smart Discovery Feed
+→ Browse deals
+→ Choose a deal
+→ Checkout
+→ Unipicks asks:
+Where are you ordering from?
+    On Campus
+    Off Campus
+If On Campus, the system can use the campus/location linked to the student.
+If Off Campus, then we can ask for the location needed for that order.
+This is also better for privacy because we're not constantly asking where the
+student is.
+And from a Business Analytics point of view, the location becomes transaction
+context rather than unnecessary personal data.
+So we now have:
+Day + Time + Price + Location + Deal freshness + Quality + Engagement →
+Deal ranking
+Next question
+For the Smart Discovery Feed, should a deal that is about to expire today get
+a higher ranking because students need to know about it before they miss it?
+
+yeahh... indeed that is good way to let businesses know they are valued
+
+Exactly. And that gives us another important idea: Unipicks should not only
+optimize for students; it should also help businesses get value from the
+platform.
+If a business has a deal expiring today, Unipicks can give it more visibility
+because there is a real reason:
+"This offer has limited time left."
+That helps the student discover an opportunity and helps the business get the
+most out of the offer they created.
+So the ranking system is becoming more balanced:
+Student value
+ ● Affordable price
+ ● Relevant time/day
+ ● Location
+ ● Quality
+ ● Freshness
+ ● Expiry
+
+Business value
+ ● Give new deals a chance
+ ● Help expiring deals get attention
+ ● Help businesses reach students during relevant periods
+ ● Reward businesses that provide good student experiences
+
+Unipicks
+ ●   Connects the two using data.
+And I really like the philosophy you just mentioned:
+A business should feel valued because Unipicks helps its offer reach the
+right students—not simply because it paid Unipicks.
+That could become another product principle.
+Next question
+If a deal is very cheap but has consistently poor student ratings, should
+Unipicks still rank it highly because of the price, or should poor quality push it
+down?
+
+
+Yes good history is good for unipicks
+
+Exactly. That gives Unipicks a trust system, not just a ranking system.
+A business that consistently gives students a good experience should gradually
+earn more trust from the platform.
+For example:
+Good history
+ ● Good student ratings
+ ● Few valid complaints
+ ● Deals match what was advertised
+ ● Students successfully redeem orders
+ ● Business responds professionally
+ ● Doesn't abuse comment hiding/reporting
+
+→ Higher trust score
+That trust can help a new deal get more visibility.
+And importantly, the business doesn't buy this trust.
+A business can pay for sponsored exposure, but it cannot simply pay its way
+into a high trust score.
+So we now have a very strong principle:
+Money can buy exposure. Good performance earns trust.
+That is starting to sound like the heart of Unipicks.
+And there is another interesting Business Analytics idea here: trust should be
+dynamic. A business shouldn't become permanently "trusted" because it was
+good six months ago. Recent performance should matter more than very old
+performance.
+Next question
+Should a business's recent performance matter more than its old
+performance when Unipicks calculates its trust score?
+
+Yeah the app/platform should consider progress it is part of business growth
+
+Exactly. Progress matters. A business should not be trapped forever by its
+past.
+A business that was struggling six months ago but is now improving should be
+able to earn its way back up.
+So instead of a simple "good/bad" reputation, Unipicks could think in terms of
+business growth:
+Past performance + recent performance + direction of improvement
+For example:
+Business A
+ ● Old rating: 2.8
+ ● Recent rating: 4.3
+ ● Complaints decreasing
+ ● Better responses to students
+
+→ Positive growth signal
+Business B
+ ● Old rating: 4.5
+ ● Recent rating: 3.1
+ ● Complaints increasing
+
+→ Negative trend
+That is much more interesting than just giving businesses a permanent score.
+It also fits your original vision of helping businesses maximize their
+opportunities. Unipicks isn't only saying:
+"You're good."
+It can help create an environment where businesses can improve and grow.
+So another principle is emerging:
+Unipicks rewards progress, not perfection.
+And this is where your Business Analytics background can become part of the
+product itself: you're not just collecting numbers; you're using them to
+understand direction and change.
+Next question
+Should students be able to see some indication that a business is improving,
+or should the growth analysis stay behind the scenes and only affect the feed?
+
+a student should not be a direct agent.......
+how many questions are we remaining with so that we move to building, i have
+we are going to document all the questions we asked to have a better
+understanding of the business blueprint
+
+Yes — and I agree with your point.
+The student should not be a direct agent in the business-growth system.
+Students provide natural feedback through their normal use of Unipicks. They
+shouldn't feel like they are working for the platform by judging or monitoring
+businesses.
+And yes, we should document all these questions and answers. That is
+actually one of the best things we can do before building, because we're
+turning your ideas into clear product rules instead of coding based on
+assumptions.
+How many questions are left?
+I would say roughly 10–15 important questions.
+We've already answered a lot of the difficult ones:
+ ● What Unipicks is
+ ● Who it serves
+ ● Student value
+ ● Business value
+ ● Student companion positioning
+ ● Food-first strategy
+ ● Price as a major value signal
+ ● Day/time as major ranking signals
+ ● Location at checkout
+ ● Smart Discovery Feed
+ ● Sponsored visibility
+ ● Public feedback
+ ● Business replies
+ ● Comment hiding
+ ● Reporting
+ ● Admin moderation
+ ● Deal quality problems
+ ● Business trust
+ ● Business progress
+ ● How student/business relationships should work
+What's left is mainly the operational blueprint, such as:
+  . What exactly makes a deal appear in the feed?
+  . How should sponsored deals work?
+  . How should the student follow businesses?
+  . What should businesses actually be able to post?
+  . What happens when a deal expires?
+  . How should orders/redemptions work?
+  . What happens when something goes wrong with an order?
+  . What should the admin be responsible for?
+  . What data should Unipicks collect and why?
+  . What are the most important success metrics?
+  . What is free vs paid for businesses?
+  . What is the first version we actually launch?
+Then we stop asking questions and build.
+And I suggest we do something important before building
+We'll create a proper:
+docs/02-business-blueprint.md
+It will contain the decisions we've made, not just random notes.
+Something like:
+Unipicks Business Blueprint
+1. Vision
+University Student Companion
+2. Student Problem
+Students need affordable products/services and better ways to discover value.
+3. Business Problem
+Businesses need access to the student market and better demand during low-
+demand periods.
+4. Marketplace Principles
+Money can buy exposure. Performance earns trust.
+Progress matters.
+Students provide feedback naturally; they are not agents of the platform.
+5. Discovery System
+Day + Time + Price + Location + Freshness + Quality + Trust + other signals.
+6. Social/Community System
+Public student feedback, business replies, reporting, moderation.
+7. Business Growth System
+Internal analytics and trust signals.
+8. Monetization
+...
+9. Core User Journeys
+...
+10. Analytics
+...
+11. MVP
+...
+Then when we start coding, the blueprint becomes our reference.
+And this is important: we won't document only what sounds good. If we later
+discover that an idea doesn't work, we update the blueprint and record why.
+So yes — we're getting close.
+Let's finish the remaining important questions, document everything, then
+move into building.
+
+
+exactly
+   Waiting for confirmation
+and then:
+   Confirmed — Pay now
+
+Perfect. That gives us a very clear transaction journey.
+Unipicks order states
+1.     Waiting for confirmation
+Student has requested the order.
+Business has not accepted yet.
+2.     Confirmed — Pay now
+Business confirmed availability.
+Student can safely make the payment.
+3.     Payment processing
+Unipicks is processing the payment.
+4.     Paid — Show QR/code
+Payment succeeded.
+Student receives the redemption code/QR.
+5.     Redeemed
+Business verifies the code and gives the student the product/service.
+And if something goes wrong, we can have states such as:
+     Declined
+Business cannot fulfill the order.
+     Expired
+Business didn't respond within the allowed time.
+This is much cleaner than making the student pay immediately.
+It also gives us good data later:
+Order requested → confirmation rate → payment rate → redemption rate
+But again, these metrics can remain internal. Students don't need to see them.
+
+Next question
+What should happen if a business doesn't respond to an order?
+Should Unipicks automatically cancel it after a certain amount of time, for
+example 10 or 15 minutes, so the student isn't left waiting?
+
+a student should be able to contact them via phone call.
+
+Yes. I like that because sometimes the fastest solution is simply calling the
+business.
+So if an order stays at:
+    Waiting for confirmation
+the student can have:
+    Call business
+This is especially useful in the early version of Unipicks because businesses
+may not always be watching the app.
+I would still keep a time limit in the system, though. A phone call should be an
+option, not something that leaves an order permanently open.
+For example:
+Student orders
+→ Waiting for confirmation
+→ Student can call business
+→ Business confirms in app
+→ Student pays
+If nothing happens after the allowed period:
+Order expired — no confirmation received
+That protects the student from waiting forever.
+One more thing
+The business should also have a simple way to:
+Accept
+Decline
+We don't want businesses forced to respond through a chat before they can
+manage an order.
+
+Next question
+If the business declines an order, should they be required to select a reason,
+such as:
+ ● Item unavailable
+ ● Too busy
+ ● Business closed
+ ● Price changed
+ ● Other
+
+or should they simply be able to press Decline?
+
+Next question
+If the business declines an order, should they be required to select a reason,
+such as:
+ ● Item unavailable
+ ● Too busy
+ ● Business closed
+ ● Price changed
+ ● Other
+
+a clarification is better than a simple decline
+
+Yes — clarification is better than a cold "Declined."
+The business could select a reason and optionally add a short explanation.
+For example:
+     Order can't be fulfilled
+Item unavailable right now. Sorry for the inconvenience.
+Or:
+     Order can't be fulfilled
+We're currently too busy. Please try again in 30 minutes.
+That feels more human and keeps the relationship between the student and
+business positive.
+It also gives Unipicks useful internal data. If a business repeatedly declines
+because of "item unavailable," that tells us something about its inventory or
+deal design.
+So the system becomes:
+Student orders → Business reviews → Accept OR Can't fulfill → Reason/
+clarification → Student understands what happened.
+Good. We're getting close to the end of the transaction questions.
+Next question
+After a student successfully redeems an order, should Unipicks automatically
+ask them to rate the experience, or should rating be optional?
+
+
+same importance quality without trust means nothing to me
+
+That is a strong principle. Deal quality and service quality should have equal
+weight.
+Your point is important:
+Quality without trust means nothing.
+So Unipicks should not allow a business to rank highly just because it has a
+good deal if students consistently have a poor experience, and vice versa.
+For the internal quality signal:
+50% Deal Quality + 50% Service Quality
+Then other signals such as recent performance, complaints, and business
+history can help determine trust/progress, without replacing the two core
+quality ratings.
+Next question
+Should ratings from a student who has actually completed an order count
+more than ratings from someone who has only viewed or interacted with a deal?
+
+completed the order
+
+Yes. Only students who completed the order should be able to rate.
+That makes the rating much more trustworthy because the student actually
+experienced the deal and service.
+So the rule is:
+No completed order → no rating.
+A student who only views, likes, or comments on a deal cannot give the official
+deal/service rating.
+Next question
+After a student completes an order, should they be able to rate the deal and
+service separately, or should Unipicks ask for both ratings in one simple
+screen?
+
+one simple screen
+
+Perfect. One simple screen is better for the student.
+After redemption, Unipicks can show:
+How was your experience?
+Deal
+
+Service
+
+Skip for now
+The student submits both together, or skips the whole rating. No editing later.
+This gives us a clean rule: one completed order → one optional rating screen
+→ two separate ratings.
+Next question
+Should the student be able to rate only after the order is redeemed, or
+immediately after payment?
+
+after receiving the payment
+
+Yes — after the student receives the product/service, not just after payment.
+That gives us a better trust rule:
+Order → Business confirms → Student pays → QR/code → Business
+redeems → Student receives the order → Optional rating
+This means the student has actually experienced both the deal and the service
+before rating.
+Next question
+Should Unipicks automatically show the rating screen once after redemption,
+or should it remind the student
+
+
+yes, even the business as well
+
+Exactly. Everyone should see that a comment was edited, including the
+business.
+So an edited comment could show:
+“The food was good but took a long time. Edited”
+This keeps the system transparent. Nobody should wonder whether a comment
+was changed after a business replied to it.
+Next question
+Should the original version of an edited comment be visible to students and
+businesses, or should only Unipicks admins be able to see the edit history?
+
+only to the admin
+Good. That gives us a strong balance between user control and moderation.
+Comment edit rule
+ ● Student can edit their own comment.
+ ● Everyone sees “Edited.”
+ ● Students and businesses see only the latest version.
+ ● Admins can see the full edit history, including the original version.
+ ● This helps admins investigate abuse or manipulation if a problem is
+
+   reported.
+Next question
+If a student deletes a comment, should it be completely removed for
+everyone, or should Unipicks keep a record that the comment was deleted for
+admins?
+
+we keep a record we can't loose data i am studying to keep data
+
+   Exactly. We don't throw away useful data.
+The student should see the comment disappear, but Unipicks should keep the
+record internally.
+Comment deletion rule
+ ● Student can delete their own comment.
+ ● Comment disappears from the public view.
+ ● Admin retains the deleted version and deletion history.
+ ● Business and other students cannot see the deleted content.
+ ● The data can support moderation, fraud detection, and future analysis.
+ ● We should keep an audit trail rather than permanently destroying the
+
+   record.
+And I like your principle here:
+If data can help us understand what happened, don't casually destroy it.
+Next question
+Should deleted comments still count in Unipicks' internal data/analytics, or
+should deletion remove them from all rating and quality calculations?
+
+it should not but it has to mention that on the admin side
+
+Exactly. Deleted comments should not affect public ratings or quality
+calculations, but the admin must know they existed.
+So:
+ ●    Deleted comment → excluded from ratings/quality calculations.
+ ●    Students/business → cannot see it.
+ ●    Admin → can see the deleted record and why/when it was deleted.
+ ●    Analytics → can track deletion activity separately, without treating
+   the deleted comment as active feedback.
+That gives us clean business metrics while preserving the historical data for
+moderation and analysis.
+Next question
+Should the student be able to report a business, in addition to reporting
+individual comments?
+
+
+not necesarry
+
+Agreed. No automatic notification is necessary.
+The report can stay confidential while Admin investigates. This helps prevent
+arguments, retaliation, or people trying to influence the investigation.
+Reporting principle
+Report → Admin reviews → Admin decides → appropriate action
+The reported person only needs to be contacted if Admin decides that their
+side of the story is needed or action is being taken.
+Next question
+If Admin confirms that a business seriously violated Unipicks rules, should
+Admin be able to temporarily suspend the business, permanently remove it,
+or both depending on the seriousness?
+
+both depending on the issue
+
+Exactly. Both, depending on the issue.
+We can make moderation proportional:
+ ●     Warning — minor issue, business gets a chance to correct it.
+ ●     Temporary suspension — serious or repeated issue.
+ ●     Permanent removal — severe violations, fraud, or continued
+   serious abuse.
+ ●     Reinstatement — a suspended business can return after meeting
+   the requirements.
+And importantly, removing one deal is not the same as removing the
+business. A business can make a bad deal and still be a good business.
+Next question
+If a business is temporarily suspended, should students who previously
+interacted with that business still be able to see their old orders, receipts,
+ratings, and comments?
+
+no every thing about the business disappears
+
+Understood. From the student side, the business should disappear
+completely when suspended.
+That means students should no longer see:
+ ● The business profile
+ ● Its deals
+ ● Its posts/stories
+ ● Its comments
+ ● Its ratings
+ ●   Its presence in search/discovery
+However, because you said “we can't lose data,” Unipicks should still keep the
+business's records securely on the admin side for history, investigations, and
+analytics. They simply become invisible to students.
+Next question
+When a suspended business is later allowed to return, should its old
+reputation and history come back, or should it return with a fresh start?
+
+fresh start
+
+Yes. Fresh start makes sense.
+When a suspended business is allowed back:
+ ● It returns with a new public reputation.
+ ● Old ratings don't affect its new public score.
+ ● Old comments don't appear publicly.
+ ● Old deals/posts don't return automatically.
+ ● Its previous history remains available only to Admin.
+ ● The business has to rebuild student trust through new performance.
+
+This fits your principle that progress matters: a business can make mistakes,
+improve, and come back—but it has to earn trust again.
+Next question
+Should a permanently removed business ever be allowed to create another
+Unipicks business account, or should the removal be permanent?
+
+it should be permanent
+
+Agreed. Permanent removal means permanent removal.
+A permanently removed business should not be able to simply create another
+account and return.
+Unipicks should keep an internal record so Admin can identify attempts to
+come back through the same business or related information.
+That gives us a clear moderation ladder:
+Warning → Temporary suspension → Possible return with fresh reputation
+→ Permanent removal
+Next question
+Should a business that is temporarily suspended still be able to log in and
+communicate with Unipicks Admin, or should it be completely locked out?
+
+
+five min max
+
+Good. Payment also has a 5-minute maximum.
+So the complete timing system is becoming very simple:
+                Stage                              Maximum time
+ Business to confirm/decline            5 min
+ Student cancellation window            5 min
+ Student to pay after confirmation      5 min
+                Stage                              Maximum time
+ Business to confirm/decline             5 min
+ Student cancellation window             5 min
+ Student to pay after confirmation       5 min
+If the student doesn't pay within those 5 minutes:
+Confirmed → Payment expired → Order cancelled
+No payment means no QR/code is generated.
+Next question
+Once the student pays successfully, should the QR/code expire after a certain
+time, or should it remain valid until the student redeems the order or the deal
+itself expires?
+
+what do you think i should do?
+
+I would use both an order-level expiry and a deal-level expiry, rather than
+leaving the QR/code valid forever.
+My recommendation:
+ ● QR/code is valid until the deal/order's stated expiry time.
+ ● If the business has a specific pickup/service time, the code can also
+   expire after that window.
+ ● Once expired, it cannot be redeemed.
+ ● The student should clearly see the expiry time/countdown.
+ ● If the student paid but the business cannot fulfill the order before
+
+   expiry, Unipicks should handle the cancellation/refund according to the
+   order rules.
+Why I prefer this: a paid QR code that stays valid forever creates problems.
+The business may change prices, stop selling the product, close, or leave
+Unipicks. An expiry gives both sides a clear deadline.
+I would not use a short 5-minute expiry for the QR itself. The 5-minute rule is
+good for confirmation and payment, but the redemption window should
+depend on the actual deal.
+Next question
+Should a business be required to set an expected pickup/fulfillment time
+when it confirms the order, so the student knows when their order should be
+ready?
+
+okay use bothe then
+I would use both an order-level expiry and a deal-level expiry, rather than
+leaving the QR/code valid forever.
+My recommendation:
+ ● QR/code is valid until the deal/order's stated expiry time.
+ ● If the business has a specific pickup/service time, the code can also
+   expire after that window.
+ ● Once expired, it cannot be redeemed.
+ ● The student should clearly see the expiry time/countdown.
+ ● If the student paid but the business cannot fulfill the order before
+
+   expiry, Unipicks should handle the cancellation/refund according to the
+   order rules.
+Why I prefer this: a paid QR code that stays valid forever creates problems.
+The business may change prices, stop selling the product, close, or leave
+Unipicks. An expiry gives both sides a clear deadline.
+I would not use a short 5-minute expiry for the QR itself. The 5-minute rule is
+good for confirmation and payment, but the redemption window should
+depend on the actual deal.
+Show more
+
+Perfect. We will use both.
+Redemption expiry
+Order-level expiry
+ ● The business can provide an expected pickup/fulfillment window.
+ ● The QR/code is valid until that order window ends.
+
+Deal-level expiry
+ ● The QR/code can never remain valid beyond the deal's expiry time.
+ ● Whichever deadline comes first wins.
+
+The student will clearly see something like:
+Ready for pickup
+QR valid until 6:30 PM
+Deal expires 7:00 PM
+So the 6:30 PM order deadline wins.
+This keeps the payment and redemption system predictable.
+Next question
+When a business confirms an order, should it be required to give the student an
+estimated ready time (for example, “Ready in 15 minutes”)?
+
+no need they should tell the student that they will call when the order is done
+
+
+yes unipicks is for students basically it should learn and meet their demand, the
+admin should be flagged in fact
+
+Exactly. That is becoming one of the most important Business Analytics
+parts of Unipicks.
+Demand intelligence
+If students search for something and Unipicks cannot satisfy that demand, we
+should record it.
+For example:
+50 students search for pizza
+→ only 2 relevant deals exist
+→ Demand gap detected
+→ Admin gets a flag
+→ Admin can look for businesses that could serve that demand.
+The same can happen with:
+ ●   Search with no results
+ ●   Searches with very few results
+ ● Frequently viewed but unavailable products
+ ● Deals students repeatedly search for
+ ● High demand in a location with few businesses
+ ● Demand at specific times/days
+
+This turns Unipicks into more than a marketplace.
+Students generate demand → Unipicks learns the demand → businesses
+get an opportunity → students get better options.
+And this fits your original Mr. Chips story very well: instead of asking a business
+to guess “How do I get Kepler students?”, Unipicks can eventually show
+where student demand actually exists.
+Next question — Business onboarding
+When a business wants to join Unipicks, what should be required before
+Admin approves them?
+For example:
+ ● Business name
+ ● Phone number
+ ● Location/address
+ ● Business registration information
+ ● Business category
+ ● Owner identity
+ ● Photos
+ ● Menu/products
+
+What do you think should be required?
+
+Next question — Business onboarding
+When a business wants to join Unipicks, what should be required before
+Admin approves them?
+For example:
+ ● Business name
+ ● Phone number
+ ● Location/address
+ ● Business registration information
+ ● Business category
+ ● Owner identity
+ ● Photos
+ ● Menu/products
+
+What do you think should be required?
+Business name, phone number, momopay code, location address, business
+registration information, business category, Logo, menu products,(optional
+Owner ID) all this the admin should be able to view them
+Show more
+
+Perfect. That gives us a clear business verification standard.
+Business onboarding
+Required
+ ●   Business name
+ ● Phone number
+ ● MoMo Pay code
+ ● Location/address
+ ● Business registration information
+ ● Business category
+ ● Business logo
+ ● Menu/products
+
+Optional
+ ●   Owner ID
+Admin access
+Admin should be able to view all submitted business information and use it
+during approval, investigation, and future verification.
+This is important because Unipicks is not just letting anyone post a deal.
+Businesses are entering a trusted student marketplace.
+Next question — Business posts
+You said businesses should have freedom to express themselves and eventually
+post Deals + Updates + Events.
+For the first food version, should a business be able to post a normal update
+that is not a deal (for example, “We have a new burger today”), or should
+every post initially need to contain an offer/deal?
+
+it should be we have a new burger for students buy 1 get 2 bring your friends,
+offer/deals is a must
+
+Yes. That's a strong rule for the MVP:
+Every business post must give the student a clear offer or deal.
+So instead of:
+    “We have a new burger.”
+It becomes:
+    “New Student Burger         — Buy 1, Get 2. Bring your friends!”
+This keeps Unipicks focused on its first promise: help students find better
+value.
+Businesses can still be creative with the offer:
+ ● Buy 1, get 1
+ ● Student bundle
+ ● Discounted price
+ ● Group deal
+ ● Free add-on
+ ● Limited-time offer
+ ● Happy-hour/student-hour deal
+
+Later, when we introduce Updates and Events, we can decide whether those
+must also contain a student benefit.
+Next question — Business dashboard
+When a business opens Unipicks, what are the 3 most important things you
+want them to see first?
+For example:
+     . Orders waiting for action
+     . Today's sales
+     . Deal performance
+What would you choose?
+
+     . Orders waiting for action
+     . Deal performance
+
+
+mutual friendships consent is a must
+
+Absolutely. Mutual friendship + consent fits Unipicks well.
+So the rule becomes:
+Student A sends a friend request → Student B accepts → they become
+Unipicks friends.
+Until accepted:
+ ● No friendship is created.
+ ● The requester cannot treat the person as a friend.
+ ● Friendship-based recommendations should not use the connection.
+ ● Either student can remove the friendship later.
+ ● Blocking/reporting should be available for safety.
+
+This also gives us a good principle for the social side of Unipicks:
+Unipicks can learn from behavior, but it never creates personal
+relationships without consent.
+And the friendship system can later support group ordering, sharing deals,
+events, and other student experiences.
+Next question
+When a student starts a group order, who should be able to join it?
+A. Only their Unipicks friends
+B. Anyone with the group-order link/code
+C. Both — friends can join directly, and the student can share a link/code
+with anyone they choose
+
+A. Anyone with the group-order link/code student move in groups mostly
+paired, but when they hang there are more than 2, they can reach to 5 even
+more during break time or lunch time
+
+Yes — that makes sense. I misunderstood your choice in the previous question.
+You want anyone who receives the group-order link/code to be able to join,
+not only friends.
+That fits real student behavior:
+ ●    Two friends might start an order.
+ ●    At lunch, 4–5 classmates may join.
+ ●    During breaks, the group could become even larger.
+ ● The group does not need to already exist as a friendship network.
+ ● Each student still pays independently unless they choose to buy for
+ ●
+
+     someone else.
+So we have an important distinction:
+Friends = personal social relationship.
+Group order = temporary shared activity.
+That is actually very good product design because students shouldn't need to
+become friends on Unipicks just to order food together.
+Next question
+Should a group order have a maximum number of students, or should the
+business decide the maximum when creating the group deal?
+
+No it should not, but the business can make that decision, plus there are more
+benefits delivery gets cheaper
+
+Exactly. So the default is no hard maximum, but the business can set one
+when it makes sense.
+And we now have another important benefit of Group Orders:
+Group Orders create value on both sides
+For students
+ ● Everyone can pay for themselves.
+ ● One student can optionally buy for others.
+ ● More people can unlock a better deal.
+ ● Shared delivery can become cheaper.
+ ● It is easy to invite people with a link/code.
+ ● It works naturally for lunch, breaks, and hanging out.
+
+For businesses
+ ● One group can bring many customers.
+ ● They can set minimum/maximum group sizes.
+ ● They can create special group-only offers.
+ ● Delivery becomes more efficient when several orders go together.
+ ● It can increase sales during slow periods.
+
+So Group Orders may become one of the strongest student-network effects
+in Unipicks.
+And I like the distinction we have reached:
+Friendship connects people. Group Orders bring people together around
+an activity.
+Next question
+For delivery savings, should Unipicks show the students the saving before they
+join the group?
+For example:
+    Normal delivery: 1,500 RWF
+    If 5 students join: 700 RWF each
+You save 800 RWF
+Yes or No?
+
+Yes, in fact it speaks for its self
+A must have university app every high school graduate in Rwanda is owed to
+know and have
+
+Yes. That is the big vision.
+Not:
+“Unipicks is a food-deal app.”
+But:
+“Unipicks is a must-have university companion that every high-school
+graduate in Rwanda knows about and wants to have.”
+That gives us a much stronger north star.
+The Unipicks journey
+High-school graduate → University → Student Unipicks → Professional
+Unipicks → Next life stage
+And the reason someone keeps Unipicks is not one feature. It is because the
+platform keeps becoming useful as their life changes.
+For the student, it starts with:
+Save money → discover better deals → order with friends → discover
+university experiences → build connections.
+For businesses:
+Reach students → fill demand → sell more → build reputation →
+understand student demand.
+And eventually, Unipicks can become a major student-market infrastructure
+in Rwanda, not simply another app.
+I think we now have enough of the vision and product identity to make the
+next questions more focused.
+Next question
+If Unipicks becomes this important to university students in Rwanda, what
+should be Unipicks' biggest advantage over a normal delivery app like
+Vuba Vuba?
+What should make a student say:
+“I could use Vuba Vuba, but I prefer Unipicks because ______.”
+
+Unipicks helps business good decision on what to produce for the market well
+as vuba vuba it serves all but, unipicks is picky and i a picky as a person
+
+    That actually fits the name Unipicks very well.
+You are not trying to be the platform that has everything for everyone.
+You want Unipicks to be picky — selective about what is shown to students and
+useful to businesses.
+So the difference becomes:
+Vuba Vuba serves the general market. Unipicks understands and serves
+the university market.
+But there is an even deeper advantage in what you said:
+Unipicks doesn't just distribute demand — it learns from demand.
+For example:
+Students search:
+“Pizza”
+Unipicks sees:
+ ● 300 searches
+ ● mostly around lunchtime
+ ● mostly around campus
+ ● few good pizza deals available
+
+That becomes business intelligence:
+“There is student demand for pizza here, at this time, but the current
+supply is weak.”
+A business can then make a better decision about what to produce, when to
+produce it, where to sell it, and what price/offer to use.
+That's much closer to your Business Analytics background:
+Student behavior → Data → Information → Insight → Business decision
+And your “picky” personality can actually become a product philosophy:
+Unipicks is picky about what students see because students deserve
+better choices, and picky about what businesses offer because the
+platform learns what students actually want.
+That could become one of the strongest ideas in the entire blueprint.
+Next question
+When Unipicks learns that students strongly want something that no business
+currently offers, should Unipicks actively approach businesses and say:
+“Students are looking for this. Would you like to serve them?”
+Yes or No?
+
+yes that is data that can be sold to business developers
+
+Exactly. That turns Unipicks into more than a marketplace. It becomes a
+student-demand intelligence platform.
+The flow could become:
+Students search/interact → Unipicks collects demand signals → Unipicks
+identifies gaps → businesses see opportunities → businesses create offers
+→ students get better choices.
+For example:
+Demand opportunity: Kepler area
+    Pizza searches: High
+    Peak demand: 12:00–14:00
+    Demand concentration: Near campus
+    Current suitable offers: Low
+    Opportunity: Student pizza market
+A business developer could use that information to decide whether there is an
+opportunity worth entering.
+But there is an important distinction
+We should not sell individual student data.
+The valuable product is aggregated demand intelligence:
+ ● What students want
+ ● Where demand exists
+ ● When demand happens
+ ● Price ranges students respond to
+ ● Categories with insufficient supply
+ ● Trends over time
+
+That protects students while still making the data commercially valuable.
+And this gives Unipicks a potential second business model later:
+Marketplace revenue + Business Intelligence revenue.
+The marketplace helps students and businesses transact.
+The intelligence layer helps businesses make better decisions.
+That is very aligned with your Business Analytics path.
+Next question
+If a business pays Unipicks for this demand intelligence, should students
+benefit from that value too?
+For example, some of the revenue could help Unipicks negotiate even better
+student prices and offers.
+
+that is the point if the business works the student should benefit yes indeed, i
+think we should move to production because talking wont make the app please
+

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { createOrder } from '../lib/orders.js'
 import GroupOrders from './GroupOrders.jsx'
 import StoryViewer from '../components/StoryViewer.jsx'
 import { Store, Search, X, Star, Smartphone, CheckCircle2 } from 'lucide-react'
@@ -35,6 +36,7 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
   const [merchantData, setMerchantData] = useState({})
   const [storyViewerOpen, setStoryViewerOpen] = useState(false)
   const [selectedStoryMerchant, setSelectedStoryMerchant] = useState(null)
+  const navigate = useNavigate()
 
   const categories = ['all', 'Pizza', 'Tacos', 'Burgers', 'Drinks', 'Desserts', 'Specials']
 
@@ -337,7 +339,9 @@ const getDiscoveryScore = (deal) => {
         ? Math.max(0, 48 - hoursUntilExpiry) / 48
         : 0
 
-    const finalPrice = finalPriceOf(deal)
+
+
+ const finalPrice = finalPriceOf(deal)
 
     const affordabilityScore =
       averagePrice && finalPrice != null
@@ -530,9 +534,7 @@ const getDiscoveryScore = (deal) => {
         </div>
       )}
 
-      <GroupOrders deals={deals} />
-
-      {/* --- Story Viewer Modal --- */}
+       {/* --- Story Viewer Modal --- */}
       {storyViewerOpen && selectedStoryMerchant && (
         <StoryViewer
           stories={selectedStoryMerchant.stories}
@@ -552,6 +554,8 @@ function DealCard({ deal, ratingStats }) {
   const [error, setError] = useState('')
   const [transactionId, setTransactionId] = useState(null)
   const [paymentStatus, setPaymentStatus] = useState(null)
+  const [orderId, setOrderId] = useState(null)
+  const [merchantPhone, setMerchantPhone] = useState(null)
 
   const expiresLabel = deal.expires_at
     ? new Date(deal.expires_at).toLocaleDateString(undefined, {
@@ -576,6 +580,57 @@ function DealCard({ deal, ratingStats }) {
     recordView()
   }, [deal?.id])
 
+  useEffect(() => {
+    if (!orderId) return
+
+    let cancelled = false
+
+    const loadOrderStatus = async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('status')
+        .eq('id', orderId)
+        .maybeSingle()
+
+      if (error) {
+        console.warn('Could not load order status:', error.message)
+        return
+      }
+
+      if (!cancelled && data?.status) {
+          setPaymentStatus(data.status === "pending_confirmation" ? "waiting_for_confirmation" : data.status)
+
+      }
+    }
+
+    loadOrderStatus()
+
+    const channel = supabase
+      .channel(`order-status-${orderId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `id=eq.${orderId}`,
+        },
+        () => {
+          loadOrderStatus()
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.warn('Order status realtime subscription failed.')
+        }
+      })
+
+    return () => {
+      cancelled = true
+      supabase.removeChannel(channel)
+    }
+  }, [orderId])
+
   const finalPrice = finalPriceOf(deal)
   const hasDiscount = deal.discount_percent != null && deal.price != null
 
@@ -584,83 +639,20 @@ function DealCard({ deal, ratingStats }) {
     setError('')
 
     try {
-      const { data: userData, error: userError } = await supabase.auth.getUser()
-      if (userError) throw new Error(userError.message)
-      if (!userData.user) throw new Error('You must be logged in to order')
+      const order = await createOrder({
+        dealId: deal.id,
+        quantity: 1,
+      })
 
-      const newCode = makeCode()
-      const { data: redemptionData, error: insertError } = await supabase
-        .from('redemptions')
-        .insert({
-          deal_id: deal.id,
-          student_id: userData.user.id,
-          student_name: userData.user.user_metadata?.full_name ?? userData.user.email,
-          code: newCode,
-          status: 'pending',
-          payment_status: 'unpaid',
-        })
-        .select('id')
-        .single()
+      console.log('Order created:', order)
 
-      if (insertError) throw new Error(insertError.message)
-      if (!redemptionData) throw new Error('Failed to create order')
-
-      const redemption_id = redemptionData.id
-      const phone = userData.user.user_metadata?.phone || ''
-      const amount = finalPrice !== null ? finalPrice : deal.price
-
-      const response = await fetch(
-        'https://dylgephsnywowxxasifs.supabase.co/functions/v1/process-payment',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          },
-          body: JSON.stringify({
-            redemption_id,
-            deal_id: deal.id,
-            amount,
-            phone,
-            currency: 'RWF',
-          }),
-        }
-      )
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Payment service error')
-      }
-
-      setTransactionId(data.transaction_id)
-      setPaymentStatus('waiting_for_phone')
-
-      // Poll the transaction for a status update (webhook confirms payment async)
-      const pollInterval = setInterval(async () => {
-        const { data: txn } = await supabase
-          .from('transactions')
-          .select('status')
-          .eq('id', data.transaction_id)
-          .single()
-
-        if (txn?.status === 'paid') {
-          clearInterval(pollInterval)
-          setPaymentStatus('paid')
-          setOrdering(false)
-        } else if (txn?.status === 'failed') {
-          clearInterval(pollInterval)
-          setPaymentStatus(null)
-          setOrdering(false)
-          setError('Payment failed or was cancelled. Please try again.')
-        }
-      }, 3000)
-
-      // Stop polling after 2 minutes if nothing happened
-      setTimeout(() => clearInterval(pollInterval), 120000)
+      setOrderId(order.id)
+        setMerchantPhone(order.merchant_phone ?? null)
+     setPaymentStatus('waiting_for_confirmation')
+      setOrdering(false)
     } catch (err) {
-      console.error('Payment error:', err.message)
-      setError(err.message || 'Something went wrong. Please try again.')
+      console.error('Order error:', err.message)
+      setError(err.message || 'Could not create your order. Please try again.')
       setOrdering(false)
     }
   }
@@ -704,18 +696,36 @@ function DealCard({ deal, ratingStats }) {
           {expiresLabel && <span className="text-muted-foreground">Valid until {expiresLabel}</span>}
         </div>
 
-        {paymentStatus === 'waiting_for_phone' ? (
+        {paymentStatus === 'waiting_for_confirmation' ? (
           <div className="mt-3 bg-accent/10 border border-accent/40 rounded-lg p-4 text-center space-y-2">
             <p className="text-foreground text-sm font-medium flex items-center justify-center gap-2">
-              <Smartphone size={16} /> Check your phone
+              Waiting for business confirmation
             </p>
             <p className="text-muted-foreground text-xs">
-              Approve the payment prompt on your phone to complete this order.
+
+
+              The business has 5 minutes to confirm your order.
             </p>
+          {merchantPhone && (
+            <a
+              href={`tel:${merchantPhone}`}
+              className="block w-full rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+            >
+              Call Business
+            </a>
+          )}
             <div className="mt-2 h-1 w-full bg-muted rounded-full overflow-hidden">
               <div className="h-full w-1/2 bg-accent animate-pulse rounded-full" />
             </div>
           </div>
+        ) : paymentStatus === 'confirmed' ? (
+          <button
+            onClick={() => navigate(`/payment?order_id=${orderId}`)}
+            disabled={!orderId}
+            className="mt-3 w-full bg-primary hover:bg-accent-dim text-primary-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
+          >
+            Pay Now
+          </button>
         ) : paymentStatus === 'paid' ? (
           <div className="mt-3 bg-green-500/10 border border-green-500/40 rounded-lg p-4 text-center">
             <p className="text-green-600 text-sm font-medium flex items-center justify-center gap-2">
