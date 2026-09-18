@@ -1,7 +1,13 @@
 :root {
   --radius: 0.5rem;
-  --color-primary: 9 70% 58%;
-  --color-primary-foreground: 0 0% 100%;
+
+  /* Core Unipicks colors — dark mode is the default. */
+  --color-primary: 83 49% 52%;
+  --color-primary-deep: 92 41% 40%;
+  --color-primary-soft: 83 49% 52% / 0.15;
+  --color-primary-foreground: 33 53% 7%;
+
+  /* Existing semantic tokens preserved for the current app. */
   --color-destructive: 0 72% 51%;
   --color-text-primary: 30 10% 93%;
   --color-text-secondary: 30 8% 65%;
@@ -14,11 +20,45 @@
   --color-text-input: 30 10% 93%;
   --color-border: 20 6% 19%;
   --color-border-input: 20 6% 24%;
+
+  /* Student experience semantic tokens. */
+  --color-background: var(--color-bg-body);
+  --color-foreground: var(--color-text-primary);
+  --color-accent: var(--color-primary);
+  --color-accent-foreground: var(--color-primary-foreground);
+  --color-muted-foreground: var(--color-text-secondary);
+
+  /* Safe-area support for the PWA shell. */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Motion tokens. */
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+  --duration-slow: 320ms;
 }
 
-.light {
-  --color-primary: 9 75% 52%;
-  --color-primary-foreground: 0 0% 100%;
+
+[data-theme="dark"] {
+  --color-primary: 83 49% 52%;
+  --color-primary-deep: 92 41% 40%;
+  --color-primary-soft: 83 49% 52% / 0.15;
+  --color-primary-foreground: 33 53% 7%;
+
+  --color-background: var(--color-bg-body);
+  --color-foreground: var(--color-text-primary);
+  --color-accent: var(--color-primary);
+  --color-accent-foreground: var(--color-primary-foreground);
+  --color-muted-foreground: var(--color-text-secondary);
+}
+
+[data-theme="light"] {
+  --color-primary: 83 49% 52%;
+  --color-primary-deep: 92 41% 40%;
+  --color-primary-soft: 83 49% 52% / 0.15;
+  --color-primary-foreground: 33 53% 7%;
+
   --color-text-primary: 20 12% 16%;
   --color-text-secondary: 20 10% 40%;
   --color-text-muted: 20 8% 55%;
@@ -30,11 +70,37 @@
   --color-text-input: 20 12% 16%;
   --color-border: 35 15% 91%;
   --color-border-input: 35 12% 85%;
+
+  --color-background: var(--color-bg-body);
+  --color-foreground: var(--color-text-primary);
+  --color-accent: var(--color-primary);
+  --color-accent-foreground: var(--color-primary-foreground);
+  --color-muted-foreground: var(--color-text-secondary);
 }
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100dvh;
+}
+
+html {
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  overscroll-behavior: none;
+}
 
 body {
   background-color: hsl(var(--color-bg-body));
@@ -78,6 +144,6 @@ body {
 }
 
 .field-input:focus {
-  border-color: hsl(9, 75%, 52%);
-  box-shadow: 0 0 0 2px hsla(9, 75%, 52%, 0.3);
+  border-color: hsl(var(--color-primary));
+  box-shadow: 0 0 0 2px hsl(var(--color-primary) / 0.3);
 }

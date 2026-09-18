@@ -5,17 +5,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        foreground: 'hsl(var(--color-text-primary) / <alpha-value>)',
+        foreground: 'hsl(var(--color-foreground) / <alpha-value>)',
         'background-foreground': 'hsl(var(--color-bg-body) / <alpha-value>)',
         muted: {
           DEFAULT: 'hsl(var(--color-bg-surface-alt) / <alpha-value>)',
-          foreground: 'hsl(var(--color-text-secondary) / <alpha-value>)',
+          foreground: 'hsl(var(--color-muted-foreground) / <alpha-value>)',
         },
-        background: 'hsl(var(--color-bg-body) / <alpha-value>)',
+        background: 'hsl(var(--color-background) / <alpha-value>)',
         card: 'hsl(var(--color-bg-surface) / <alpha-value>)',
         input: 'hsl(var(--color-bg-input) / <alpha-value>)',
         border: 'hsl(var(--color-border) / <alpha-value>)',
-        ring: '#DE4E32',
+        accent: 'hsl(var(--color-accent) / <alpha-value>)',
+        'accent-foreground': 'hsl(var(--color-accent-foreground) / <alpha-value>)',
+        'muted-foreground': 'hsl(var(--color-muted-foreground) / <alpha-value>)',
+        ring: 'hsl(var(--color-accent) / <alpha-value>)',
         primary: {
           DEFAULT: 'hsl(var(--color-primary) / <alpha-value>)',
           foreground: 'hsl(var(--color-primary-foreground) / <alpha-value>)',
@@ -38,8 +41,8 @@ export default {
           700: 'hsl(var(--color-bg-interactive) / <alpha-value>)',
         },
         accent: {
-          DEFAULT: '#DE4E32',
-          dim: '#B83E27',
+          DEFAULT: 'hsl(var(--color-accent) / <alpha-value>)',
+          dim: 'hsl(var(--color-primary-deep) / <alpha-value>)',
         },
       },
       fontFamily: {
