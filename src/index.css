@@ -85,7 +85,8 @@
 html,
 body,
 #root {
-  height: 100dvh;
+  min-height: 100dvh;
+  height: auto;
 }
 
 html {
@@ -99,7 +100,6 @@ body::-webkit-scrollbar,
 }
 
 body {
-  overscroll-behavior: none;
 }
 
 body {
@@ -146,4 +146,13 @@ body {
 .field-input:focus {
   border-color: hsl(var(--color-primary));
   box-shadow: 0 0 0 2px hsl(var(--color-primary) / 0.3);
+}
+
+ 
+.app-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }

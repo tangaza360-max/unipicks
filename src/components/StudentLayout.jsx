@@ -177,7 +177,8 @@ export default function StudentLayout({ children, onLogout }) {
       <main
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
         style={{
-          paddingBottom: 'calc(4rem + var(--safe-area-bottom))',
+          paddingTop: 'calc(var(--safe-area-top) + 56px)',
+          paddingBottom: 'calc(var(--safe-area-bottom) + 64px)',
         }}
       >
         <div className="animate-fadeIn">
