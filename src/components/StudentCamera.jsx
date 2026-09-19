@@ -4,9 +4,12 @@ import { haptic } from '../lib/haptics.js'
 
 export default function StudentCamera({ onClose }) {
   const videoRef = useRef(null)
+  const canvasRef = useRef(null)
   const streamRef = useRef(null)
   const [facingMode, setFacingMode] = useState('user')
   const [permissionDenied, setPermissionDenied] = useState(false)
+  const [capturedBlob, setCapturedBlob] = useState(null)
+  const [capturedUrl, setCapturedUrl] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -48,12 +51,93 @@ export default function StudentCamera({ onClose }) {
     }
   }, [facingMode])
 
+  useEffect(() => {
+    return () => {
+      if (capturedUrl) {
+        URL.revokeObjectURL(capturedUrl)
+      }
+    }
+  }, [capturedUrl])
+
   const handleToggleCamera = () => {
     setFacingMode((current) => (current === 'user' ? 'environment' : 'user'))
   }
 
   const handleShutter = () => {
-    haptic(20)
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    if (!video || !canvas) return
+
+    const width = video.videoWidth
+    const height = video.videoHeight
+    if (!width || !height) return
+
+    canvas.width = width
+    canvas.height = height
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    ctx.drawImage(video, 0, 0, width, height)
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return
+
+        if (capturedUrl) {
+          URL.revokeObjectURL(capturedUrl)
+        }
+
+        const url = URL.createObjectURL(blob)
+        setCapturedBlob(blob)
+        setCapturedUrl(url)
+        haptic(20)
+      },
+      'image/jpeg',
+      0.92
+    )
+  }
+
+  const handleSave = () => {
+    if (!capturedUrl) return
+
+    const a = document.createElement('a')
+    a.href = capturedUrl
+    a.download = `unipicks-${Date.now()}.jpg`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    haptic(10)
+  }
+
+  const handleShare = async () => {
+    if (!capturedBlob) return
+
+    const file = new File([capturedBlob], `unipicks-${Date.now()}.jpg`, {
+      type: 'image/jpeg',
+    })
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] })
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error(error)
+        }
+      }
+    } else {
+      handleSave()
+    }
+  }
+
+  const handleRetake = () => {
+    if (capturedUrl) {
+      URL.revokeObjectURL(capturedUrl)
+    }
+
+    setCapturedBlob(null)
+    setCapturedUrl(null)
+    haptic(10)
   }
 
   return (
@@ -81,6 +165,8 @@ export default function StudentCamera({ onClose }) {
         </button>
       </div>
 
+      <canvas ref={canvasRef} className="hidden" />
+
       <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-black">
         {permissionDenied ? (
           <div className="flex max-w-sm flex-col items-center gap-4 px-6 text-center text-white">
@@ -96,6 +182,12 @@ export default function StudentCamera({ onClose }) {
               Close
             </button>
           </div>
+        ) : capturedUrl ? (
+          <img
+            src={capturedUrl}
+            alt="Captured"
+            className="h-full w-full object-contain"
+          />
         ) : (
           <video
             ref={videoRef}
@@ -111,22 +203,52 @@ export default function StudentCamera({ onClose }) {
         className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center bg-gradient-to-t from-black/80 via-black/30 to-transparent px-4"
         style={{ paddingBottom: 'calc(var(--safe-area-bottom) + 16px)' }}
       >
-        <div className="mb-5 flex items-center gap-8 text-sm font-medium text-white/60">
-          <button type="button" className="text-white">
-            Story
-          </button>
-          <button type="button">Post</button>
-          <button type="button">Scan</button>
-        </div>
+        {capturedUrl ? (
+          <div className="flex w-full items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={handleRetake}
+              className="flex-1 rounded-full border border-white/30 bg-white/10 px-5 py-3 font-medium text-white backdrop-blur-md"
+            >
+              Retake
+            </button>
 
-        <button
-          type="button"
-          onClick={handleShutter}
-          aria-label="Take photo"
-          className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-white/20 p-1"
-        >
-          <span className="h-full w-full rounded-full bg-white" />
-        </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="flex-1 rounded-full bg-accent px-5 py-3 font-medium text-accent-foreground"
+            >
+              Save
+            </button>
+
+            <button
+              type="button"
+              onClick={handleShare}
+              className="flex-1 rounded-full bg-accent px-5 py-3 font-medium text-accent-foreground"
+            >
+              Share
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="mb-5 flex items-center gap-8 text-sm font-medium text-white/60">
+              <button type="button" className="text-white">
+                Story
+              </button>
+              <button type="button">Post</button>
+              <button type="button">Scan</button>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleShutter}
+              aria-label="Take photo"
+              className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-white/20 p-1"
+            >
+              <span className="h-full w-full rounded-full bg-white" />
+            </button>
+          </>
+        )}
       </div>
     </div>
   )
