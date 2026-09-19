@@ -7,6 +7,7 @@ export default function StudentCamera({ onClose }) {
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
   const [facingMode, setFacingMode] = useState('user')
+  const [cameraMode, setCameraMode] = useState('story')
   const [diagnostics, setDiagnostics] = useState('')
   const [permissionDenied, setPermissionDenied] = useState(false)
   const [capturedBlob, setCapturedBlob] = useState(null)
@@ -248,11 +249,27 @@ export default function StudentCamera({ onClose }) {
         ) : (
           <>
             <div className="mb-5 flex items-center gap-8 text-sm font-medium text-white/60">
-              <button type="button" className="text-white">
+              <button
+                type="button"
+                onClick={() => setCameraMode('story')}
+                className={cameraMode === 'story' ? 'text-accent' : 'text-white/60'}
+              >
                 Story
               </button>
-              <button type="button">Post</button>
-              <button type="button">Scan</button>
+              <button
+                type="button"
+                onClick={() => setCameraMode('post')}
+                className={cameraMode === 'post' ? 'text-accent' : 'text-white/60'}
+              >
+                Post
+              </button>
+              <button
+                type="button"
+                onClick={() => setCameraMode('scan')}
+                className={cameraMode === 'scan' ? 'text-accent' : 'text-white/60'}
+              >
+                Scan
+              </button>
             </div>
 
             <button
