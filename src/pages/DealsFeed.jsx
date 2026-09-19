@@ -163,7 +163,7 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
           const stats = {}
           for (const deal of data) {
             const { data: ratingData, error: ratingError } = await supabase
-              .rpc('get_deal_rating_stats', { deal_id: deal.id })
+              .rpc('get_deal_rating_stats', { target_deal_id: deal.id })
             if (!ratingError && ratingData) {
               stats[deal.id] = ratingData
             }
