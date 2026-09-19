@@ -1,3 +1,4 @@
+import StudentCamera from './StudentCamera.jsx'
 import { useEffect, useState, cloneElement } from 'react'
 import GroupOrders from '../pages/GroupOrders.jsx'
 import Social from '../pages/Social.jsx'
@@ -9,6 +10,7 @@ import StudentTopBar from './StudentTopBar.jsx'
 import StudentBottomNav from './StudentBottomNav.jsx'
 
 export default function StudentLayout({ children, onLogout }) {
+  const [cameraOpen, setCameraOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('home')
   const [socialHasProfile, setSocialHasProfile] = useState(null)
   const [checkingSocialProfile, setCheckingSocialProfile] = useState(false)
@@ -109,9 +111,6 @@ export default function StudentLayout({ children, onLogout }) {
     setActiveTab(tab)
   }
 
-  function handleCamera() {
-    window.dispatchEvent(new CustomEvent('unipicks-open-camera'))
-  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -193,9 +192,10 @@ export default function StudentLayout({ children, onLogout }) {
             : activeTab
         }
         onNavigate={handleNavigate}
-        onCamera={handleCamera}
+        onCamera={() => setCameraOpen(true)}
         className="md:hidden"
       />
+          {cameraOpen && <StudentCamera onClose={() => setCameraOpen(false)} />}
     </div>
   )
 }
