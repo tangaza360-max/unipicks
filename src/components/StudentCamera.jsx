@@ -7,6 +7,7 @@ export default function StudentCamera({ onClose }) {
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
   const [facingMode, setFacingMode] = useState('user')
+  const [diagnostics, setDiagnostics] = useState('')
   const [permissionDenied, setPermissionDenied] = useState(false)
   const [capturedBlob, setCapturedBlob] = useState(null)
   const [capturedUrl, setCapturedUrl] = useState(null)
@@ -64,12 +65,14 @@ export default function StudentCamera({ onClose }) {
   }
 
   const handleShutter = () => {
-    console.log('[shutter] fired')
-    console.log('[shutter] videoRef', videoRef.current)
-    console.log('[shutter] videoWidth', videoRef.current?.videoWidth)
-    console.log('[shutter] videoHeight', videoRef.current?.videoHeight)
-    console.log('[shutter] canvasRef', canvasRef.current)
-    console.log('[shutter] toBlob type', typeof canvasRef.current?.toBlob)
+    setDiagnostics('tapped')
+    setDiagnostics(
+      `fired=true | videoRef=${!!videoRef.current} | ` +
+      `vw=${videoRef.current?.videoWidth ?? 'null'} | ` +
+      `vh=${videoRef.current?.videoHeight ?? 'null'} | ` +
+      `canvas=${!!canvasRef.current} | ` +
+      `toBlob=${typeof canvasRef.current?.toBlob}`
+    )
 
     const video = videoRef.current
     const canvas = canvasRef.current
@@ -174,6 +177,12 @@ export default function StudentCamera({ onClose }) {
 
       <canvas ref={canvasRef} className="hidden" />
 
+      {diagnostics && (
+        <div className="absolute inset-x-0 top-20 z-20 mx-auto max-w-sm rounded-lg bg-black/80 px-3 py-2 text-xs text-white">
+          {diagnostics}
+        </div>
+      )}
+
       <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-black">
         {permissionDenied ? (
           <div className="flex max-w-sm flex-col items-center gap-4 px-6 text-center text-white">
@@ -248,7 +257,7 @@ export default function StudentCamera({ onClose }) {
 
             <button
               type="button"
-              onClick={() => { console.log('[shutter] button clicked'); handleShutter() }}
+              onClick={handleShutter}
               aria-label="Take photo"
               className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-white/20 p-1"
             >
