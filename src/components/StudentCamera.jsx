@@ -6,9 +6,9 @@ export default function StudentCamera({ onClose }) {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
+  const lastTapRef = useRef(0)
   const [facingMode, setFacingMode] = useState('user')
   const [cameraMode, setCameraMode] = useState('story')
-  const [diagnostics, setDiagnostics] = useState('')
   const [permissionDenied, setPermissionDenied] = useState(false)
   const [capturedBlob, setCapturedBlob] = useState(null)
   const [capturedUrl, setCapturedUrl] = useState(null)
@@ -64,16 +64,21 @@ export default function StudentCamera({ onClose }) {
   const handleToggleCamera = () => {
     setFacingMode((current) => (current === 'user' ? 'environment' : 'user'))
   }
+  const handleVideoTap = () => {
+    if (capturedUrl) return
+
+    const now = Date.now()
+    if (now - lastTapRef.current <= 300) {
+      lastTapRef.current = 0
+      handleToggleCamera()
+      return
+    }
+
+    lastTapRef.current = now
+  }
+
 
   const handleShutter = () => {
-    setDiagnostics('tapped')
-    setDiagnostics(
-      `fired=true | videoRef=${!!videoRef.current} | ` +
-      `vw=${videoRef.current?.videoWidth ?? 'null'} | ` +
-      `vh=${videoRef.current?.videoHeight ?? 'null'} | ` +
-      `canvas=${!!canvasRef.current} | ` +
-      `toBlob=${typeof canvasRef.current?.toBlob}`
-    )
 
     const video = videoRef.current
     const canvas = canvasRef.current
@@ -178,11 +183,6 @@ export default function StudentCamera({ onClose }) {
 
       <canvas ref={canvasRef} className="hidden" />
 
-      {diagnostics && (
-        <div className="absolute inset-x-0 top-20 z-20 mx-auto max-w-sm rounded-lg bg-black/80 px-3 py-2 text-xs text-white">
-          {diagnostics}
-        </div>
-      )}
 
       <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-black">
         {permissionDenied ? (
@@ -211,6 +211,7 @@ export default function StudentCamera({ onClose }) {
             autoPlay
             playsInline
             muted
+           onClick={handleVideoTap}
             className="h-full w-full object-cover"
           />
         )}
