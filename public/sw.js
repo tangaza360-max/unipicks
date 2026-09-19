@@ -1,5 +1,5 @@
-const CACHE_NAME = 'unipicks-shell-v4'
-const APP_SHELL = ['/manifest.json', '/icon-192.svg', '/icon-512.svg']
+const CACHE_NAME = 'unipicks-shell-v5'
+const APP_SHELL = ['/icon-192.svg', '/icon-512.svg']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -26,6 +26,12 @@ self.addEventListener('fetch', (event) => {
 
   // Only handle same-origin requests. Let Supabase and others pass through.
   if (url.origin !== self.location.origin) return
+
+  // Manifest: always fetch fresh. Never cache. So Chrome sees new icons.
+  if (url.pathname === '/manifest.json') {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }))
+    return
+  }
 
   // HTML navigations: network-first, no HTTP cache.
   if (event.request.mode === 'navigate') {
@@ -55,7 +61,7 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Everything else (icons, manifest): cache-first for speed.
+  // Everything else (icons, static files): cache-first for speed.
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached
