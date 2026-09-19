@@ -64,6 +64,13 @@ export default function StudentCamera({ onClose }) {
   }
 
   const handleShutter = () => {
+    console.log('[shutter] fired')
+    console.log('[shutter] videoRef', videoRef.current)
+    console.log('[shutter] videoWidth', videoRef.current?.videoWidth)
+    console.log('[shutter] videoHeight', videoRef.current?.videoHeight)
+    console.log('[shutter] canvasRef', canvasRef.current)
+    console.log('[shutter] toBlob type', typeof canvasRef.current?.toBlob)
+
     const video = videoRef.current
     const canvas = canvasRef.current
     if (!video || !canvas) return
@@ -241,7 +248,7 @@ export default function StudentCamera({ onClose }) {
 
             <button
               type="button"
-              onClick={handleShutter}
+              onClick={() => { console.log('[shutter] button clicked'); handleShutter() }}
               aria-label="Take photo"
               className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-white/20 p-1"
             >
