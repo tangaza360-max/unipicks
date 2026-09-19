@@ -175,7 +175,7 @@ export default function StudentLayout({ children, onLogout }) {
       </div>
 
       <main
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        className="min-h-0 flex-1"
         style={{
           paddingTop: 'calc(var(--safe-area-top) + 56px)',
           paddingBottom: 'calc(var(--safe-area-bottom) + 64px)',
