@@ -78,6 +78,14 @@ export default function Login() {
             Create an account
           </Link>
         </p>
+
+        <p className="text-center text-xs text-muted-foreground">
+          Are you a business?{' '}
+          <Link to="/register/merchant" className="text-accent hover:underline">
+            Sign up here
+          </Link>
+        </p>
+
         <p className="text-center text-xs text-muted-foreground">
           <Link to="/terms" className="hover:text-foreground hover:underline">Terms</Link>
           {' · '}

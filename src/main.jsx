@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import './index.css'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import Register from './pages/Register.jsx'
+import RegisterMerchant from './pages/RegisterMerchant.jsx'
 import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import AdminStudentView from './pages/AdminStudentView.jsx'
@@ -25,6 +26,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <BrowserRouter>
         <Routes>
           <Route path="/register" element={<Register />} />
+          <Route path="/register/merchant" element={<RegisterMerchant />} />
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/admin/student-view" element={<AdminStudentView />} />

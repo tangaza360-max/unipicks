@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
-import { UNIVERSITIES, domainForUniversity } from '../lib/universities.js'
 import Logo from '../components/Logo.jsx'
 
 const initialForm = {
@@ -10,12 +9,13 @@ const initialForm = {
   email: '',
   password: '',
   confirm: '',
-  university: UNIVERSITIES[0].name,
-  studentId: '',
+  businessName: '',
+  rdbNumber: '',
+  address: '',
   agreed: false,
 }
 
-export default function Register() {
+export default function RegisterMerchant() {
   const navigate = useNavigate()
   const [form, setForm] = useState(initialForm)
   const [error, setError] = useState('')
@@ -30,20 +30,13 @@ export default function Register() {
   function validate() {
     if (!form.fullName.trim()) return 'Enter your full name.'
     if (!form.phone.trim()) return 'Enter your phone number.'
-    if (!form.email.trim()) return 'Enter your school email.'
+    if (!form.email.trim()) return 'Enter your email.'
     if (form.password.length < 8) return 'Password must be at least 8 characters.'
     if (form.password !== form.confirm) return 'Passwords do not match.'
-    if (!form.studentId.trim()) return 'Enter your student ID number.'
+    if (!form.businessName.trim()) return 'Enter your business name.'
+    if (!form.rdbNumber.trim()) return 'Enter your RDB number.'
+    if (!form.address.trim()) return 'Enter your business address.'
     if (!form.agreed) return 'You need to agree to the Terms and Privacy Policy.'
-
-    const domain = domainForUniversity(form.university)
-    if (!domain) {
-      return `${form.university} isn't open for sign-ups yet — check back soon.`
-    }
-    const emailDomain = form.email.trim().toLowerCase().split('@')[1]
-    if (emailDomain !== domain) {
-      return `Use your ${form.university} email (must end in @${domain}).`
-    }
     return ''
   }
 
@@ -62,9 +55,10 @@ export default function Register() {
     const metadata = {
       full_name: form.fullName.trim(),
       phone: form.phone.trim(),
-      university: form.university,
-      student_id: form.studentId.trim(),
-      role: 'student',
+      business_name: form.businessName.trim(),
+      rdb_number: form.rdbNumber.trim(),
+      address: form.address.trim(),
+      role: 'merchant',
     }
 
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -79,10 +73,15 @@ export default function Register() {
       return
     }
 
-    // If Supabase's "Confirm email" setting is off, signUp already returns a
-    // live session — the account is active immediately, so skip straight to
-    // the dashboard instead of telling them to check an email that was never
-    // required.
+    // Merchants start unapproved — create their approval record so an
+    // admin can review and approve them before they're fully live.
+    if (signUpData.user) {
+      await supabase.from('merchant_profiles').insert({
+        id: signUpData.user.id,
+        business_name: form.businessName.trim(),
+      })
+    }
+
     if (signUpData.session) {
       navigate('/dashboard')
       return
@@ -99,7 +98,7 @@ export default function Register() {
           <h1 className="font-display text-2xl font-semibold">Check your email</h1>
           <p className="text-muted-foreground">
             We sent a confirmation link to {successEmail}. Verify it to activate your Unipicks
-            account.
+            business account.
           </p>
         </div>
       </div>
@@ -113,8 +112,10 @@ export default function Register() {
           <div className="w-14 h-14 rounded-full bg-accent/20 flex items-center justify-center text-accent">
             <Logo size={28} />
           </div>
-          <h1 className="font-display text-3xl font-semibold">Join Unipicks</h1>
-          <p className="text-muted-foreground text-sm">Affordable campus meals, student deals</p>
+          <h1 className="font-display text-3xl font-semibold">Join Unipicks as a Business</h1>
+          <p className="text-muted-foreground text-sm">
+            Reach students in your area with deals they'll love.
+          </p>
         </div>
 
         <form
@@ -143,11 +144,11 @@ export default function Register() {
           </div>
 
           <div>
-            <label className="field-label">Student email</label>
+            <label className="field-label">Email</label>
             <input
               className="field-input"
               type="email"
-              placeholder="Enter your student email"
+              placeholder="you@example.com"
               value={form.email}
               onChange={(e) => update('email', e.target.value)}
             />
@@ -174,30 +175,34 @@ export default function Register() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="field-label">University</label>
-              <select
-                className="field-input"
-                value={form.university}
-                onChange={(e) => update('university', e.target.value)}
-              >
-                {UNIVERSITIES.map((u) => (
-                  <option key={u.name} value={u.name}>
-                    {u.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="field-label">Student ID number</label>
-              <input
-                className="field-input"
-                placeholder="UR12345"
-                value={form.studentId}
-                onChange={(e) => update('studentId', e.target.value)}
-              />
-            </div>
+          <div>
+            <label className="field-label">Business name</label>
+            <input
+              className="field-input"
+              placeholder="Kepler Bite House"
+              value={form.businessName}
+              onChange={(e) => update('businessName', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="field-label">RDB number</label>
+            <input
+              className="field-input"
+              placeholder="RDB/..."
+              value={form.rdbNumber}
+              onChange={(e) => update('rdbNumber', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="field-label">Address</label>
+            <input
+              className="field-input"
+              placeholder="Street, building"
+              value={form.address}
+              onChange={(e) => update('address', e.target.value)}
+            />
           </div>
 
           <label className="flex items-start gap-3 text-sm text-muted-foreground">
@@ -227,7 +232,7 @@ export default function Register() {
             disabled={loading}
             className="w-full bg-accent hover:bg-accent-dim text-background-foreground font-semibold rounded-lg py-3 transition disabled:opacity-50"
           >
-            {loading ? 'Creating account…' : 'Create account'}
+            {loading ? 'Creating account…' : 'Create business account'}
           </button>
         </form>
 
@@ -239,8 +244,8 @@ export default function Register() {
         </p>
 
         <p className="text-center text-xs text-muted-foreground">
-          Are you a business?{' '}
-          <Link to="/register/merchant" className="text-accent hover:underline">
+          Are you a student?{' '}
+          <Link to="/register" className="text-accent hover:underline">
             Sign up here
           </Link>
         </p>
