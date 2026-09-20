@@ -1,0 +1,17 @@
+REVOKE EXECUTE ON FUNCTION public.accept_friend_request(uuid) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.accept_message_request(uuid) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.are_students_blocked(uuid, uuid) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.are_students_friends(uuid, uuid) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.block_student(uuid) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.cancel_friend_request(uuid) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.cancel_message_request(uuid) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.create_group_order_with_host(uuid, text) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.decline_friend_request(uuid) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.decline_message_request(uuid) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.get_setting(text) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.get_social_activity() FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.get_student_message_profiles(uuid[]) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.search_students(text) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.send_friend_request(uuid) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.send_message_request(uuid) FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.unblock_student(uuid) FROM public, anon;
