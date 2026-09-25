@@ -11,6 +11,8 @@ import AdminStudentView from './pages/AdminStudentView.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
 import PaymentCheckout from './pages/PaymentCheckout.jsx'
+import DealDetail from './pages/DealDetail.jsx'
+import OrderConfirmation from './pages/OrderConfirmation.jsx'
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
@@ -33,6 +35,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/payment" element={<PaymentCheckout />} />
+        <Route path="/deal/:id" element={<DealDetail />} />
+        <Route path="/deal/:id/confirm" element={<OrderConfirmation />} />
           <Route path="*" element={<Navigate to="/register" replace />} />
         </Routes>
       </BrowserRouter>

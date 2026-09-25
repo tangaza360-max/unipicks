@@ -634,30 +634,9 @@ function DealCard({ deal, ratingStats }) {
   const finalPrice = finalPriceOf(deal)
   const hasDiscount = deal.discount_percent != null && deal.price != null
 
-  async function handleOrderWithPayment() {
-    setOrdering(true)
-    setError('')
-
-    try {
-      const order = await createOrder({
-        dealId: deal.id,
-        quantity: 1,
-      })
-
-      console.log('Order created:', order)
-
-      setOrderId(order.id)
-        setMerchantPhone(order.merchant_phone ?? null)
-     setPaymentStatus('waiting_for_confirmation')
-      setOrdering(false)
-    } catch (err) {
-      console.error('Order error:', err.message)
-      setError(err.message || 'Could not create your order. Please try again.')
-      setOrdering(false)
-    }
+  function handleOrder() {
+    navigate(`/deal/${deal.id}`)
   }
-
-  const handleOrder = handleOrderWithPayment
 
   return (
     <div className="border border-border rounded-lg overflow-hidden bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md">
