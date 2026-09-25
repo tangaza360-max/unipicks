@@ -5,9 +5,20 @@ import RatingPrompt from './RatingPrompt.jsx'
 import StatusBadge from './StatusBadge.jsx'
 import { Package } from 'lucide-react'
 
+const DECLINE_REASON_LABELS = {
+  unavailable: 'Item unavailable',
+  too_busy: 'Merchant too busy',
+  closed: 'Merchant closed',
+  price_changed: 'Price changed',
+  other: 'Other',
+}
+
+const HIDDEN_ORDER_STATUSES = ['cancelled', 'confirmation_expired', 'payment_expired', 'refunded']
+
 export default function OrdersTab() {
   const [hostedOrders, setHostedOrders] = useState([])
   const [joinedOrders, setJoinedOrders] = useState([])
+  const [normalOrders, setNormalOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showCancelled, setShowCancelled] = useState(false)
@@ -72,6 +83,18 @@ export default function OrdersTab() {
       return
     }
 
+    const { data: normal, error: normalError } = await supabase
+      .from('orders')
+      .select('id, deal_id, merchant_id, quantity, unit_price, total_price, status, decline_reason, decline_reason_note, created_at, deals(title, business_name), redemptions(code)')
+      .eq('student_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (normalError) {
+      setError(normalError.message)
+      setLoading(false)
+      return
+    }
+
     let filteredJoined = joined || []
     if (!showCancelled) {
       filteredJoined = filteredJoined.filter(
@@ -79,8 +102,16 @@ export default function OrdersTab() {
       )
     }
 
+    let filteredNormal = normal || []
+    if (!showCancelled) {
+      filteredNormal = filteredNormal.filter(
+        (order) => !HIDDEN_ORDER_STATUSES.includes(order.status)
+      )
+    }
+
     setHostedOrders(hosted || [])
     setJoinedOrders(filteredJoined)
+    setNormalOrders(filteredNormal)
     setRedemptions(redeemed || [])
     setLoading(false)
   }
@@ -93,7 +124,7 @@ export default function OrdersTab() {
     return <p className="text-sm text-red-400">Could not load orders: {error}</p>
   }
 
-  const totalOrders = hostedOrders.length + joinedOrders.length + redemptions.length
+  const totalOrders = hostedOrders.length + joinedOrders.length + redemptions.length + normalOrders.length
 
   if (totalOrders === 0) {
     return (
@@ -119,7 +150,7 @@ export default function OrdersTab() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted"><Package size={28} className="text-muted-foreground" /></div>
           <h3 className="font-display text-lg font-semibold">No orders yet</h3>
           <p className="text-muted-foreground text-sm">
-            You haven't hosted or joined any group orders yet. Start one from the Home tab!
+            You haven't placed any orders yet. Start one from the Home tab!
           </p>
         </div>
       </div>
@@ -144,6 +175,25 @@ export default function OrdersTab() {
         </label>
         <span className="text-sm text-muted-foreground">Show cancelled orders</span>
       </div>
+
+      {normalOrders.length > 0 && (
+        <div>
+          <h3 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-3">
+            Your orders ({normalOrders.length})
+          </h3>
+          <div className="space-y-3">
+            {normalOrders.map((order, index) => (
+              <div
+                key={order.id}
+                className="animate-slideUp"
+                style={{ animationDelay: `${index * 60}ms` }}
+              >
+                <NormalOrderCard order={order} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {hostedOrders.length > 0 && (
         <div>
@@ -275,6 +325,100 @@ function OrderCard({ order, type, quantity }) {
             ))}
           </div>
         </div>
+      )}
+    </div>
+  )
+}
+
+function NormalOrderCard({ order }) {
+  const navigate = useNavigate()
+  const deal = order.deals
+  const redemption = Array.isArray(order.redemptions) ? order.redemptions[0] : order.redemptions
+  const date = new Date(order.created_at).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  const time = new Date(order.created_at).toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+  const status = order.status
+  const canPay = status === 'confirmed'
+  const showPickupCode = (status === 'paid' || status === 'redeemed' || status === 'completed') && redemption?.code
+  const showDecline = status === 'declined'
+  const showWaiting = status === 'pending_confirmation'
+  const showProcessing = status === 'payment_processing'
+  const showRedeemed = status === 'redeemed' || status === 'completed'
+  const showExpired = HIDDEN_ORDER_STATUSES.includes(status)
+
+  return (
+    <div className="border border-border rounded-lg p-5 bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="font-medium text-sm">
+            {deal?.title || 'Unknown deal'} · {deal?.business_name || 'Unknown business'}
+          </p>
+          <p className="text-muted-foreground text-xs mt-0.5">
+            {date} at {time}
+          </p>
+          <p className="text-muted-foreground text-xs mt-1">
+            {order.quantity} × {Number(order.unit_price).toLocaleString()} RWF = {Number(order.total_price).toLocaleString()} RWF
+          </p>
+        </div>
+        <StatusBadge status={status} />
+      </div>
+
+      {showWaiting && (
+        <p className="mt-3 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+          Waiting for the merchant to accept your order.
+        </p>
+      )}
+
+      {showProcessing && (
+        <p className="mt-3 text-xs text-blue-400 bg-blue-100/10 rounded-lg px-3 py-2">
+          Payment is being processed. You'll receive a pickup code once it's confirmed.
+        </p>
+      )}
+
+      {canPay && (
+        <button
+          type="button"
+          onClick={() => navigate(`/payment?order_id=${order.id}`)}
+          className="mt-3 w-full bg-primary text-primary-foreground font-semibold rounded-lg py-2.5 transition"
+        >
+          Pay Now · {Number(order.total_price).toLocaleString()} RWF
+        </button>
+      )}
+
+      {showPickupCode && (
+        <div className="mt-3 rounded-lg border border-green-400/30 bg-green-100/10 px-3 py-2">
+          <p className="text-xs text-muted-foreground">Pickup code</p>
+          <p className="font-mono font-semibold text-base tracking-wider">{redemption.code}</p>
+          <p className="text-xs text-muted-foreground mt-1">Show this to the merchant.</p>
+        </div>
+      )}
+
+      {showRedeemed && (
+        <p className="mt-3 text-xs text-green-400">Redeemed ✓</p>
+      )}
+
+      {showDecline && (
+        <div className="mt-3 rounded-lg border border-red-400/30 bg-red-100/10 px-3 py-2">
+          <p className="text-xs font-medium text-red-400">
+            Declined: {DECLINE_REASON_LABELS[order.decline_reason] || order.decline_reason || 'No reason provided'}
+          </p>
+          {order.decline_reason_note && (
+            <p className="text-xs text-muted-foreground mt-1">"{order.decline_reason_note}"</p>
+          )}
+        </div>
+      )}
+
+      {showExpired && (
+        <p className="mt-3 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+          This order is no longer active.
+        </p>
       )}
     </div>
   )
