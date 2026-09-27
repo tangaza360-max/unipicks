@@ -13,7 +13,8 @@ const DECLINE_REASON_LABELS = {
   other: 'Other',
 }
 
-const HIDDEN_ORDER_STATUSES = ['cancelled', 'confirmation_expired', 'payment_expired', 'refunded']
+const INACTIVE_ORDER_STATUSES = ['cancelled', 'confirmation_expired', 'payment_expired', 'refunded']
+const ACTIONABLE_ORDER_STATUSES = ['confirmed']
 
 export default function OrdersTab() {
   const [hostedOrders, setHostedOrders] = useState([])
@@ -21,12 +22,12 @@ export default function OrdersTab() {
   const [normalOrders, setNormalOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [showCancelled, setShowCancelled] = useState(true)
+  const [showAllOrders, setShowAllOrders] = useState(true)
   const [redemptions, setRedemptions] = useState([])
 
   useEffect(() => {
     loadOrders()
-  }, [showCancelled])
+  }, [showAllOrders])
 
   async function loadOrders() {
     setLoading(true)
@@ -46,7 +47,7 @@ export default function OrdersTab() {
       .eq('created_by', userId)
       .order('created_at', { ascending: false })
 
-    if (!showCancelled) {
+    if (!showAllOrders) {
       query = query.neq('status', 'cancelled')
     }
 
@@ -95,24 +96,29 @@ export default function OrdersTab() {
       return
     }
 
+    // Filter based on toggle.
+    // ON  = complete record (every order).
+    // OFF = actionable orders only (things needing the student's attention).
+    let filteredHosted = hosted || []
     let filteredJoined = joined || []
-    if (!showCancelled) {
-      filteredJoined = filteredJoined.filter(
-        (membership) => membership.group_orders?.status !== 'cancelled'
-      )
-    }
-
     let filteredNormal = normal || []
-    if (!showCancelled) {
-      filteredNormal = filteredNormal.filter(
-        (order) => !HIDDEN_ORDER_STATUSES.includes(order.status)
+    let filteredRedemptions = redeemed || []
+
+    if (!showAllOrders) {
+      filteredNormal = filteredNormal.filter((order) =>
+        ACTIONABLE_ORDER_STATUSES.includes(order.status)
       )
+      filteredHosted = filteredHosted.filter((order) => order.status === 'open')
+      filteredJoined = filteredJoined.filter(
+        (membership) => membership.group_orders?.status === 'open'
+      )
+      filteredRedemptions = []
     }
 
-    setHostedOrders(hosted || [])
+    setHostedOrders(filteredHosted)
     setJoinedOrders(filteredJoined)
     setNormalOrders(filteredNormal)
-    setRedemptions(redeemed || [])
+    setRedemptions(filteredRedemptions)
     setLoading(false)
   }
 
@@ -134,13 +140,13 @@ export default function OrdersTab() {
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={showCancelled}
-              onChange={(e) => setShowCancelled(e.target.checked)}
+              checked={showAllOrders}
+              onChange={(e) => setShowAllOrders(e.target.checked)}
               className="sr-only peer"
             />
             <div className="w-9 h-5 bg-muted rounded-full peer peer-checked:bg-accent transition-colors">
               <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-card rounded-full transition-transform ${
-                showCancelled ? 'translate-x-4' : ''
+                showAllOrders ? 'translate-x-4' : ''
               }`}></div>
             </div>
           </label>
@@ -148,9 +154,13 @@ export default function OrdersTab() {
 
         <div className="text-center py-12">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted"><Package size={28} className="text-muted-foreground" /></div>
-          <h3 className="font-display text-lg font-semibold">No orders yet</h3>
+          <h3 className="font-display text-lg font-semibold">
+            {showAllOrders ? 'No orders yet' : 'Nothing needs your attention'}
+          </h3>
           <p className="text-muted-foreground text-sm">
-            You haven't placed any orders yet. Start one from the Home tab!
+            {showAllOrders
+              ? "You haven't placed any orders yet. Start one from the Home tab!"
+              : 'Toggle "Show all orders" to see your complete history.'}
           </p>
         </div>
       </div>
@@ -164,13 +174,13 @@ export default function OrdersTab() {
         <label className="relative inline-flex items-center cursor-pointer">
           <input
             type="checkbox"
-            checked={showCancelled}
-            onChange={(e) => setShowCancelled(e.target.checked)}
+            checked={showAllOrders}
+            onChange={(e) => setShowAllOrders(e.target.checked)}
             className="sr-only peer"
           />
           <div className="w-9 h-5 bg-muted rounded-full peer peer-checked:bg-accent transition-colors">
             <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-card rounded-full transition-transform ${
-              showCancelled ? 'translate-x-4' : ''
+              showAllOrders ? 'translate-x-4' : ''
             }`}></div>
           </div>
         </label>
@@ -351,7 +361,7 @@ function NormalOrderCard({ order }) {
   const showWaiting = status === 'pending_confirmation'
   const showProcessing = status === 'payment_processing'
   const showRedeemed = status === 'redeemed' || status === 'completed'
-  const showExpired = HIDDEN_ORDER_STATUSES.includes(status)
+  const showExpired = INACTIVE_ORDER_STATUSES.includes(status)
 
   return (
     <div className="border border-border rounded-lg p-5 bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md">
