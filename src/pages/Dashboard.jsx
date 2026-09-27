@@ -9,7 +9,7 @@ import MerchantAnalytics from './MerchantAnalytics.jsx'
 import MerchantProfile from './MerchantProfile.jsx'
 import MerchantStories from './MerchantStories.jsx'
 import Messages from './Messages.jsx'
-import { ClipboardCheck, ClipboardList, GraduationCap, BarChart3, Users, Settings, FileClock, FileText, Camera, MessageCircle, ShoppingBag, Sun, Moon, LogOut } from 'lucide-react'
+import { ClipboardCheck, ClipboardList, GraduationCap, BarChart3, Users, Settings, FileClock, FileText, Camera, MessageCircle, ShoppingBag, Sun, Moon, LogOut, AlertCircle } from 'lucide-react'
 import Logo from '../components/Logo.jsx'
 import AdminAnalytics from './AdminAnalytics.jsx'
 import AdminApprovals from './AdminApprovals.jsx'
@@ -18,6 +18,7 @@ import AdminUsers from './AdminUsers.jsx'
 import AdminSettings from './AdminSettings.jsx'
 import AdminActivityLogs from './AdminActivityLogs.jsx'
 import AdminReviews from './AdminReviews.jsx'
+import AdminDisputes from './AdminDisputes.jsx'
 import StudentLayout from '../components/StudentLayout.jsx'
 import NotificationBell from '../components/NotificationBell.jsx'
 
@@ -169,6 +170,7 @@ return () => {
             { id: 'settings', label: 'Settings', icon: Settings },
             { id: 'activity-logs', label: 'Activity logs', icon: FileClock },
             { id: 'reviews', label: 'Reviews', icon: FileText },
+            { id: 'disputes', label: 'Disputes', icon: AlertCircle },
           ].map((tab) => {
             const Icon = tab.icon
             return (
@@ -193,6 +195,7 @@ return () => {
          adminTab === 'users' ? <AdminUsers /> :
          adminTab === 'settings' ? <AdminSettings /> :
          adminTab === 'activity-logs' ? <AdminActivityLogs /> :
+         adminTab === 'disputes' ? <AdminDisputes /> :
          <AdminReviews />}
       </>
     )
