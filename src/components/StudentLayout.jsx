@@ -228,7 +228,7 @@ export default function StudentLayout({ children, onLogout }) {
       </div>
 
       <main
-        className="min-h-0 flex-1"
+        className="min-h-0 flex-1 px-4"
         style={{
           paddingTop: 'calc(var(--safe-area-top) + 56px)',
           paddingBottom: 'calc(var(--safe-area-bottom) + 64px)',
