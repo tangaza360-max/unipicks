@@ -527,7 +527,7 @@ export default function ProfileTab() {
       ) : (
         <div className="space-y-5 bg-card border border-border rounded-lg p-6 shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-full bg-accent/15 ring-4 ring-accent/10 flex items-center justify-center text-accent text-3xl font-semibold">
+            <div className="w-20 h-20 shrink-0 rounded-full bg-accent/15 ring-4 ring-accent/10 flex items-center justify-center text-accent text-3xl font-semibold">
               {formData.full_name?.charAt(0) || '?'}
             </div>
 
@@ -947,10 +947,12 @@ export default function ProfileTab() {
              {theme === 'dark' ? 'Dark mode' : 'Light mode'}
            </span>
 
-           <span className="relative h-6 w-11 rounded-full bg-muted">
+           <span className={`relative h-6 w-11 rounded-full transition-colors ${
+             theme === 'dark' ? 'bg-accent' : 'bg-muted'
+           }`}>
              <span
                className={[
-                 'absolute top-1 h-4 w-4 rounded-full bg-accent transition-transform',
+                 'absolute top-1 h-4 w-4 rounded-full bg-white transition-transform',
                  theme === 'dark' ? 'translate-x-6' : 'translate-x-1',
                ].join(' ')}
              />

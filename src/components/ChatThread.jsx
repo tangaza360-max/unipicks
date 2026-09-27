@@ -152,7 +152,7 @@ export default function ChatThread({
   }
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-16rem)] md:h-[70vh] bg-card">
+    <div className="flex flex-col h-[calc(100dvh-10rem)] md:h-[70vh] bg-card">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
         <button
           onClick={onBack}
