@@ -21,7 +21,7 @@ export default function OrdersTab() {
   const [normalOrders, setNormalOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [showCancelled, setShowCancelled] = useState(false)
+  const [showCancelled, setShowCancelled] = useState(true)
   const [redemptions, setRedemptions] = useState([])
 
   useEffect(() => {
@@ -129,7 +129,8 @@ export default function OrdersTab() {
   if (totalOrders === 0) {
     return (
       <div className="space-y-4 animate-fadeIn">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm text-muted-foreground">Show all orders</span>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
@@ -143,7 +144,6 @@ export default function OrdersTab() {
               }`}></div>
             </div>
           </label>
-          <span className="text-sm text-muted-foreground">Show cancelled orders</span>
         </div>
 
         <div className="text-center py-12">
@@ -159,7 +159,8 @@ export default function OrdersTab() {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm text-muted-foreground">Show all orders</span>
         <label className="relative inline-flex items-center cursor-pointer">
           <input
             type="checkbox"
@@ -173,7 +174,6 @@ export default function OrdersTab() {
             }`}></div>
           </div>
         </label>
-        <span className="text-sm text-muted-foreground">Show cancelled orders</span>
       </div>
 
       {normalOrders.length > 0 && (
