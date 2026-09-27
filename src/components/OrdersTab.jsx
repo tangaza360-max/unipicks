@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import RatingPrompt from './RatingPrompt.jsx'
 import StatusBadge from './StatusBadge.jsx'
-import RaiseDisputeModal from './RaiseDisputeModal.jsx'
 import { Package } from 'lucide-react'
 
 const DECLINE_REASON_LABELS = {
@@ -15,12 +14,6 @@ const DECLINE_REASON_LABELS = {
 }
 
 const INACTIVE_ORDER_STATUSES = ['cancelled', 'confirmation_expired', 'payment_expired', 'refunded']
-const DISPUTE_STATUS_LABELS = {
-  open: 'Under review',
-  under_review: 'Under review',
-  resolved: 'Resolved',
-  rejected: 'Rejected',
-}
 const ACTIONABLE_ORDER_STATUSES = ['confirmed']
 
 export default function OrdersTab() {
@@ -31,7 +24,6 @@ export default function OrdersTab() {
   const [error, setError] = useState('')
   const [showAllOrders, setShowAllOrders] = useState(true)
   const [redemptions, setRedemptions] = useState([])
-  const [disputeTarget, setDisputeTarget] = useState(null)
 
   useEffect(() => {
     loadOrders()
@@ -94,7 +86,7 @@ export default function OrdersTab() {
 
     const { data: normal, error: normalError } = await supabase
       .from('orders')
-      .select('id, deal_id, merchant_id, quantity, unit_price, total_price, status, decline_reason, decline_reason_note, dispute_status, dispute_reason, dispute_raised_at, dispute_resolution_note, created_at, payment_deadline, deals(title, business_name), redemptions(code)')
+      .select('id, deal_id, merchant_id, quantity, unit_price, total_price, status, decline_reason, decline_reason_note, created_at, payment_deadline, deals(title, business_name), redemptions(code)')
       .eq('student_id', userId)
       .order('created_at', { ascending: false })
 
@@ -213,7 +205,7 @@ export default function OrdersTab() {
                 className="animate-slideUp"
                 style={{ animationDelay: `${index * 60}ms` }}
               >
-                <NormalOrderCard order={order} onRaiseDispute={setDisputeTarget} />
+                <NormalOrderCard order={order} />
               </div>
             ))}
           </div>
@@ -351,22 +343,11 @@ function OrderCard({ order, type, quantity }) {
           </div>
         </div>
       )}
-
-      {disputeTarget && (
-        <RaiseDisputeModal
-          order={disputeTarget}
-          onClose={() => setDisputeTarget(null)}
-          onSuccess={() => {
-            setDisputeTarget(null)
-            loadOrders()
-          }}
-        />
-      )}
     </div>
   )
 }
 
-function NormalOrderCard({ order, onRaiseDispute }) {
+function NormalOrderCard({ order }) {
   const navigate = useNavigate()
   const deal = order.deals
   const redemption = Array.isArray(order.redemptions) ? order.redemptions[0] : order.redemptions
@@ -392,10 +373,6 @@ function NormalOrderCard({ order, onRaiseDispute }) {
   const showProcessing = status === 'payment_processing'
   const showRedeemed = status === 'redeemed' || status === 'completed'
   const showExpired = INACTIVE_ORDER_STATUSES.includes(status)
-  const canRaiseDispute =
-    !order.dispute_status &&
-    ['confirmed', 'paid', 'redeemed', 'completed', 'declined'].includes(status)
-  const showDisputeStatus = Boolean(order.dispute_status)
 
   return (
     <div className="border border-border rounded-lg p-5 bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md">
@@ -469,29 +446,6 @@ function NormalOrderCard({ order, onRaiseDispute }) {
         <p className="mt-3 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
           This order is no longer active.
         </p>
-      )}
-
-      {showDisputeStatus && (
-        <div className="mt-3 rounded-lg border border-amber-400/30 bg-amber-100/10 px-3 py-2">
-          <p className="text-xs font-medium text-amber-400">
-            Dispute: {DISPUTE_STATUS_LABELS[order.dispute_status] || order.dispute_status}
-          </p>
-          {order.dispute_resolution_note && (
-            <p className="text-xs text-muted-foreground mt-1">
-              &ldquo;{order.dispute_resolution_note}&rdquo;
-            </p>
-          )}
-        </div>
-      )}
-
-      {canRaiseDispute && (
-        <button
-          type="button"
-          onClick={() => onRaiseDispute(order)}
-          className="mt-3 w-full border border-border text-muted-foreground hover:text-foreground rounded-lg py-2 text-xs transition"
-        >
-          Raise a dispute
-        </button>
       )}
     </div>
   )
