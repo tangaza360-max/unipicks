@@ -40,6 +40,7 @@ export default function ChatThread({
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(true)
   const bottomRef = useRef(null)
+  const hasScrolledOnce = useRef(false)
 
   const isGroup = Boolean(groupOrderId)
 
@@ -93,8 +94,16 @@ export default function ChatThread({
   }, [currentUserId, otherUserId, groupOrderId, isGroup])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    if (!bottomRef.current) return
+
+    // On the very first render (loading the thread), jump instantly
+    // to the bottom so the user doesn't watch a slow scroll animation.
+    // After that, animate smoothly for new incoming messages.
+    const behavior = hasScrolledOnce.current ? 'smooth' : 'auto'
+    bottomRef.current.scrollIntoView({ behavior })
+
+    if (!loading) hasScrolledOnce.current = true
+  }, [messages, loading])
 
   // Mark incoming messages as read when the thread is opened
   // (or when new messages arrive while viewing it).
