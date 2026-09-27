@@ -1,6 +1,21 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 
+const DISPUTE_STATUS_LABELS = {
+  open: 'Open',
+  under_review: 'Under review',
+  resolved: 'Resolved',
+  rejected: 'Rejected',
+}
+
+const DISPUTE_REASON_LABELS = {
+  item_not_received: 'Item not received',
+  quality_issue: 'Quality issue',
+  merchant_unresponsive: 'Merchant unresponsive',
+  wrong_item: 'Wrong item',
+  other: 'Other',
+}
+
 const declineReasons = [
   {
     value: 'unavailable',
@@ -66,6 +81,9 @@ export default function MerchantOrders() {
           status,
           confirmation_deadline,
           created_at,
+          dispute_status,
+          dispute_reason,
+          dispute_resolution_note,
           deals (
             title,
             business_name
@@ -290,6 +308,24 @@ export default function MerchantOrders() {
                 Total:{' '}
                 {Number(order.total_price).toLocaleString()} RWF
               </div>
+
+              {order.dispute_status && (
+                <div className="rounded-lg border border-amber-400/30 bg-amber-100/10 px-3 py-2">
+                  <p className="text-xs font-medium text-amber-400">
+                    Dispute: {DISPUTE_STATUS_LABELS[order.dispute_status] || order.dispute_status}
+                  </p>
+                  {order.dispute_reason && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Reason: {DISPUTE_REASON_LABELS[order.dispute_reason] || order.dispute_reason}
+                    </p>
+                  )}
+                  {order.dispute_resolution_note && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      &ldquo;{order.dispute_resolution_note}&rdquo;
+                    </p>
+                  )}
+                </div>
+              )}
 
               {order.status === 'pending_confirmation' && (
                 <div className="space-y-3">
