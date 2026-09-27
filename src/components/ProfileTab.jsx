@@ -890,7 +890,7 @@ export default function ProfileTab() {
                       className={[ 'relative block h-6 w-11 rounded-full transition', socialProfile.discoverable ? 'bg-accent' : 'bg-muted' ].join(' ')}
                     >
                       <span
-                        className={[ 'absolute top-1 h-4 w-4 rounded-full bg-white transition-transform', socialProfile.discoverable ? 'translate-x-6' : 'translate-x-1' ].join(' ')}
+                        className={[ 'absolute top-1 h-4 w-4 rounded-full bg-white transition-all', socialProfile.discoverable ? 'left-[22px]' : 'left-1' ].join(' ')}
                       />
                     </span>
                   </button>
@@ -952,8 +952,8 @@ export default function ProfileTab() {
            }`}>
              <span
                className={[
-                 'absolute top-1 h-4 w-4 rounded-full bg-white transition-transform',
-                 theme === 'dark' ? 'translate-x-6' : 'translate-x-1',
+                 'absolute top-1 h-4 w-4 rounded-full bg-white transition-all',
+                 theme === 'dark' ? 'left-[22px]' : 'left-1',
                ].join(' ')}
              />
            </span>
