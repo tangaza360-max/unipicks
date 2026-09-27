@@ -63,3 +63,33 @@ The complete product vision is documented in:
 Future product development must follow that document.
 
 ---
+
+## 2026-09-25 — Automated Order Expiry (Fixes lingering pending_confirmation orders)
+- **Problem**: Orders past their `confirmation_deadline` stayed in `pending_confirmation` forever because the expiry check only ran when a merchant manually accepted/declined.
+- **Solution**: Created new Edge Function `expire-orders` to find and expire these orders automatically.
+- **Security**: Added `CRON_SECRET` to Supabase secrets; function requires `x-cron-secret` header to run.
+- **Scheduling**: Configured cron-job.org to POST to the function every 1 minute.
+- **Verification**: Manual test expired 2 older orders. Cron history shows successful 200 OK runs every minute.
+
+## 2026-09-27 — Task 3 + 3.5 + 3.6: Student Order History
+
+### Task 3 — Normal orders now visible to students
+- `OrdersTab.jsx` now queries the `orders` table with `deals` and `redemptions(code)` joins.
+- New "Your orders" section shows status, quantity, total, decline reason + note, pickup code.
+
+### Task 3.5 — Toggle polish
+- Toggle moved to the right of its label (platform convention).
+- Default state changed to ON (complete record on first open — IS 19598).
+- Label renamed "Show cancelled orders" → "Show all orders".
+- Section header "Ordered deals" → "Completed Orders".
+
+### Task 3.6 — Dedicated Order History page
+- Profile now shows a clickable "Order History →" row.
+- Tapping opens a dedicated page with `← Back to Profile`, page title, and full Order History.
+- Toggle behavior aligned with standards:
+  - **ON** (default): complete record — every order, every status
+  - **OFF**: actionable only — confirmed orders awaiting payment + open group orders
+
+### Bonus fix — Production GRANT missing
+- Discovered that `can_access_group_order`, `is_open_group_order`, and `find_open_group_order_by_code` were missing `EXECUTE` grants for the `authenticated` role in production, causing the "permission denied" error for all students.
+- New migration `20260925120000_regrant_group_order_function_access.sql` restores the grants.

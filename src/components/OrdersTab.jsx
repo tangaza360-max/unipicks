@@ -86,7 +86,7 @@ export default function OrdersTab() {
 
     const { data: normal, error: normalError } = await supabase
       .from('orders')
-      .select('id, deal_id, merchant_id, quantity, unit_price, total_price, status, decline_reason, decline_reason_note, created_at, deals(title, business_name), redemptions(code)')
+      .select('id, deal_id, merchant_id, quantity, unit_price, total_price, status, decline_reason, decline_reason_note, created_at, payment_deadline, deals(title, business_name), redemptions(code)')
       .eq('student_id', userId)
       .order('created_at', { ascending: false })
 
@@ -105,9 +105,16 @@ export default function OrdersTab() {
     let filteredRedemptions = redeemed || []
 
     if (!showAllOrders) {
-      filteredNormal = filteredNormal.filter((order) =>
-        ACTIONABLE_ORDER_STATUSES.includes(order.status)
-      )
+      filteredNormal = filteredNormal.filter((order) => {
+        if (!ACTIONABLE_ORDER_STATUSES.includes(order.status)) return false
+        if (order.status === 'confirmed') {
+          return (
+            order.payment_deadline &&
+            new Date(order.payment_deadline) > new Date()
+          )
+        }
+        return true
+      })
       filteredHosted = filteredHosted.filter((order) => order.status === 'open')
       filteredJoined = filteredJoined.filter(
         (membership) => membership.group_orders?.status === 'open'
@@ -355,7 +362,11 @@ function NormalOrderCard({ order }) {
   })
 
   const status = order.status
-  const canPay = status === 'confirmed'
+  const isPaymentWindowOpen = order.payment_deadline
+    ? new Date(order.payment_deadline) > new Date()
+    : false
+  const canPay = status === 'confirmed' && isPaymentWindowOpen
+  const showPaymentExpired = status === 'confirmed' && !isPaymentWindowOpen
   const showPickupCode = (status === 'paid' || status === 'redeemed' || status === 'completed') && redemption?.code
   const showDecline = status === 'declined'
   const showWaiting = status === 'pending_confirmation'
@@ -389,6 +400,12 @@ function NormalOrderCard({ order }) {
       {showProcessing && (
         <p className="mt-3 text-xs text-blue-400 bg-blue-100/10 rounded-lg px-3 py-2">
           Payment is being processed. You'll receive a pickup code once it's confirmed.
+        </p>
+      )}
+
+      {showPaymentExpired && (
+        <p className="mt-3 text-xs text-red-400 bg-red-100/10 rounded-lg px-3 py-2">
+          Payment window expired. This order was not paid in time.
         </p>
       )}
 
