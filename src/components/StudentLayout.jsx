@@ -1,5 +1,6 @@
 import StudentCamera from './StudentCamera.jsx'
 import { useEffect, useState, cloneElement } from 'react'
+import { supabase } from '../lib/supabaseClient.js'
 import GroupOrders from '../pages/GroupOrders.jsx'
 import Social from '../pages/Social.jsx'
 import SocialOnboarding from '../pages/SocialOnboarding.jsx'
@@ -15,6 +16,7 @@ export default function StudentLayout({ children, onLogout }) {
   const [socialHasProfile, setSocialHasProfile] = useState(null)
   const [checkingSocialProfile, setCheckingSocialProfile] = useState(false)
   const [messageTarget, setMessageTarget] = useState(null)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
     function handleOpenStudentChat(event) {
@@ -39,6 +41,49 @@ export default function StudentLayout({ children, onLogout }) {
         'unipicks-open-student-chat',
         handleOpenStudentChat
       )
+    }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    let channel = null
+
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || !active) return
+
+      const { count, error } = await supabase
+        .from('chat_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('receiver_id', user.id)
+        .eq('is_read', false)
+
+      if (error) {
+        console.error('[unread] initial fetch failed:', error)
+      } else if (active) {
+        setUnreadCount(count || 0)
+      }
+
+      channel = supabase
+        .channel(`unread:${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chat_messages',
+            filter: `receiver_id=eq.${user.id}`,
+          },
+          () => setUnreadCount((c) => c + 1)
+        )
+        .subscribe()
+    }
+
+    init()
+
+    return () => {
+      active = false
+      if (channel) supabase.removeChannel(channel)
     }
   }, [])
 
@@ -162,8 +207,8 @@ export default function StudentLayout({ children, onLogout }) {
   return (
     <div className="flex h-full min-h-0 flex-col bg-background text-foreground">
       <StudentTopBar
-        onActivity={handleActivity}
         onMessages={handleMessages}
+        unreadCount={unreadCount}
       />
 
       <div className="hidden shrink-0 border-b border-border/40 bg-background/80 px-4 py-2 backdrop-blur-xl md:block">
