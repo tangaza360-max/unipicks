@@ -276,8 +276,8 @@ Deno.serve(async (req) => {
       const message = [
         'The business accepted your order.',
         '',
-        `Please pay within 5 minutes to confirm it.`,
-        'Open your Order History to complete the payment.',
+        'Please pay within 5 minutes to confirm it.',
+        'Tap the button below to complete your payment.',
       ].join('\n')
 
       const { error: messageError } = await supabaseAdmin
@@ -288,6 +288,8 @@ Deno.serve(async (req) => {
           deal_id: order.deal_id,
           message,
           is_read: false,
+          link_path: `/payment?order_id=${order.id}`,
+          link_label: 'Pay Now',
         })
 
       if (messageError) {

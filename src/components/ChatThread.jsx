@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 
 function formatTime(iso) {
@@ -41,6 +42,7 @@ export default function ChatThread({
   const [loading, setLoading] = useState(true)
   const bottomRef = useRef(null)
   const hasScrolledOnce = useRef(false)
+  const navigate = useNavigate()
 
   const isGroup = Boolean(groupOrderId)
 
@@ -195,6 +197,19 @@ export default function ChatThread({
                     }`}
                   >
                     <p className="whitespace-pre-wrap break-words">{m.message}</p>
+                    {m.link_path && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(m.link_path)}
+                        className={`mt-2 w-full text-xs font-semibold rounded-md px-3 py-2 transition ${
+                          isMine
+                            ? 'bg-background/20 hover:bg-background/30 text-primary-foreground'
+                            : 'bg-accent/20 hover:bg-accent/30 text-accent'
+                        }`}
+                      >
+                        {m.link_label || 'Open'} &rarr;
+                      </button>
+                    )}
                     <p
                       className={`text-[10px] mt-1 text-right ${
                         isMine
