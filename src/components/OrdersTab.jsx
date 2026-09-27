@@ -94,7 +94,7 @@ export default function OrdersTab() {
 
     const { data: normal, error: normalError } = await supabase
       .from('orders')
-      .select('id, deal_id, merchant_id, quantity, unit_price, total_price, status, decline_reason, decline_reason_note, dispute_status, dispute_reason, dispute_raised_at, dispute_resolution_note, created_at, payment_deadline, deals(title, business_name), redemptions(code)')
+      .select('id, deal_id, merchant_id, quantity, unit_price, total_price, status, decline_reason, decline_reason_note, dispute_status, dispute_reason, dispute_raised_at, dispute_resolution_note, created_at, payment_deadline, merchant_phone, deals(title, business_name), redemptions(code)')
       .eq('student_id', userId)
       .order('created_at', { ascending: false })
 
@@ -447,6 +447,11 @@ function NormalOrderCard({ order, onRaiseDispute }) {
           <p className="text-xs text-muted-foreground">Pickup code</p>
           <p className="font-mono font-semibold text-base tracking-wider">{redemption.code}</p>
           <p className="text-xs text-muted-foreground mt-1">Show this to the merchant.</p>
+          {order.merchant_phone && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Merchant contact: <span className="font-mono">{order.merchant_phone}</span>
+            </p>
+          )}
         </div>
       )}
 

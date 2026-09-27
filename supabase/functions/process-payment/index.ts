@@ -28,6 +28,7 @@ type Order = {
   status: string
   confirmation_deadline: string
   payment_deadline: string | null
+  merchant_phone: string | null
 }
 
 type Redemption = {
@@ -354,11 +355,16 @@ async function sendPickupCodeMessage({
   order: Order
   redemption: Redemption
 }): Promise<void> {
+  const phoneLine = order.merchant_phone
+    ? `\n\n📞 Merchant contact: ${order.merchant_phone}\nCall them if you have any issue with this order.`
+    : ''
+
   const pickupMessage =
     `Payment received 🎉\n\n` +
     `Your order is confirmed.\n` +
     `Pickup code: ${redemption.code}\n\n` +
-    `Show this code to the business when collecting your order.`
+    `Show this code to the business when collecting your order.` +
+    phoneLine
 
   /*
    * chat_messages does not currently have an
@@ -548,7 +554,8 @@ serve(async (req) => {
         total_price,
         status,
         confirmation_deadline,
-        payment_deadline
+        payment_deadline,
+        merchant_phone
       `,
     )
     .eq('id', order_id)

@@ -29,7 +29,7 @@ export default function PaymentCheckout() {
       const { data, error: orderError } = await supabase
         .from('orders')
         .select(
-          'id, deal_id, quantity, unit_price, total_price, status, payment_deadline',
+          'id, deal_id, quantity, unit_price, total_price, status, payment_deadline, merchant_phone',
         )
         .eq('id', orderId)
         .maybeSingle()
@@ -179,9 +179,14 @@ export default function PaymentCheckout() {
                 Your order has been paid successfully.
               </p>
               <p className="text-muted-foreground text-sm">
-                Your pickup code will appear after the redemption step is
-                connected.
+                Your pickup code has been sent to your Messages.
               </p>
+              {order?.merchant_phone && (
+                <p className="text-muted-foreground text-sm">
+                  Merchant contact:{' '}
+                  <span className="font-mono">{order.merchant_phone}</span>
+                </p>
+              )}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
