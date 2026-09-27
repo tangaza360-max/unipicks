@@ -267,6 +267,39 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (action === 'accept') {
+      // Notify the student that the order was accepted and give them
+      // a clear deadline to complete payment. The pickup code is NOT
+      // included here — it is generated and sent by `process-payment`
+      // only after the student actually pays.
+
+      const message = [
+        'The business accepted your order.',
+        '',
+        `Please pay within 5 minutes to confirm it.`,
+        'Open your Order History to complete the payment.',
+      ].join('\n')
+
+      const { error: messageError } = await supabaseAdmin
+        .from('chat_messages')
+        .insert({
+          sender_id: order.merchant_id,
+          receiver_id: order.student_id,
+          deal_id: order.deal_id,
+          message,
+          is_read: false,
+        })
+
+      if (messageError) {
+        // Do not fail the accept: the order is already confirmed and
+        // the student can still see it in Order History. Log for ops.
+        console.error(
+          'Accept message creation failed:',
+          messageError,
+        )
+      }
+    }
+
     return jsonResponse({
       order: updatedOrder,
     })
