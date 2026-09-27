@@ -61,6 +61,8 @@ export default function ProfileTab() {
     loadUser()
   }, [])
 
+  const [showOrderHistory, setShowOrderHistory] = useState(false)
+
   async function loadUser() {
     setLoading(true)
     setError('')
@@ -369,6 +371,21 @@ export default function ProfileTab() {
 
   const isStudent = role === 'student'
   const isMerchant = role === 'merchant'
+
+  if (showOrderHistory) {
+    return (
+      <div className="space-y-4">
+        <button
+          onClick={() => setShowOrderHistory(false)}
+          className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+        >
+          ← Back to Profile
+        </button>
+        <h2 className="font-display text-xl font-semibold">Order History</h2>
+        <OrdersTab />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -892,9 +909,20 @@ export default function ProfileTab() {
         </section>
       )}
 
-      {/* Orders */}
+      {/* Order History link */}
       <div className="border-t border-border pt-5">
-        <OrdersTab />
+        <button
+          onClick={() => setShowOrderHistory(true)}
+          className="w-full flex items-center justify-between text-left group"
+        >
+          <div>
+            <p className="font-display text-lg font-semibold">Order History</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              View all your past orders
+            </p>
+          </div>
+          <span className="text-muted-foreground group-hover:text-accent transition">&rarr;</span>
+        </button>
       </div>
 
       {/* Settings */}
