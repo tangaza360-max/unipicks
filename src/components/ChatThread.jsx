@@ -236,11 +236,11 @@ export default function ChatThread({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type a message..."
-          className="flex-1 bg-input border border-input rounded-lg px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="flex-1 h-11 bg-input border border-input rounded-lg px-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <button
           type="submit"
-          className="bg-primary text-primary-foreground font-semibold rounded-lg px-4 py-2.5 text-sm shrink-0"
+          className="h-11 bg-primary text-primary-foreground font-semibold rounded-lg px-4 text-sm shrink-0"
         >
           Send
         </button>
