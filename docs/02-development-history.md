@@ -114,3 +114,27 @@ Future product development must follow that document.
 ### Task 4.8 — Instant scroll on chat open
 - `ChatThread.jsx` now jumps **instantly** to the bottom on first render (no visible scroll animation), and only animates **smoothly** for new incoming messages.
 - Implemented via a `hasScrolledOnce` ref that flips after the initial load.
+
+## 2026-09-27 — Step 2: Actionable chat notifications
+
+### Migration
+- `20260927140000_add_chat_message_links.sql` adds two nullable columns to `chat_messages`: `link_path` and `link_label`. Applied to production via Supabase SQL Editor.
+
+### `update-order-status` Edge Function
+- The accept message insert now includes:
+  - `link_path = /payment?order_id=<id>`
+  - `link_label = 'Pay Now'`
+- Message text reworded to "Tap the button below to complete your payment."
+
+### `ChatThread.jsx`
+- Added `useNavigate` and a button rendered under any bubble whose message has a non-null `link_path`.
+- Old messages (pre-change) have null `link_path` and render exactly as before.
+
+### Outcome
+- Student now goes from notification → payment in **one tap** (previously 5 taps).
+- Standards met: IS 19598, WCAG 2.4.4, ISO 32111 §5.4.
+
+## 2026-09-27 — Housekeeping: commit previously untracked files
+
+- `supabase/functions/expire-orders/` — automated order expiry Edge Function (was created earlier, never committed).
+- `supabase/migrations/20260925120000_regrant_group_order_function_access.sql` — production GRANT fix for group-order helper functions (was written earlier, never committed).
