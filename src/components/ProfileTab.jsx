@@ -531,16 +531,16 @@ export default function ProfileTab() {
               {formData.full_name?.charAt(0) || '?'}
             </div>
 
-            <div>
-              <p className="font-display text-lg font-semibold">
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-lg font-semibold truncate">
                 {formData.full_name || 'No name set'}
               </p>
 
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground text-sm truncate">
                 {user?.email}
               </p>
 
-              <span className="text-xs capitalize px-2 py-0.5 rounded-lg bg-muted text-muted-foreground">
+              <span className="text-xs capitalize px-2 py-0.5 rounded-lg bg-muted text-muted-foreground inline-block mt-1">
                 {role || 'user'}
               </span>
             </div>
