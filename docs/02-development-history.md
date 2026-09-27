@@ -138,3 +138,22 @@ Future product development must follow that document.
 
 - `supabase/functions/expire-orders/` — automated order expiry Edge Function (was created earlier, never committed).
 - `supabase/migrations/20260925120000_regrant_group_order_function_access.sql` — production GRANT fix for group-order helper functions (was written earlier, never committed).
+
+## 2026-09-27 — Mobile UI polish batch
+
+### Dark mode wiring (root cause fix)
+- `ThemeContext.jsx` was applying a **class** (`dark` / `light`) but `src/index.css` responds to a **`data-theme` attribute**. The toggle flipped but nothing visually changed.
+- Fix: added `root.setAttribute('data-theme', ...)` alongside the existing class manipulation. Dark mode now works end-to-end.
+- Confirmed `tailwind.config.js` has `darkMode: 'class'`; verified `0` usages of Tailwind `dark:` variants (app is 100% CSS-variable driven).
+
+### Other mobile UI fixes
+- **Email overflow** in Account Information — added `min-w-0 flex-1` + `truncate`. Long Kepler emails now clip with `…`.
+- **Avatar squish** — added `shrink-0` to the 80×80 avatar div; it stays a perfect circle regardless of sibling text width.
+- **Toggle knob positioning** — replaced `translate-x-6` / `translate-x-1` with explicit `left-[22px]` / `left-1` on both the Dark mode and Discoverability toggles. The knob no longer overflows the pill.
+- **Toggle pill color** — Dark mode toggle now uses `bg-accent : bg-muted` (was hardcoded `bg-muted`).
+- **Chat container height** — changed from `h-[calc(100dvh-16rem)]` to `h-[calc(100dvh-10rem)]` (removed 96px of empty space at the bottom).
+- **Search input padding** — `px-4` → `pl-10 pr-4`, so the placeholder text starts **after** the search icon instead of under it.
+
+### Chat polish
+- Input + Send button both set to `h-11` (44px) for pixel-perfect alignment.
+- Messages instant-scroll to bottom on first load, smooth only for new incoming messages.
