@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { linkPhoneNumbers } from '../lib/linkPhoneNumbers.jsx'
 
 function formatTime(iso) {
   if (!iso) return ''
@@ -196,7 +197,7 @@ export default function ChatThread({
                         : 'bg-muted text-foreground'
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words">{m.message}</p>
+                    <p className="whitespace-pre-wrap break-words">{linkPhoneNumbers(m.message)}</p>
                     {m.link_path && (
                       <button
                         type="button"

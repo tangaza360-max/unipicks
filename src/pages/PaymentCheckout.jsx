@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import MerchantPhone from '../components/MerchantPhone.jsx'
 import { initiatePayment } from '../lib/payment.js'
 
 const phonePattern = /^(078|079|072|073)\d{7}$/
@@ -182,9 +183,8 @@ export default function PaymentCheckout() {
                 Your pickup code has been sent to your Messages.
               </p>
               {order?.merchant_phone && (
-                <p className="text-muted-foreground text-sm">
-                  Merchant contact:{' '}
-                  <span className="font-mono">{order.merchant_phone}</span>
+                <p className="text-sm">
+                  <MerchantPhone phone={order.merchant_phone} />
                 </p>
               )}
             </div>

@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import RatingPrompt from './RatingPrompt.jsx'
 import StatusBadge from './StatusBadge.jsx'
 import RaiseDisputeModal from './RaiseDisputeModal.jsx'
+import MerchantPhone from './MerchantPhone.jsx'
 import { Package } from 'lucide-react'
 
 const DECLINE_REASON_LABELS = {
@@ -448,8 +449,8 @@ function NormalOrderCard({ order, onRaiseDispute }) {
           <p className="font-mono font-semibold text-base tracking-wider">{redemption.code}</p>
           <p className="text-xs text-muted-foreground mt-1">Show this to the merchant.</p>
           {order.merchant_phone && (
-            <p className="text-xs text-muted-foreground mt-2">
-              Merchant contact: <span className="font-mono">{order.merchant_phone}</span>
+            <p className="text-xs mt-2">
+              <MerchantPhone phone={order.merchant_phone} />
             </p>
           )}
         </div>
