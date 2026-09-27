@@ -64,17 +64,26 @@ export default function StudentLayout({ children, onLogout }) {
         setUnreadCount(count || 0)
       }
 
+      async function refetchUnread() {
+        const { count, error } = await supabase
+          .from('chat_messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('receiver_id', user.id)
+          .eq('is_read', false)
+        if (!error && active) setUnreadCount(count || 0)
+      }
+
       channel = supabase
         .channel(`unread:${user.id}`)
         .on(
           'postgres_changes',
           {
-            event: 'INSERT',
+            event: '*',
             schema: 'public',
             table: 'chat_messages',
             filter: `receiver_id=eq.${user.id}`,
           },
-          () => setUnreadCount((c) => c + 1)
+          () => refetchUnread()
         )
         .subscribe()
     }

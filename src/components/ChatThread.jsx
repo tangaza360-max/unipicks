@@ -96,6 +96,36 @@ export default function ChatThread({
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Mark incoming messages as read when the thread is opened
+  // (or when new messages arrive while viewing it).
+  useEffect(() => {
+    const hasUnreadIncoming = messages.some(
+      (m) => m.sender_id !== currentUserId && !m.is_read
+    )
+    if (!hasUnreadIncoming) return
+
+    async function markRead() {
+      let update = supabase
+        .from('chat_messages')
+        .update({ is_read: true })
+        .eq('receiver_id', currentUserId)
+        .eq('is_read', false)
+
+      if (isGroup) {
+        update = update.eq('group_order_id', groupOrderId)
+      } else {
+        update = update.eq('sender_id', otherUserId)
+      }
+
+      const { error } = await update
+      if (error) {
+        console.error('Failed to mark messages as read:', error.message)
+      }
+    }
+
+    markRead()
+  }, [messages, currentUserId, otherUserId, groupOrderId, isGroup])
+
   async function handleSend(e) {
     e.preventDefault()
     const text = input.trim()
