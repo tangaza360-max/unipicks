@@ -157,3 +157,61 @@ Future product development must follow that document.
 ### Chat polish
 - Input + Send button both set to `h-11` (44px) for pixel-perfect alignment.
 - Messages instant-scroll to bottom on first load, smooth only for new incoming messages.
+
+## 2026-09-27 — Task 6 + 6.5: Merchant contact visibility
+
+### Standards context
+- **IS 19598** requires seller contact details to be "clearly, prominently, and easily accessible to consumers." Prior to this change, students had no way to contact the merchant — a compliance gap.
+- **ISO 32111 §8.8** requires the durable transaction record to include enough info for post-transaction rights.
+- **RFC 3966** governs `tel:` URIs.
+
+### Task 6 — Merchant phone in three places
+- `process-payment/index.ts` — added `merchant_phone` to the Order type + select, and appended a conditional "📞 Merchant contact" line to the pickup-code chat message.
+- `PaymentCheckout.jsx` — added `merchant_phone` to the order query + a contact line on the payment success screen.
+- `OrdersTab.jsx` — added `merchant_phone` to the query + a contact line under the pickup code in Order History.
+
+### Task 6.5 — Tappable merchant phone
+- New component `MerchantPhone.jsx`: renders the number as a `tel:` link (opens dialer) plus a Copy button (clipboard, WCAG §2.5.5 44px target).
+- New helper `linkPhoneNumbers.jsx`: auto-detects Rwandan phone numbers (`07XXXXXXXX`, `+2507XXXXXXXX`, `2507XXXXXXXX`) in any chat message and wraps them as `tel:` links.
+- `ChatThread.jsx` now pipes `m.message` through `linkPhoneNumbers()`, so the merchant phone in the pickup message is tappable from the chat.
+- `PaymentCheckout.jsx` and `OrdersTab.jsx` now use `<MerchantPhone />` instead of plain text.
+
+## 2026-09-27 — Task 5: Dispute record (full lifecycle)
+
+### Standards context
+- **ISO 32111 §7.4.3** — "Resolving disputes" is a named post-transaction activity; the platform must maintain a dispute history.
+- **ISO 32111 §8.14** — "Dispute resolution rule" must exist as a documented process.
+- **IS 19598** — "Transparent policies for returns, cancellations, and refunds" and "clear communication with the customer throughout the reversal process."
+
+### Task 5.1 — Schema + RPC functions
+- Migration `20260927160000_add_dispute_record.sql`:
+  - Added 5 columns to `orders`: `dispute_status`, `dispute_reason`, `dispute_raised_by`, `dispute_raised_at`, `dispute_resolution_note`.
+  - CHECK constraints for status (`open|under_review|resolved|rejected`), reason (`item_not_received|quality_issue|merchant_unresponsive|wrong_item|other`), and note length (1–500 chars).
+  - Partial index on `dispute_status` where not null.
+  - RPC `raise_order_dispute(p_order_id, p_reason, p_note)` — SECURITY DEFINER, validates caller owns the order, checks allowed status, prevents duplicate disputes, `is_read`-style column-restricted update.
+  - RPC `resolve_order_dispute(p_order_id, p_status, p_resolution_note)` — SECURITY DEFINER, admin-only via `get_my_role()`, sets status + resolution note.
+- Grants: `revoke all from public; grant execute to authenticated`.
+
+### Task 5.2 — Student UI
+- New `RaiseDisputeModal.jsx` — reason dropdown, note textarea (500 char limit), submit calls the RPC.
+- `OrdersTab.jsx`:
+  - Added 4 dispute columns to the query.
+  - New `disputeTarget` state + modal render.
+  - "Raise a dispute" button on orders in actionable states (`confirmed`, `paid`, `redeemed`, `completed`, `declined`) that don't already have a dispute.
+  - Amber "Dispute: [status]" block on cards with an open dispute, including resolution note when present.
+- **Note on the first deploy:** an earlier commit accidentally placed the modal render inside `OrderCard` instead of `OrdersTab`, causing a `ReferenceError` and a black screen. Fixed by anchoring the patch on the specific `function OrderCard({ order, type, quantity }) {` signature.
+
+### Task 5.3 — Merchant view
+- `MerchantOrders.jsx`:
+  - Added `dispute_status`, `dispute_reason`, `dispute_resolution_note` to the orders query.
+  - Amber dispute block on order cards — same visual language as the student side, with reason + resolution note.
+  - Label maps for both status and reason values.
+
+### Task 5.4 — Admin UI
+- New migration `20260927180000_admin_orders_read_policy.sql`: RLS policy letting admins read all orders (`get_my_role() = 'admin'`). Without this, admins had no visibility into disputes.
+- New `AdminDisputes.jsx`:
+  - Three filter pills: Active / Resolved / Rejected.
+  - Dispute cards with deal, business, raised timestamp, quantity × price, reason, status badge.
+  - Resolve modal with three actions: Mark under review / Reject / Resolve, plus an optional resolution note.
+  - Submits via the `resolve_order_dispute` RPC.
+- `Dashboard.jsx`: added "Disputes" tab (with AlertCircle icon) to the admin tab row.
