@@ -215,3 +215,20 @@ Future product development must follow that document.
   - Resolve modal with three actions: Mark under review / Reject / Resolve, plus an optional resolution note.
   - Submits via the `resolve_order_dispute` RPC.
 - `Dashboard.jsx`: added "Disputes" tab (with AlertCircle icon) to the admin tab row.
+
+## 2026-09-29 — Merchant notification badges (Orders + Messages)
+
+### Context
+Standards: ISO 32111 §7.3.3 (order confirmation), IS 19598 ("efficient delivery notifications"). A merchant who can't see an order is waiting fails the accountability principle.
+
+### Implementation
+- `Dashboard.jsx` now tracks two live counts for the merchant role:
+  - `pendingOrderCount` — number of orders with `status = 'pending_confirmation'`
+  - `merchantUnreadCount` — number of unread `chat_messages` addressed to the merchant
+- Both subscribe to Supabase Realtime and refetch the true count on any INSERT/UPDATE event. No optimistic increment, so the counts cannot drift.
+- Red badges render on the Orders and Messages tabs when the counts are > 0.
+- Badges clear as the merchant accepts/declines orders or reads messages.
+
+### Result
+- Real-time awareness of new orders and messages without manual refresh.
+- Symmetric with the student side (chat bubble unread badge).
