@@ -30,6 +30,7 @@ export default function Dashboard() {
   const [adminTab, setAdminTab] = useState('approvals')
   const [merchantTab, setMerchantTab] = useState('deals')
   const [merchantUnreadCount, setMerchantUnreadCount] = useState(0)
+  const [pendingOrderCount, setPendingOrderCount] = useState(0)
   const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
@@ -69,6 +70,56 @@ return () => {
       subscription?.unsubscribe()
     }
   }, [navigate])
+
+  // Merchant pending-order badge: count of orders awaiting the merchant's accept/decline.
+  useEffect(() => {
+    if (role !== 'merchant' || !user) return
+
+    let active = true
+    let channel = null
+
+    async function init() {
+      const { count, error } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('merchant_id', user.id)
+        .eq('status', 'pending_confirmation')
+
+      if (error) {
+        console.error('[merchant pending-orders] initial fetch failed:', error)
+      } else if (active) {
+        setPendingOrderCount(count || 0)
+      }
+
+      channel = supabase
+        .channel(`merchant-orders-count:${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'orders',
+            filter: `merchant_id=eq.${user.id}`,
+          },
+          async () => {
+            const { count, error: refetchError } = await supabase
+              .from('orders')
+              .select('*', { count: 'exact', head: true })
+              .eq('merchant_id', user.id)
+              .eq('status', 'pending_confirmation')
+            if (!refetchError && active) setPendingOrderCount(count || 0)
+          }
+        )
+        .subscribe()
+    }
+
+    init()
+
+    return () => {
+      active = false
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [role, user])
 
   // Merchant unread message badge: fetch on mount, update in real-time.
   // Only runs when the current user is a merchant.
@@ -195,6 +246,11 @@ return () => {
               >
                 <Icon size={16} />
                 <span>{tab.label}</span>
+                {tab.id === 'orders' && pendingOrderCount > 0 && (
+                  <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+                    {pendingOrderCount > 99 ? '99+' : pendingOrderCount}
+                  </span>
+                )}
                 {tab.id === 'messages' && merchantUnreadCount > 0 && (
                   <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
                     {merchantUnreadCount > 99 ? '99+' : merchantUnreadCount}
