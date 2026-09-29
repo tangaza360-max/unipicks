@@ -29,6 +29,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [adminTab, setAdminTab] = useState('approvals')
   const [merchantTab, setMerchantTab] = useState('deals')
+  const [merchantUnreadCount, setMerchantUnreadCount] = useState(0)
   const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
@@ -68,6 +69,57 @@ return () => {
       subscription?.unsubscribe()
     }
   }, [navigate])
+
+  // Merchant unread message badge: fetch on mount, update in real-time.
+  // Only runs when the current user is a merchant.
+  useEffect(() => {
+    if (role !== 'merchant' || !user) return
+
+    let active = true
+    let channel = null
+
+    async function init() {
+      const { count, error } = await supabase
+        .from('chat_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('receiver_id', user.id)
+        .eq('is_read', false)
+
+      if (error) {
+        console.error('[merchant unread] initial fetch failed:', error)
+      } else if (active) {
+        setMerchantUnreadCount(count || 0)
+      }
+
+      channel = supabase
+        .channel(`merchant-unread:${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'chat_messages',
+            filter: `receiver_id=eq.${user.id}`,
+          },
+          async () => {
+            const { count, error: refetchError } = await supabase
+              .from('chat_messages')
+              .select('*', { count: 'exact', head: true })
+              .eq('receiver_id', user.id)
+              .eq('is_read', false)
+            if (!refetchError && active) setMerchantUnreadCount(count || 0)
+          }
+        )
+        .subscribe()
+    }
+
+    init()
+
+    return () => {
+      active = false
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [role, user])
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -143,6 +195,11 @@ return () => {
               >
                 <Icon size={16} />
                 <span>{tab.label}</span>
+                {tab.id === 'messages' && merchantUnreadCount > 0 && (
+                  <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+                    {merchantUnreadCount > 99 ? '99+' : merchantUnreadCount}
+                  </span>
+                )}
               </button>
             )
           })}
