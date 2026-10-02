@@ -83,7 +83,7 @@ export default function RegisterMerchant() {
     }
 
     if (signUpData.session) {
-      navigate('/dashboard')
+      navigate('/dashboard/deals', { replace: true })
       return
     }
 

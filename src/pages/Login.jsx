@@ -25,7 +25,7 @@ export default function Login() {
       setError(signInError.message)
       return
     }
-    navigate('/dashboard')
+    navigate('/dashboard/deals', { replace: true })
   }
 
   return (

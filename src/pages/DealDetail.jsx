@@ -82,7 +82,7 @@ export default function DealDetail() {
             {error || 'Deal not found.'}
           </p>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/dashboard/deals')}
             className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
           >
             Back to deals
@@ -108,7 +108,7 @@ export default function DealDetail() {
     <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto px-4 py-5 md:py-8 space-y-5">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/dashboard/deals')}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition"
         >
           <ArrowLeft size={18} />

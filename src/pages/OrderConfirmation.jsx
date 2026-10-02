@@ -69,7 +69,7 @@ export default function OrderConfirmation() {
         quantity,
       })
 
-      navigate(`/payment?order_id=${order.id}`)
+      navigate(`/payment?order_id=${order.id}`, { replace: true })
     } catch (err) {
       console.error('Order error:', err)
       setError(err.message || 'Could not place your order. Please try again.')
@@ -108,7 +108,7 @@ export default function OrderConfirmation() {
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-5 md:py-8 space-y-5">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(`/deal/${id}`)}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition"
         >
           <ArrowLeft size={18} />

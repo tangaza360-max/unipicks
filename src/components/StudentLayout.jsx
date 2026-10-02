@@ -1,5 +1,6 @@
 import StudentCamera from './StudentCamera.jsx'
 import { useEffect, useState, cloneElement } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import GroupOrders from '../pages/GroupOrders.jsx'
 import Social from '../pages/Social.jsx'
@@ -11,8 +12,15 @@ import StudentTopBar from './StudentTopBar.jsx'
 import StudentBottomNav from './StudentBottomNav.jsx'
 
 export default function StudentLayout({ children, onLogout }) {
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
   const [cameraOpen, setCameraOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('home')
+  const pathTab = pathname.split('/')[2]
+  const activeTab = !pathTab || pathTab === 'deals'
+    ? 'home'
+    : pathTab === 'group-orders'
+      ? 'orders'
+      : pathTab
   const [socialHasProfile, setSocialHasProfile] = useState(null)
   const [checkingSocialProfile, setCheckingSocialProfile] = useState(false)
   const [messageTarget, setMessageTarget] = useState(null)
@@ -28,7 +36,7 @@ export default function StudentLayout({ children, onLogout }) {
         otherId: target.userId,
         otherName: target.displayName || 'Student',
       })
-      setActiveTab('messages')
+      navigate('/dashboard/messages')
     }
 
     window.addEventListener(
@@ -42,7 +50,7 @@ export default function StudentLayout({ children, onLogout }) {
         handleOpenStudentChat
       )
     }
-  }, [])
+  }, [navigate])
 
   useEffect(() => {
     let active = true
@@ -153,16 +161,16 @@ export default function StudentLayout({ children, onLogout }) {
   }
 
   function handleMessages() {
-    setActiveTab('messages')
+    navigate('/dashboard/messages')
   }
 
   function handleNavigate(tab) {
-    if (tab === 'group-orders') {
-      setActiveTab('orders')
-      return
-    }
-
-    setActiveTab(tab)
+    const routeTab = tab === 'home'
+      ? 'deals'
+      : tab === 'group-orders'
+        ? 'orders'
+        : tab
+    navigate(`/dashboard/${routeTab}`)
   }
 
 
@@ -223,7 +231,7 @@ export default function StudentLayout({ children, onLogout }) {
       <div className="hidden shrink-0 border-b border-border/40 bg-background/80 px-4 py-2 backdrop-blur-xl md:block">
         <DesktopNav
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleNavigate}
         />
       </div>
 

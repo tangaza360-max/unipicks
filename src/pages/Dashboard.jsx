@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useTheme } from '../context/ThemeContext.jsx'
 import DealsFeed from './DealsFeed.jsx'
@@ -24,11 +24,11 @@ import NotificationBell from '../components/NotificationBell.jsx'
 
 export default function Dashboard() {
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const dashboardTab = pathname.split('/')[2] || ''
   const [user, setUser] = useState(null)
   const [role, setRole] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [adminTab, setAdminTab] = useState('approvals')
-  const [merchantTab, setMerchantTab] = useState('deals')
   const [merchantUnreadCount, setMerchantUnreadCount] = useState(0)
   const [pendingOrderCount, setPendingOrderCount] = useState(0)
   const { theme, toggleTheme } = useTheme()
@@ -42,7 +42,7 @@ export default function Dashboard() {
       setRole(trustedRole)
       } else {
         setUser(null)
-        navigate('/login')
+        navigate('/login', { replace: true })
       }
       setLoading(false)
     }
@@ -61,7 +61,7 @@ export default function Dashboard() {
       setUser(null)
       setRole(null)
       setLoading(false)
-      navigate('/login')
+      navigate('/login', { replace: true })
     }
   }
 )
@@ -70,6 +70,22 @@ return () => {
       subscription?.unsubscribe()
     }
   }, [navigate])
+
+  useEffect(() => {
+    if (loading || !role) return
+
+    const roleTabs = {
+      student: ['deals', 'search', 'social', 'advisor', 'orders', 'profile', 'messages'],
+      merchant: ['deals', 'orders', 'stats', 'profile', 'stories', 'messages'],
+      delivery: ['jobs'],
+      admin: ['approvals', 'student-view', 'analytics', 'users', 'settings', 'activity-logs', 'reviews', 'disputes'],
+    }
+    const defaultTab = role === 'admin' ? 'approvals' : role === 'delivery' ? 'jobs' : 'deals'
+
+    if (!roleTabs[role]?.includes(dashboardTab)) {
+      navigate(`/dashboard/${defaultTab}`, { replace: true })
+    }
+  }, [dashboardTab, loading, navigate, role])
 
   // Merchant pending-order badge: count of orders awaiting the merchant's accept/decline.
   useEffect(() => {
@@ -175,7 +191,7 @@ return () => {
   async function handleLogout() {
     await supabase.auth.signOut()
     setUser(null)
-    navigate('/login')
+    navigate('/login', { replace: true })
   }
 
   if (loading) {
@@ -187,7 +203,7 @@ return () => {
   }
 
   if (!user) {
-    navigate('/login')
+    navigate('/login', { replace: true })
     return null
   }
 
@@ -237,9 +253,9 @@ return () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setMerchantTab(tab.id)}
+                onClick={() => navigate(`/dashboard/${tab.id}`)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  merchantTab === tab.id
+                  dashboardTab === tab.id
                     ? 'bg-accent text-background-foreground shadow-sm'
                     : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
@@ -261,12 +277,12 @@ return () => {
           })}
         </div>
 
-        {merchantTab === 'deals' && <MerchantDeals />}
-          {merchantTab === 'orders' && <MerchantOrders />}
-        {merchantTab === 'stats' && <MerchantAnalytics />}
-        {merchantTab === 'profile' && <MerchantProfile merchantId={user.id} />}
-        {merchantTab === 'stories' && <MerchantStories />}
-        {merchantTab === 'messages' && <Messages />}
+        {dashboardTab === 'deals' && <MerchantDeals />}
+        {dashboardTab === 'orders' && <MerchantOrders />}
+        {dashboardTab === 'stats' && <MerchantAnalytics />}
+        {dashboardTab === 'profile' && <MerchantProfile merchantId={user.id} />}
+        {dashboardTab === 'stories' && <MerchantStories />}
+        {dashboardTab === 'messages' && <Messages />}
       </>
     )
   } else if (role === 'delivery') {
@@ -289,9 +305,9 @@ return () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setAdminTab(tab.id)}
+                onClick={() => navigate(`/dashboard/${tab.id}`)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${
-                  adminTab === tab.id
+                  dashboardTab === tab.id
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground border border-border'
                 }`}
@@ -302,13 +318,13 @@ return () => {
             )
           })}
         </div>
-        {adminTab === 'approvals' ? <AdminApprovals /> : 
-         adminTab === 'student-view' ? <AdminStudentView /> : 
-         adminTab === 'analytics' ? <AdminAnalytics /> : 
-         adminTab === 'users' ? <AdminUsers /> :
-         adminTab === 'settings' ? <AdminSettings /> :
-         adminTab === 'activity-logs' ? <AdminActivityLogs /> :
-         adminTab === 'disputes' ? <AdminDisputes /> :
+        {dashboardTab === 'approvals' ? <AdminApprovals /> : 
+         dashboardTab === 'student-view' ? <AdminStudentView /> : 
+         dashboardTab === 'analytics' ? <AdminAnalytics /> : 
+         dashboardTab === 'users' ? <AdminUsers /> :
+         dashboardTab === 'settings' ? <AdminSettings /> :
+         dashboardTab === 'activity-logs' ? <AdminActivityLogs /> :
+         dashboardTab === 'disputes' ? <AdminDisputes /> :
          <AdminReviews />}
       </>
     )

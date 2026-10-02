@@ -127,7 +127,7 @@ export default function PaymentCheckout() {
     <main className="min-h-screen bg-background px-4 py-10 text-foreground">
       <div className="mx-auto max-w-md space-y-6">
         <Link
-          to="/dashboard"
+          to="/dashboard/deals"
           className="text-sm text-primary hover:underline"
         >
           ← Back to dashboard

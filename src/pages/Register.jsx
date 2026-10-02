@@ -84,7 +84,7 @@ export default function Register() {
     // the dashboard instead of telling them to check an email that was never
     // required.
     if (signUpData.session) {
-      navigate('/dashboard')
+      navigate('/dashboard/deals', { replace: true })
       return
     }
 

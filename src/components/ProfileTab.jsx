@@ -354,7 +354,7 @@ export default function ProfileTab() {
 
   async function handleLogout() {
     await supabase.auth.signOut()
-    navigate('/login')
+    navigate('/login', { replace: true })
   }
 
   if (loading) {
