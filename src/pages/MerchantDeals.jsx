@@ -9,8 +9,14 @@ export default function MerchantDeals() {
   const [businessName, setBusinessName] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [offerType, setOfferType] = useState('percentage')
   const [discountPercent, setDiscountPercent] = useState('')
   const [price, setPrice] = useState('')
+  const [discountValue, setDiscountValue] = useState('')
+  const [buyQuantity, setBuyQuantity] = useState('1')
+  const [getQuantity, setGetQuantity] = useState('1')
+  const [minParticipants, setMinParticipants] = useState('5')
+  const [tieredRules, setTieredRules] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
   const [availableDays, setAvailableDays] = useState([
     'monday',
@@ -143,10 +149,45 @@ export default function MerchantDeals() {
     }
   }, [])
 
-  const finalPrice =
-    price && discountPercent
-      ? Math.round(Number(price) * (1 - Number(discountPercent) / 100))
-      : null
+  const selectedDiscountPercent = Number(discountPercent)
+  const enteredPrice = price === '' ? null : Number(price)
+  const enteredDiscountValue = discountValue === '' ? null : Number(discountValue)
+  let finalPrice = null
+
+  if (['percentage', 'group_buy'].includes(offerType) && enteredPrice !== null && discountPercent !== '') {
+    finalPrice = Math.round(enteredPrice * (1 - selectedDiscountPercent / 100))
+  } else if (offerType === 'fixed_amount' && enteredPrice !== null && enteredDiscountValue !== null) {
+    finalPrice = Math.max(0, Math.round(enteredPrice - enteredDiscountValue))
+  } else if (offerType === 'fixed_price' && enteredDiscountValue !== null) {
+    finalPrice = enteredDiscountValue
+  }
+
+  function parseTieredRules(value) {
+    if (!value.trim()) return []
+
+    return value.split(',').map((rule) => {
+      const match = rule.trim().match(/^(\d+)\s+for\s+(\d+(?:\.\d{1,2})?)$/i)
+      if (!match) return null
+      return { quantity: Number(match[1]), price: Number(match[2]) }
+    })
+  }
+
+  function getOfferBadge(deal) {
+    const type = deal.offer_type || 'percentage'
+    if (type === 'percentage') return `${deal.discount_value ?? deal.discount_percent ?? 0}% OFF`
+    if (type === 'fixed_amount') return `SAVE ${deal.discount_value ?? 0} RWF`
+    if (type === 'bogo') return `BUY ${deal.buy_quantity ?? 1} GET ${deal.get_quantity ?? 1}`
+    if (type === 'fixed_price') return `BUNDLE ${deal.final_price ?? deal.discount_value ?? 0} RWF`
+    if (type === 'free_shipping') return 'FREE DELIVERY'
+    if (type === 'group_buy') return `GROUP BUY · ${deal.min_participants ?? 5} NEEDED`
+    return 'TIERED DEAL'
+  }
+
+  function getOfferBadgeClass(type) {
+    if (type === 'percentage' || type === 'fixed_amount') return 'bg-green-600 text-white'
+    if (type === 'bogo' || type === 'fixed_price' || type === 'tiered') return 'bg-blue-600 text-white'
+    return 'bg-purple-600 text-white'
+  }
 
   async function reloadDeals() {
     setLoadingDeals(true)
@@ -236,16 +277,102 @@ export default function MerchantDeals() {
       supabase.rpc('get_setting', { setting_key: 'max_discount_percent' }),
       supabase.rpc('get_setting', { setting_key: 'max_price_rwf' }),
     ])
-    const maxDiscountPercent = Number(maxDiscount)
-    const maxPriceRwf = Number(maxPrice)
-    if (Number.isFinite(maxDiscountPercent) && Number(discountPercent) > maxDiscountPercent) {
+    const maxDiscountPercent = (maxDiscount !== null && maxDiscount !== undefined && Number(maxDiscount) > 0) ? Number(maxDiscount) : 100
+    const maxPriceRwf = (maxPrice !== null && maxPrice !== undefined && Number(maxPrice) > 0) ? Number(maxPrice) : 1000000
+    const numericPrice = price === '' ? null : Number(price)
+    const numericDiscountValue = discountValue === '' ? null : Number(discountValue)
+    const tierRules = offerType === 'tiered' ? parseTieredRules(tieredRules) : []
+    const requiresPrice = ['percentage', 'fixed_amount', 'bogo', 'tiered', 'group_buy'].includes(offerType)
+
+    if (requiresPrice && (!Number.isFinite(numericPrice) || numericPrice <= 0)) {
       setSaving(false)
-      setError(`Discount cannot exceed ${maxDiscountPercent}%.`)
+      setError('Enter an original price greater than 0 RWF.')
       return
     }
-    if (Number.isFinite(maxPriceRwf) && Number(price) > maxPriceRwf) {
+    if (numericPrice !== null && (!Number.isFinite(numericPrice) || numericPrice < 0)) {
+      setSaving(false)
+      setError('Price must be a valid amount of 0 RWF or more.')
+      return
+    }
+    if (numericPrice !== null && numericPrice > maxPriceRwf) {
       setSaving(false)
       setError(`Price cannot exceed ${maxPriceRwf.toLocaleString()} RWF.`)
+      return
+    }
+
+    if (['percentage', 'group_buy'].includes(offerType)) {
+      const percent = Number(discountPercent)
+      if (discountPercent === '' || !Number.isFinite(percent) || percent < 0 || percent > 100) {
+        setSaving(false)
+        setError('Enter a discount between 0% and 100%.')
+        return
+      }
+      if (percent > maxDiscountPercent) {
+        setSaving(false)
+        setError(`Discount cannot exceed ${maxDiscountPercent}%.`)
+        return
+      }
+    }
+
+    if (['fixed_amount', 'fixed_price', 'free_shipping'].includes(offerType)) {
+      const amountLabel = offerType === 'fixed_amount'
+        ? 'discount amount'
+        : offerType === 'fixed_price'
+          ? 'bundle price'
+          : 'minimum order amount'
+      if (numericDiscountValue === null || !Number.isFinite(numericDiscountValue) || numericDiscountValue < 0) {
+        setSaving(false)
+        setError(`Enter a valid ${amountLabel} of 0 RWF or more.`)
+        return
+      }
+      if (numericDiscountValue > maxPriceRwf) {
+        setSaving(false)
+        setError(`${amountLabel[0].toUpperCase()}${amountLabel.slice(1)} cannot exceed ${maxPriceRwf.toLocaleString()} RWF.`)
+        return
+      }
+    }
+
+    if (offerType === 'fixed_amount' && numericDiscountValue > numericPrice) {
+      setSaving(false)
+      setError('Discount amount cannot be greater than the original price.')
+      return
+    }
+
+    if (offerType === 'bogo') {
+      if (!Number.isInteger(Number(buyQuantity)) || Number(buyQuantity) < 1) {
+        setSaving(false)
+        setError('Buy quantity must be a whole number of at least 1.')
+        return
+      }
+      if (!Number.isInteger(Number(getQuantity)) || Number(getQuantity) < 1) {
+        setSaving(false)
+        setError('Get quantity must be a whole number of at least 1.')
+        return
+      }
+    }
+
+    if (offerType === 'group_buy' && (!Number.isInteger(Number(minParticipants)) || Number(minParticipants) < 2)) {
+      setSaving(false)
+      setError('Minimum participants must be a whole number of at least 2.')
+      return
+    }
+
+    if (offerType === 'tiered') {
+      if (!tierRules.length || tierRules.some((rule) => !rule || rule.quantity < 1 || rule.price <= 0)) {
+        setSaving(false)
+        setError('Enter tier rules as quantity for price, for example: 1 for 5000, 2 for 8000.')
+        return
+      }
+      if (tierRules.some((rule) => rule.price > maxPriceRwf)) {
+        setSaving(false)
+        setError(`Tier prices cannot exceed ${maxPriceRwf.toLocaleString()} RWF.`)
+        return
+      }
+    }
+
+    if (availableDays.length === 0) {
+      setSaving(false)
+      setError('Choose at least one available day.')
       return
     }
 
@@ -266,15 +393,39 @@ export default function MerchantDeals() {
       imageUrl = publicUrlData.publicUrl
     }
 
+    const savedDiscountPercent = ['percentage', 'group_buy'].includes(offerType)
+      ? Number(discountPercent)
+      : null
+    const savedDiscountValue = {
+      percentage: savedDiscountPercent,
+      fixed_amount: numericDiscountValue,
+      fixed_price: numericDiscountValue,
+      free_shipping: numericDiscountValue,
+      group_buy: savedDiscountPercent,
+    }[offerType] ?? null
+    const savedFinalPrice = {
+      percentage: Math.round(numericPrice * (1 - savedDiscountPercent / 100)),
+      fixed_amount: Math.round(numericPrice - numericDiscountValue),
+      fixed_price: numericDiscountValue,
+      group_buy: Math.round(numericPrice * (1 - savedDiscountPercent / 100)),
+    }[offerType] ?? null
+
     const dealData = {
       merchant_id: merchantId,
       business_name: businessName.trim(),
       title: title.trim(),
       description: description.trim() || null,
-      discount_percent: discountPercent ? Number(discountPercent) : null,
-      price: price ? Number(price) : null,
+      offer_type: offerType,
+      discount_percent: savedDiscountPercent,
+      discount_value: savedDiscountValue,
+      final_price: savedFinalPrice,
+      price: offerType === 'free_shipping' ? null : numericPrice,
+      buy_quantity: offerType === 'bogo' ? Number(buyQuantity) : null,
+      get_quantity: offerType === 'bogo' ? Number(getQuantity) : null,
+      min_participants: offerType === 'group_buy' ? Number(minParticipants) : null,
+      tiered_rules: offerType === 'tiered' ? tierRules : null,
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
-  available_days: availableDays,
+      available_days: availableDays,
       available_from: availableFrom || null,
       available_until: availableUntil || null,
       image_url: imageUrl,
@@ -312,8 +463,14 @@ export default function MerchantDeals() {
   function resetForm() {
     setTitle('')
     setDescription('')
+    setOfferType('percentage')
     setDiscountPercent('')
     setPrice('')
+    setDiscountValue('')
+    setBuyQuantity('1')
+    setGetQuantity('1')
+    setMinParticipants('5')
+    setTieredRules('')
     setExpiresAt('')
   setAvailableFrom('')
   setAvailableUntil('')
@@ -347,8 +504,16 @@ export default function MerchantDeals() {
     setBusinessName(deal.business_name || '')
     setTitle(deal.title || '')
     setDescription(deal.description || '')
-    setDiscountPercent(deal.discount_percent?.toString() || '')
+    setOfferType(deal.offer_type || 'percentage')
+    setDiscountPercent((deal.discount_percent ?? (deal.offer_type === 'percentage' ? deal.discount_value : null))?.toString() || '')
     setPrice(deal.price?.toString() || '')
+    setDiscountValue(deal.discount_value?.toString() || '')
+    setBuyQuantity(deal.buy_quantity?.toString() || '1')
+    setGetQuantity(deal.get_quantity?.toString() || '1')
+    setMinParticipants(deal.min_participants?.toString() || '5')
+    setTieredRules(Array.isArray(deal.tiered_rules)
+      ? deal.tiered_rules.map((rule) => `${rule.quantity} for ${rule.price}`).join(', ')
+      : '')
     setExpiresAt(deal.expires_at ? new Date(deal.expires_at).toISOString().split('T')[0] : '')
     setAvailableDays(deal.available_days?.length ? deal.available_days : ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])
     setExistingImageUrl(deal.image_url || null)
@@ -407,6 +572,8 @@ export default function MerchantDeals() {
 
   function applyAIDeal() {
     if (!aiGenerated) return
+    setOfferType('percentage')
+    setDiscountValue('')
     setTitle(aiGenerated.title || '')
     setDescription(aiGenerated.description || '')
     if (aiPrice) setPrice(aiPrice)
@@ -457,9 +624,10 @@ export default function MerchantDeals() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {myDeals.map((deal) => {
-            const finalPrice = deal.discount_percent
+            const dealOfferType = deal.offer_type || 'percentage'
+            const finalPrice = deal.final_price ?? (deal.discount_percent
               ? Math.round(deal.price * (1 - deal.discount_percent / 100))
-              : deal.price
+              : deal.price)
 
             return (
               <div
@@ -475,11 +643,9 @@ export default function MerchantDeals() {
                     </div>
                   )}
                   <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/35 to-transparent" />
-                  {deal.discount_percent != null && (
-                    <div className="absolute top-3 right-3 bg-accent text-background-foreground font-display font-semibold text-sm rounded-lg px-3 py-1.5 shadow-lg">
-                      {deal.discount_percent}% off
-                    </div>
-                  )}
+                  <div className={`absolute top-3 right-3 font-display font-semibold text-sm rounded-lg px-3 py-1.5 shadow-lg ${getOfferBadgeClass(dealOfferType)}`}>
+                    {getOfferBadge(deal)}
+                  </div>
                 </div>
 
                 <div className="p-4">
@@ -503,9 +669,19 @@ export default function MerchantDeals() {
                   </div>
 
                   <div className="flex items-center gap-2 text-xs pt-2">
-                    <span className="text-primary font-bold text-sm">{finalPrice} RWF</span>
-                    {deal.discount_percent != null && (
-                      <span className="line-through text-muted-foreground">{deal.price} RWF</span>
+                    <span className="text-primary font-bold text-sm">
+                      {dealOfferType === 'free_shipping'
+                        ? 'Free delivery'
+                        : finalPrice != null
+                          ? `${Number(finalPrice).toLocaleString()} RWF`
+                          : dealOfferType === 'tiered'
+                            ? 'Tiered pricing'
+                            : deal.price != null
+                              ? `${Number(deal.price).toLocaleString()} RWF / item`
+                              : 'View offer'}
+                    </span>
+                    {deal.price != null && finalPrice != null && Number(finalPrice) < Number(deal.price) && (
+                      <span className="line-through text-muted-foreground">{Number(deal.price).toLocaleString()} RWF</span>
                     )}
                   </div>
 
@@ -624,30 +800,160 @@ export default function MerchantDeals() {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="field-label">Original price (RWF)</label>
-                  <input
-                    className="field-input"
-                    type="number"
-                    min="0"
-                    placeholder="2000"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="field-label">Discount %</label>
-                  <input
-                    className="field-input"
-                    type="number"
-                    min="0"
-                    max="100"
-                    placeholder="20"
-                    value={discountPercent}
-                    onChange={(e) => setDiscountPercent(e.target.value)}
-                  />
-                </div>
+              <div>
+                <label className="field-label" htmlFor="offer-type">Offer type</label>
+                <select
+                  id="offer-type"
+                  className="field-input"
+                  value={offerType}
+                  onChange={(e) => {
+                    setOfferType(e.target.value)
+                    setDiscountValue('')
+                  }}
+                >
+                  <option value="percentage">Percentage Discount</option>
+                  <option value="fixed_amount">Fixed Amount Off</option>
+                  <option value="bogo">Buy X Get Y Free</option>
+                  <option value="fixed_price">Fixed Price Bundle</option>
+                  <option value="tiered">Tiered Discount</option>
+                  <option value="free_shipping">Free Delivery</option>
+                  <option value="group_buy">Group Buy</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {offerType !== 'free_shipping' && (
+                  <div>
+                    <label className="field-label">
+                      {offerType === 'bogo' ? 'Price per item (RWF)' : offerType === 'fixed_price' ? 'Original price (RWF, optional)' : 'Original price (RWF)'}
+                    </label>
+                    <input
+                      className="field-input"
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="2000"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {['percentage', 'group_buy'].includes(offerType) && (
+                  <div>
+                    <label className="field-label">Discount (%)</label>
+                    <input
+                      className="field-input"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      placeholder="20"
+                      value={discountPercent}
+                      onChange={(e) => setDiscountPercent(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {offerType === 'fixed_amount' && (
+                  <div>
+                    <label className="field-label">Discount amount (RWF)</label>
+                    <input
+                      className="field-input"
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="500"
+                      value={discountValue}
+                      onChange={(e) => setDiscountValue(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {offerType === 'fixed_price' && (
+                  <div>
+                    <label className="field-label">Bundle price (RWF)</label>
+                    <input
+                      className="field-input"
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="5000"
+                      value={discountValue}
+                      onChange={(e) => setDiscountValue(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {offerType === 'free_shipping' && (
+                  <div>
+                    <label className="field-label">Minimum order (RWF)</label>
+                    <input
+                      className="field-input"
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="5000"
+                      value={discountValue}
+                      onChange={(e) => setDiscountValue(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {offerType === 'bogo' && (
+                  <>
+                    <div>
+                      <label className="field-label">Buy quantity</label>
+                      <input
+                        className="field-input"
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={buyQuantity}
+                        onChange={(e) => setBuyQuantity(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="field-label">Get quantity free</label>
+                      <input
+                        className="field-input"
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={getQuantity}
+                        onChange={(e) => setGetQuantity(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {offerType === 'tiered' && (
+                  <div className="sm:col-span-2">
+                    <label className="field-label">Tier rules</label>
+                    <input
+                      className="field-input"
+                      type="text"
+                      placeholder="1 for 5000, 2 for 8000"
+                      value={tieredRules}
+                      onChange={(e) => setTieredRules(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {offerType === 'group_buy' && (
+                  <div>
+                    <label className="field-label">Minimum participants</label>
+                    <input
+                      className="field-input"
+                      type="number"
+                      min="2"
+                      step="1"
+                      value={minParticipants}
+                      onChange={(e) => setMinParticipants(e.target.value)}
+                    />
+                  </div>
+                )}
+
                 <div>
                   <label className="field-label">Expires on</label>
                   <input
@@ -727,13 +1033,6 @@ export default function MerchantDeals() {
             </p>
           </div>
 
-{finalPrice != null && (
-                <p className="text-sm text-muted-foreground bg-muted/20 p-2 rounded-lg border border-border">
-                  Students will see: <span className="line-through text-muted-foreground">{price} RWF</span>{' '}
-                  <span className="text-accent font-semibold">{finalPrice} RWF</span>
-                </p>
-              )}
-
               <div>
                 <label className="field-label">Photo</label>
                 {existingImageUrl && (
@@ -755,6 +1054,45 @@ export default function MerchantDeals() {
                 <p className="text-muted-foreground text-xs mt-1">
                   {existingImageUrl ? 'Upload a new image to replace it' : 'Upload an image for your deal'}
                 </p>
+              </div>
+
+              <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Student preview</p>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground">{businessName || 'Your business'}</p>
+                    <h3 className="font-display text-lg font-semibold break-words">{title || 'Your deal title'}</h3>
+                  </div>
+                  <span className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold ${getOfferBadgeClass(offerType)}`}>
+                    {getOfferBadge({
+                      offer_type: offerType,
+                      discount_value: ['percentage', 'group_buy'].includes(offerType) ? discountPercent : discountValue,
+                      discount_percent: discountPercent,
+                      buy_quantity: buyQuantity,
+                      get_quantity: getQuantity,
+                      min_participants: minParticipants,
+                      final_price: finalPrice,
+                    })}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-t border-border/70 pt-3">
+                  {enteredPrice !== null && ['percentage', 'fixed_amount', 'fixed_price', 'group_buy'].includes(offerType) && finalPrice !== null && finalPrice < enteredPrice && (
+                    <span className="text-sm text-muted-foreground line-through">{enteredPrice.toLocaleString()} RWF</span>
+                  )}
+                  <span className="font-display text-xl font-bold text-primary">
+                    {offerType === 'free_shipping'
+                      ? 'Free delivery'
+                      : finalPrice !== null
+                        ? `${finalPrice.toLocaleString()} RWF`
+                        : offerType === 'bogo' && enteredPrice !== null
+                          ? `Pay ${(enteredPrice * (Number(buyQuantity) || 0)).toLocaleString()} RWF for ${Number(buyQuantity || 0) + Number(getQuantity || 0)} items`
+                          : offerType === 'tiered'
+                            ? (parseTieredRules(tieredRules)[0]?.price
+                              ? `From ${parseTieredRules(tieredRules)[0].price.toLocaleString()} RWF`
+                              : 'See tier prices')
+                            : 'Deal price'}
+                  </span>
+                </div>
               </div>
 
               {error && <p className="text-sm text-red-400">{error}</p>}
