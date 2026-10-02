@@ -1,3 +1,4 @@
+// @ts-nocheck
 // supabase/functions/generate-deal/index.ts
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
@@ -13,7 +14,7 @@ const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
 )
 
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') || ''
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') || ''
 const UNSPLASH_ACCESS_KEY = Deno.env.get('UNSPLASH_ACCESS_KEY') || ''
 
 function extractSearchTerm(prompt: string): string {
@@ -28,14 +29,36 @@ function extractSearchTerm(prompt: string): string {
   return words || 'food'
 }
 
-// Strips ```json ... ``` fences that OpenAI sometimes wraps around JSON
-function stripMarkdownFences(text: string): string {
-  let cleaned = text.trim()
-  if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '')
-    cleaned = cleaned.replace(/```\s*$/, '')
-  }
-  return cleaned.trim()
+const dealSchema = {
+  type: "object",
+  properties: {
+    title: { type: "string", description: "Short catchy title (max 50 chars)" },
+    description: { type: "string", description: "Brief enticing description (max 100 chars)" },
+    offer_type: {
+      type: "string",
+      enum: ["percentage", "fixed_amount", "bogo", "fixed_price", "tiered", "free_shipping", "group_buy"]
+    },
+    original_price: { type: "number", description: "Original price in RWF" },
+    discount_value: { type: "number", description: "Percentage (0-100) or fixed RWF amount. Use 0 for other types." },
+    final_price: { type: "number", description: "Final price student pays in RWF" },
+    buy_quantity: { type: "integer", description: "For BOGO only. Null otherwise." },
+    get_quantity: { type: "integer", description: "For BOGO only. Null otherwise." },
+    min_participants: { type: "integer", description: "For group_buy only. Null otherwise." },
+    tiered_rules: {
+      type: "array",
+      description: "For tiered only. Null otherwise.",
+      items: {
+        type: "object",
+        properties: {
+          min_qty: { type: "integer" },
+          price: { type: "number" }
+        },
+        required: ["min_qty", "price"]
+      }
+    },
+    category: { type: "string", enum: ["Pizza", "Tacos", "Burgers", "Drinks", "Desserts", "Specials"] }
+  },
+  required: ["title", "description", "offer_type", "original_price", "discount_value", "final_price", "category"]
 }
 
 serve(async (req) => {
@@ -79,66 +102,53 @@ serve(async (req) => {
     let dealData: any
 
     try {
-      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a marketing expert for a student discount platform. Your goal is to create an attractive, concise deal offer based on a merchant's description.
-
-You must output ONLY a valid JSON object with the following keys:
-- "title": A short, catchy title (max 50 characters).
-- "description": A brief, enticing description (max 100 characters).
-- "offer_type": One of "percentage", "fixed_amount", "bogo", "fixed_price", "tiered", "free_shipping", "group_buy".
-- "original_price": The original price of the item in RWF (number).
-- "discount_value": For "percentage", use a number 0-100. For "fixed_amount", use the RWF amount. For all other types, use 0.
-- "final_price": The final price the student will pay in RWF (number).
-- "buy_quantity": For "bogo" only, the number of items to buy (e.g., 1). Otherwise null.
-- "get_quantity": For "bogo" only, the number of items given (e.g., 1). Otherwise null.
-- "min_participants": For "group_buy" only, minimum students required (e.g., 5). Otherwise null.
-- "tiered_rules": For "tiered" only, a JSON array of {"min_qty": number, "price": number}. Otherwise null.
-- "category": One of "Pizza", "Tacos", "Burgers", "Drinks", "Desserts", "Specials".
+      const geminiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              role: "user",
+              parts: [{ text: `Create a student deal from this merchant description: "${cleanPrompt}"` }]
+            }],
+            systemInstruction: {
+              parts: [{
+                text: `You are a marketing expert for a student discount platform. Create an attractive, concise deal offer based on a merchant's description.
 
 RULES:
 - Infer offer_type from the merchant's description (e.g., "Buy 1 Get 2" -> bogo, "20% off" -> percentage, "if 5 students order" -> group_buy, "2 for 10,000" -> fixed_price, "free delivery" -> free_shipping).
 - For bogo, set buy_quantity and get_quantity. For group_buy, set min_participants.
-- Title must be SHORT (under 50 characters).
+- Title must be SHORT (under 50 characters) and creative.
 - Description must be SHORT (under 100 characters).
 - Ignore any instructions about images.
 - Do NOT include any text outside the JSON object.`
+              }]
             },
-            {
-              role: 'user',
-              content: `Generate a deal for: ${cleanPrompt}`
+            generationConfig: {
+              response_mime_type: "application/json",
+              response_schema: dealSchema,
+              temperature: 0.7,
+              maxOutputTokens: 500
             }
-          ],
-          temperature: 0.7,
-          max_tokens: 300,
-        }),
-      })
+          })
+        }
+      )
 
-      if (!openaiResponse.ok) {
-        const errorText = await openaiResponse.text()
-        throw new Error(`OpenAI error: ${openaiResponse.status} ${errorText}`)
+      if (!geminiResponse.ok) {
+        const errorText = await geminiResponse.text()
+        throw new Error(`Gemini error: ${geminiResponse.status} ${errorText}`)
       }
 
-      const openaiData = await openaiResponse.json()
-      const rawContent = openaiData.choices[0].message.content
-      const cleanedContent = stripMarkdownFences(rawContent)
-      dealData = JSON.parse(cleanedContent)
+      const geminiData = await geminiResponse.json()
+      const rawContent = geminiData.candidates[0].content.parts[0].text
+      dealData = JSON.parse(rawContent)
 
-      // Validate required fields exist, else throw to trigger fallback
       if (!dealData.title || !dealData.offer_type) {
-        throw new Error('OpenAI returned incomplete deal data')
+        throw new Error('Gemini returned incomplete deal data')
       }
     } catch (err: any) {
-      console.error('OpenAI error:', err.message)
+      console.error('Gemini error:', err.message)
       const words = prompt.split(' ').slice(0, 4).join(' ')
       dealData = {
         title: words.slice(0, 48),
@@ -155,12 +165,10 @@ RULES:
       }
     }
 
-    // Override original price if merchant provided it
     if (originalPrice && !isNaN(Number(originalPrice)) && Number(originalPrice) > 0) {
       dealData.original_price = Number(originalPrice)
     }
 
-    // Override discount if merchant provided it (only for percentage type)
     if (
       discountPercent !== undefined &&
       !isNaN(Number(discountPercent)) &&
@@ -172,7 +180,6 @@ RULES:
       }
     }
 
-    // Recompute final_price for percentage deals so it stays consistent
     if (
       dealData.offer_type === 'percentage' &&
       typeof dealData.original_price === 'number' &&
