@@ -149,7 +149,7 @@ export default function StudentSearch() {
           placeholder="Search students, businesses, or deals…"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          className="field-input w-full pl-10"
+          className="field-input w-full !pl-10"
         />
       </div>
 
