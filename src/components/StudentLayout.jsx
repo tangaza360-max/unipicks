@@ -8,6 +8,7 @@ import SocialOnboarding from '../pages/SocialOnboarding.jsx'
 import ProfileTab from './ProfileTab.jsx'
 import DesktopNav from './DesktopNav.jsx'
 import Messages from '../pages/Messages.jsx'
+import StudentSearch from '../pages/StudentSearch.jsx'
 import StudentTopBar from './StudentTopBar.jsx'
 import StudentBottomNav from './StudentBottomNav.jsx'
 
@@ -180,7 +181,7 @@ export default function StudentLayout({ children, onLogout }) {
         return children
 
       case 'search':
-        return children
+        return <StudentSearch />
 
       case 'social':
         if (checkingSocialProfile || socialHasProfile === null) {
