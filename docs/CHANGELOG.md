@@ -9,6 +9,7 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-03
 
+- 14:55 — `fix(security)`: revoke student INSERT on redemptions; merchant code check requires a paid parent order — `supabase/migrations/20261003145500_revoke_student_redemption_insert.sql`, `src/pages/VerifyCode.jsx`
 - 14:15 — `fix(group-orders)`: center My Groups page with max-w-xl wrapper — `src/pages/GroupOrders.jsx`
 - 13:50 — `fix(group-orders)`: page gutters + even-width action buttons — `src/pages/GroupOrders.jsx`
 - 12:30 — `feat(group-orders)`: redesign as "My Groups" with hosting + joined sections, deal thumbnails, progress bars, skeletons, empty states — `src/pages/GroupOrders.jsx`
