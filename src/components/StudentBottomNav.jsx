@@ -96,7 +96,7 @@ export default function StudentBottomNav({
           active={activeTab === navigationItems[3].id}
           onClick={() => handleNavigate(navigationItems[3].id)}
           badgeCount={badges.profile}
-          badgeLabel={(n) => `${n} order${n === 1 ? '' : 's'} need${n === 1 ? 's' : ''} payment`}
+          badgeLabel={(n) => `${n} update${n === 1 ? '' : 's'} need${n === 1 ? 's' : ''} your attention`}
         />
       </div>
     </nav>

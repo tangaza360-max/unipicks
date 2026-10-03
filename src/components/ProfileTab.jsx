@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Mail,
   MapPin,
@@ -29,7 +29,7 @@ function verifiedIdentityOf(user) {
   }
 }
 
-export default function ProfileTab({ needsActionCount = 0 }) {
+export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 0 }) {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
 
@@ -72,6 +72,36 @@ export default function ProfileTab({ needsActionCount = 0 }) {
   }, [])
 
   const [showOrderHistory, setShowOrderHistory] = useState(false)
+  const location = useLocation()
+
+  // Dispute notifications link to /dashboard/profile?view=orders.
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('view') === 'orders') {
+      setShowOrderHistory(true)
+    }
+  }, [location.search])
+
+  // Opening Order History is where dispute updates are shown (OrdersTab),
+  // so mark the student's unread dispute notifications as read then.
+  useEffect(() => {
+    if (!showOrderHistory || disputeUnreadCount === 0) return
+
+    async function markDisputeNotificationsRead() {
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      if (!currentUser) return
+
+      const { error } = await supabase
+        .from('user_notifications')
+        .update({ is_read: true })
+        .eq('user_id', currentUser.id)
+        .eq('is_read', false)
+        .like('type', 'dispute_%')
+
+      if (error) console.error('Failed to mark dispute notifications as read:', error.message)
+    }
+
+    markDisputeNotificationsRead()
+  }, [showOrderHistory, disputeUnreadCount])
 
   async function loadUser() {
     setLoading(true)
@@ -900,9 +930,11 @@ export default function ProfileTab({ needsActionCount = 0 }) {
           onClick={() => setShowOrderHistory(true)}
           className="w-full flex items-center justify-between text-left group"
           aria-label={
-            needsActionCount > 0
-              ? `Order History, ${needsActionCount} order${needsActionCount === 1 ? '' : 's'} waiting for payment`
-              : 'Order History'
+            [
+              'Order History',
+              needsActionCount > 0 && `${needsActionCount} order${needsActionCount === 1 ? '' : 's'} waiting for payment`,
+              disputeUnreadCount > 0 && `${disputeUnreadCount} dispute update${disputeUnreadCount === 1 ? '' : 's'}`,
+            ].filter(Boolean).join(', ')
           }
         >
           <div>
@@ -910,16 +942,18 @@ export default function ProfileTab({ needsActionCount = 0 }) {
             <p className="text-sm text-muted-foreground mt-1">
               {needsActionCount > 0
                 ? `${needsActionCount} order${needsActionCount === 1 ? '' : 's'} accepted — pay before the deadline`
-                : 'View all your past orders'}
+                : disputeUnreadCount > 0
+                  ? 'Your dispute has an update'
+                  : 'View all your past orders'}
             </p>
           </div>
           <span className="flex items-center gap-2">
-            {needsActionCount > 0 && (
+            {needsActionCount + disputeUnreadCount > 0 && (
               <span
                 aria-hidden="true"
                 className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
               >
-                {needsActionCount > 99 ? '99+' : needsActionCount}
+                {needsActionCount + disputeUnreadCount > 99 ? '99+' : needsActionCount + disputeUnreadCount}
               </span>
             )}
             <span className="text-muted-foreground group-hover:text-accent transition">&rarr;</span>

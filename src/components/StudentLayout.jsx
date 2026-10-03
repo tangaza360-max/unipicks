@@ -27,6 +27,7 @@ export default function StudentLayout({ children, onLogout }) {
   const [messageTarget, setMessageTarget] = useState(null)
   const [unreadCount, setUnreadCount] = useState(0)
   const [needsActionCount, setNeedsActionCount] = useState(0)
+  const [disputeUnreadCount, setDisputeUnreadCount] = useState(0)
 
   useEffect(() => {
     function handleOpenStudentChat(event) {
@@ -168,6 +169,56 @@ export default function StudentLayout({ children, onLogout }) {
     }
   }, [])
 
+  // Unread dispute updates (user_notifications rows written by the
+  // notify_dispute_change trigger). Cleared when the student opens Order History.
+  useEffect(() => {
+    let active = true
+    let channel = null
+
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || !active) return
+
+      async function refetchDisputeUnread() {
+        const { count, error } = await supabase
+          .from('user_notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('is_read', false)
+          .like('type', 'dispute_%')
+
+        if (error) {
+          console.error('[dispute-unread] fetch failed:', error)
+        } else if (active) {
+          setDisputeUnreadCount(count || 0)
+        }
+      }
+
+      await refetchDisputeUnread()
+
+      channel = supabase
+        .channel(`dispute-unread:${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_notifications',
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => refetchDisputeUnread()
+        )
+        .subscribe()
+    }
+
+    init()
+
+    return () => {
+      active = false
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [])
+
   useEffect(() => {
     if (activeTab !== 'social') return
 
@@ -270,7 +321,7 @@ export default function StudentLayout({ children, onLogout }) {
         return <GroupOrders />
 
       case 'profile':
-        return <ProfileTab needsActionCount={needsActionCount} />
+        return <ProfileTab needsActionCount={needsActionCount} disputeUnreadCount={disputeUnreadCount} />
 
       case 'messages':
         return (
@@ -319,7 +370,7 @@ export default function StudentLayout({ children, onLogout }) {
         }
         onNavigate={handleNavigate}
         onCamera={() => setCameraOpen(true)}
-        badges={{ profile: needsActionCount }}
+        badges={{ profile: needsActionCount + disputeUnreadCount }}
         className="md:hidden"
       />
           {cameraOpen && <StudentCamera onClose={() => setCameraOpen(false)} />}
