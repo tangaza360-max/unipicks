@@ -41,12 +41,20 @@ create schema auth; create schema storage;
 create table auth.users (id uuid primary key, email varchar(255), phone text, encrypted_password varchar(255),
   banned_until timestamptz, email_confirmed_at timestamptz, created_at timestamptz default now(),
   updated_at timestamptz default now(), raw_user_meta_data jsonb default '{}'::jsonb,
-  raw_app_meta_data jsonb default '{}'::jsonb, is_sso_user boolean not null default false);
+  raw_app_meta_data jsonb default '{}'::jsonb, is_sso_user boolean not null default false,
+  -- Newer GoTrue columns, as on the hosted project (GoTrue writes '' into the tokens).
+  instance_id uuid, aud varchar(255), role varchar(255), confirmation_token varchar(255), confirmation_sent_at timestamptz,
+  recovery_token varchar(255), email_change_token_new varchar(255), email_change varchar(255),
+  email_change_token_current varchar(255) default '', email_change_confirm_status smallint default 0
+    check (email_change_confirm_status >= 0 and email_change_confirm_status <= 2),
+  phone_change text default '', phone_change_token varchar(255) default '', reauthentication_token varchar(255) default '',
+  last_sign_in_at timestamptz, is_anonymous boolean not null default false);
 create unique index users_email_partial_key on auth.users (email) where is_sso_user = false;
 create table auth.identities (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id) on delete cascade, provider text, identity_data jsonb);
 create table auth.sessions (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id) on delete cascade);
 create table auth.refresh_tokens (id bigserial primary key, user_id varchar(255), session_id uuid references auth.sessions(id) on delete cascade, token text);
 create table auth.mfa_factors (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id) on delete cascade);
+create table auth.one_time_tokens (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, token_type text, token_hash text not null);
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 create function auth.jwt() returns jsonb language sql stable as $$ select '{}'::jsonb $$;
 create function auth.role() returns text language sql stable as $$ select 'authenticated'::text $$;
@@ -218,6 +226,43 @@ q "update auth.users set raw_app_meta_data = '{\"provider\":\"email\"}' where id
 check "auth-server app_metadata rewrite can't resurrect student_id or unban (P1 fix)" "$(q "select (raw_app_meta_data ? 'deleted_at')::text || '|' || (raw_app_meta_data->>'banned') || '|' || (raw_app_meta_data ? 'student_id')::text from auth.users where id='$S'")" "true|true|false"
 check "second call is idempotent" "$(tomb $S null)" "already_deleted"
 
+echo "  production-shaped account (GoTrue columns, identity, session, refresh + one-time token)"
+P=00000000-0000-0000-0000-0000000000a5
+q "insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, confirmation_token, confirmation_sent_at,
+     recovery_token, email_change_token_new, email_change, email_change_token_current, email_change_confirm_status, phone_change,
+     phone_change_token, reauthentication_token, raw_app_meta_data, raw_user_meta_data, last_sign_in_at, is_sso_user, is_anonymous)
+   values ('00000000-0000-0000-0000-000000000000', '$P', 'authenticated', 'authenticated', 'prod-shape@keplercollege.ac.rw',
+     '\$2a\$10\$abcdefghijklmnopqrstuv', now(), '', now(), '', '', '', '', 0, '', '', '',
+     '{\"provider\":\"email\",\"providers\":[\"email\"]}', '{\"role\":\"student\",\"full_name\":\"Prod Shape\",\"student_id\":\"K555\",\"email_verified\":true}',
+     now(), false, false);
+   insert into auth.identities (user_id, provider, identity_data) values ('$P', 'email', '{\"sub\":\"$P\",\"email\":\"prod-shape@keplercollege.ac.rw\"}');
+   insert into auth.sessions (id, user_id) values ('00000000-0000-0000-0000-00000000aa05', '$P');
+   insert into auth.refresh_tokens (user_id, session_id, token) values ('$P', '00000000-0000-0000-0000-00000000aa05', 'rt-p');
+   insert into auth.one_time_tokens (user_id, token_type, token_hash) values ('$P', 'confirmation_token', 'h');" >/dev/null
+# Verbose error of tombstone_user($1) as service_role, after optional SQL $2 run as
+# postgres in the same (rolled back) transaction. Prints "SQLSTATE|hint".
+tomb_error() {
+  local out
+  out=$({ "${PSQL[@]}" -At 2>&1 || true; } <<SQL
+\\set VERBOSITY verbose
+begin;
+$2
+set local role service_role;
+select public.tombstone_user('$1', null);
+rollback;
+SQL
+)
+  echo "$(echo "$out" | grep -oE 'ERROR: +[0-9A-Z]{5}' | head -1 | awk '{print $2}')|$(echo "$out" | grep -E '^HINT:' | head -1 | sed -E 's/^HINT: +//')"
+}
+DRIFT=$(tomb_error $P "alter table public.deal_searches rename to deal_searches_missing;")
+check "schema drift (missing table): SQLSTATE 42P01 reaches the caller" "${DRIFT%%|*}" "42P01"
+check "  …with the failing statement's location in the hint" "$(echo "${DRIFT#*|}" | grep -cE '^tombstone_user unexpected error; where: PL/pgSQL function tombstone_user_core\(uuid,uuid\) line [0-9]+ at SQL statement')" "1"
+check "  …hint is non-empty and contains no email" "$([ -n "${DRIFT#*|}" ] && ! echo "$DRIFT" | grep -q '@' && echo clean)" "clean"
+check "  …and nothing was changed" "$(q "select (raw_app_meta_data ? 'deleted_at')::text || '|' || (select count(*) from auth.identities where user_id='$P') from auth.users where id='$P'")" "false|1"
+check "pre-check errors keep their code and carry no hint" "$(tomb_error $ACT "")" "P0001|"
+check "production-shaped account is deleted" "$(tomb $P null)" "deleted"
+check "  …its identity, session, refresh token and one-time token are gone" "$(q "select (select count(*) from auth.identities where user_id='$P') + (select count(*) from auth.sessions where user_id='$P') + (select count(*) from auth.refresh_tokens where user_id='$P') + (select count(*) from auth.one_time_tokens where user_id='$P')")" "0"
+check "  …and its GoTrue token columns are untouched (no constraint tripped)" "$(q "select email_change_confirm_status || '|' || is_anonymous::text || '|' || (raw_app_meta_data->>'banned') from auth.users where id='$P'")" "0|false|true"
 echo " admin deletion of merchant M (admin_delete_user, previously a raw DELETE)"
 q "update public.orders set status='completed' where student_id='$ACT'" >/dev/null
 check "a merchant with an open dispute (as merchant) is blocked" "$(tomb $M "'$AD'")" "You have an open dispute. Wait for it to be resolved before deleting your account."

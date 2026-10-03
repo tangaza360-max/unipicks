@@ -35,6 +35,21 @@ const USER_FACING_ERRORS: Record<string, number> = {
   P0002: 404, // user not found
 }
 
+// Set by tombstone_user (migration 20261003230000) on every error that is not a
+// deliberate pre-check, e.g. a genuine permission-denied 42501.
+const UNEXPECTED_HINT = 'tombstone_user unexpected error'
+
+// Postgres messages can quote row values (emails, phones, whole rows); strip
+// them before logging. Codes, statement locations and line numbers are kept.
+export function redactDbText(text: unknown): string | null {
+  if (typeof text !== 'string' || text.length === 0) return null
+  return text
+    .replace(/(Failing row contains )\(.*\)/gs, '$1(redacted)')
+    .replace(/(Key \([^)]*\))=\(.*?\)(?= already exists| is not present| is still referenced|$)/g, '$1=(redacted)')
+    .replace(/[^\s@()'"=,<>]+@[^\s@()'"=,<>]+/g, '[email]')
+    .replace(/\+?\d(?: ?\d){6,}/g, '[number]')
+}
+
 type StorageTarget = { bucket: string; prefix: string }
 
 async function removeStorage(targets: StorageTarget[]) {
@@ -123,10 +138,22 @@ serve(async (req) => {
     })
 
     if (rpcError) {
-      const status = USER_FACING_ERRORS[rpcError.code ?? '']
+      const unexpected = (rpcError.hint ?? '').startsWith(UNEXPECTED_HINT)
+      const status = unexpected ? undefined : USER_FACING_ERRORS[rpcError.code ?? '']
       if (status) return json({ error: rpcError.message }, status)
-      console.error('[delete-my-account] tombstone_user failed:', rpcError)
-      return json({ error: 'Account deletion failed. Nothing was deleted; please try again.' }, 500)
+      // One line, no password, email or user id: code + redacted message,
+      // details and hint (the hint carries the failing statement's location).
+      console.error('[delete-my-account] tombstone_user failed ' + JSON.stringify({
+        mode: isAdminAction ? 'admin' : 'self',
+        code: rpcError.code ?? null,
+        message: redactDbText(rpcError.message),
+        details: redactDbText(rpcError.details),
+        hint: redactDbText(rpcError.hint),
+      }))
+      return json({
+        error: 'Account deletion failed. Nothing was deleted; please try again.',
+        code: rpcError.code ?? null,
+      }, 500)
     }
 
     // Database deletion is complete. Storage cleanup is best-effort and retryable.

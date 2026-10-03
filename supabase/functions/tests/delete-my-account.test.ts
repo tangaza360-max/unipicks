@@ -5,6 +5,7 @@
 import { assertEquals } from 'jsr:@std/assert@1'
 import { db, resetDb } from './fakes/supabase.ts'
 import * as serveStub from './fakes/serve.ts'
+import { redactDbText } from '../delete-my-account/index.ts'
 
 Deno.env.set('SUPABASE_URL', 'http://fake')
 Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', 'fake')
@@ -92,6 +93,65 @@ Deno.test('unexpected database error → 500 with a safe message (no internals l
   const res = await call('tok-s', { password: 'correct horse' })
   assertEquals(res.status, 500)
   assertEquals((await res.json()).error, 'Account deletion failed. Nothing was deleted; please try again.')
+})
+
+async function captureErrors(fn: () => Promise<void>) {
+  const lines: string[] = []
+  const original = console.error
+  console.error = (...args: unknown[]) => { lines.push(args.map(String).join(' ')) }
+  try { await fn() } finally { console.error = original }
+  return lines
+}
+
+Deno.test('unexpected error is logged as one line with code, message, details and hint — no password, email or phone', async () => {
+  seed()
+  db.rpcs.tombstone_user = () => ({
+    data: null,
+    error: {
+      code: '23502',
+      message: 'null value in column "x" of relation "y" violates not-null constraint',
+      details: 'Failing row contains (aline@keplercollege.ac.rw, 0781234567, Aline).',
+      hint: 'tombstone_user unexpected error; where: PL/pgSQL function tombstone_user_core(uuid,uuid) line 98 at SQL statement',
+    },
+  })
+  let res: Response | undefined
+  const lines = await captureErrors(async () => { res = await call('tok-s', { password: 'correct horse' }) })
+  assertEquals(res!.status, 500)
+  assertEquals((await res!.json()).code, '23502')
+  const line = lines.find((l) => l.startsWith('[delete-my-account] tombstone_user failed '))!
+  const logged = JSON.parse(line.replace('[delete-my-account] tombstone_user failed ', ''))
+  assertEquals(logged, {
+    mode: 'self',
+    code: '23502',
+    message: 'null value in column "x" of relation "y" violates not-null constraint',
+    details: 'Failing row contains (redacted).',
+    hint: 'tombstone_user unexpected error; where: PL/pgSQL function tombstone_user_core(uuid,uuid) line 98 at SQL statement',
+  })
+  for (const secret of ['correct horse', 'aline@keplercollege.ac.rw', '0781234567', S]) {
+    assertEquals(lines.join('\n').includes(secret), false, `log contains ${secret}`)
+  }
+})
+
+Deno.test('a 42501 flagged unexpected by tombstone_user (real permission error) → 500, not a 403 with the raw message', async () => {
+  seed()
+  db.rpcs.tombstone_user = () => ({
+    data: null,
+    error: { code: '42501', message: 'permission denied for table sessions', details: null, hint: 'tombstone_user unexpected error; where: ...' },
+  })
+  const res = await captureErrors(async () => {
+    const r = await call('tok-s', { password: 'correct horse' })
+    assertEquals(r.status, 500)
+    assertEquals((await r.json()).error, 'Account deletion failed. Nothing was deleted; please try again.')
+  })
+  assertEquals(res.length, 1)
+})
+
+Deno.test('redactDbText strips emails, phone numbers, key values and failing rows', () => {
+  assertEquals(redactDbText('Key (email)=(a@b.rw) already exists.'), 'Key (email)=(redacted) already exists.')
+  assertEquals(redactDbText('value for +250 781 234 567 too long'), 'value for [number] too long')
+  assertEquals(redactDbText('user x@y.z not allowed'), 'user [email] not allowed')
+  assertEquals(redactDbText('relation "public.deal_searches" does not exist'), 'relation "public.deal_searches" does not exist')
+  assertEquals(redactDbText(null), null)
 })
 
 Deno.test('admin mode: non-admin targeting someone else → 403, nothing deleted', async () => {
