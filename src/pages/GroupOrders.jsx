@@ -97,7 +97,7 @@ export default function GroupOrders() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-5 px-4">
+    <div className="space-y-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
           <ShoppingCart size={20} className="text-accent" /> My Groups
@@ -382,7 +382,7 @@ function HostedOrderCard({ order, onChanged }) {
                 type="button"
                 onClick={handleSubmitGroupOrder}
                 disabled={submitting || total == null || total <= 0}
-                className="flex items-center justify-center rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-background-foreground transition hover:bg-accent-dim disabled:opacity-50"
+                className="flex-1 rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-background-foreground transition hover:bg-accent-dim disabled:opacity-50"
               >
                 {submitting ? 'Preparing…' : 'View & Pay'}
               </button>
@@ -529,8 +529,8 @@ function GroupOrderCard({ order, hostLabel, actions, expanded, error, children }
         )}
 
         {error && <p className="text-xs text-destructive">{error}</p>}
-        {actions && <div className="grid grid-cols-2 gap-2 pt-1">{actions}</div>}
-        {children && <div className="grid grid-cols-2 gap-2">{children}</div>}
+        {actions && <div className="flex flex-wrap items-center gap-2 pt-1">{actions}</div>}
+        {children && <div className="flex flex-wrap gap-2">{children}</div>}
       </div>
     </article>
   )
