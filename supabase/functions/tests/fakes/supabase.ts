@@ -6,7 +6,7 @@ type Row = any
 
 export const db: {
   tables: Record<string, Row[]>
-  users: Record<string, { id: string; email?: string; user_metadata?: Row }>
+  users: Record<string, { id: string; email?: string; user_metadata?: Row; app_metadata?: Row }>
   tokens: Record<string, string>
   // Make the next N inserts into a table fail, to test error handling.
   failInserts: Record<string, number>

@@ -9,6 +9,7 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-03
 
+- 20:00 — `fix(security)`: enforce bans: flag moved to server-only app_metadata (preserved against rewrites, legacy flags backfilled); banned users can't send chat/friend/message requests, raise disputes, post stories, start/join group orders or create orders — `supabase/migrations/20261003200000_enforce_bans.sql`, `supabase/functions/create-order/index.ts`, `supabase/functions/create-group-order-payment/index.ts`, `supabase/tests/ban_enforcement.test.sh`, `supabase/functions/tests/`
 - 19:40 — `fix(profile)`: remove non-functional settings rows (5 notification rows, Password & security, Other privacy controls, Communication, Change password) — `src/components/ProfileTab.jsx`
 - 19:25 — `feat(admin)`: open-dispute count badge on the admin Disputes tab, live via Realtime — `src/pages/Dashboard.jsx`
 - 19:10 — `feat(notifications)`: student "needs action" badge (accepted orders still inside the payment window) on the Profile nav item and the Order History row; live via Realtime + deadline timer — `src/components/StudentLayout.jsx`, `src/components/StudentBottomNav.jsx`, `src/components/ProfileTab.jsx`
