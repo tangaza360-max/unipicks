@@ -365,7 +365,7 @@ export default function StudentLayout({ children, onLogout }) {
       <StudentBottomNav
         activeTab={
           activeTab === 'orders'
-            ? 'group-orders'
+            ? 'home' // Group Orders is reached from Home (D1)
             : activeTab
         }
         onNavigate={handleNavigate}

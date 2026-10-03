@@ -2,8 +2,8 @@ import {
   Camera,
   Home,
   Search,
-  ShoppingBag,
   User,
+  Users,
 } from 'lucide-react'
 import IconButton from './IconButton.jsx'
 
@@ -19,9 +19,9 @@ const navigationItems = [
     Icon: Search,
   },
   {
-    id: 'group-orders',
-    label: 'Group Orders',
-    Icon: ShoppingBag,
+    id: 'social',
+    label: 'Social',
+    Icon: Users,
   },
   {
     id: 'profile',
@@ -54,6 +54,8 @@ export default function StudentBottomNav({
         paddingBottom: 'var(--safe-area-bottom)',
       }}
     >
+      {/* Order decided in social audit D1: Home · Search · Social · Profile · Camera.
+          The camera is photo capture + share to other apps ("Snap & share", D4). */}
       <div className="mx-auto grid h-16 max-w-lg grid-cols-5 items-center px-2">
         <NavItem
           item={navigationItems[0]}
@@ -67,28 +69,12 @@ export default function StudentBottomNav({
           onClick={() => handleNavigate(navigationItems[1].id)}
         />
 
-        <div className="flex items-center justify-center">
-          <IconButton
-            ariaLabel="Open camera"
-            onClick={onCamera}
-            hapticPattern={10}
-            className={[
-              'h-14 w-14 min-h-14 min-w-14',
-              'bg-accent text-accent-foreground',
-              'shadow-lg shadow-accent/20',
-              'hover:bg-accent/90 hover:text-accent-foreground',
-              'active:bg-accent/80 active:text-accent-foreground',
-              'active:scale-90',
-            ].join(' ')}
-          >
-            <Camera size={25} strokeWidth={2.25} aria-hidden="true" />
-          </IconButton>
-        </div>
-
         <NavItem
           item={navigationItems[2]}
           active={activeTab === navigationItems[2].id}
           onClick={() => handleNavigate(navigationItems[2].id)}
+          badgeCount={badges.social}
+          badgeLabel={(n) => `${n} new`}
         />
 
         <NavItem
@@ -98,6 +84,24 @@ export default function StudentBottomNav({
           badgeCount={badges.profile}
           badgeLabel={(n) => `${n} update${n === 1 ? '' : 's'} need${n === 1 ? 's' : ''} your attention`}
         />
+
+        <div className="flex items-center justify-center">
+          <IconButton
+            ariaLabel="Snap & share"
+            onClick={onCamera}
+            hapticPattern={10}
+            className={[
+              'h-12 w-12 min-h-12 min-w-12',
+              'bg-accent text-accent-foreground',
+              'shadow-lg shadow-accent/20',
+              'hover:bg-accent/90 hover:text-accent-foreground',
+              'active:bg-accent/80 active:text-accent-foreground',
+              'active:scale-90',
+            ].join(' ')}
+          >
+            <Camera size={22} strokeWidth={2.25} aria-hidden="true" />
+          </IconButton>
+        </div>
       </div>
     </nav>
   )

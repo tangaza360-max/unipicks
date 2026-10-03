@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { createOrder } from '../lib/orders.js'
 import GroupOrders from './GroupOrders.jsx'
 import StoryViewer from '../components/StoryViewer.jsx'
-import { Store, Search, X, Star, Smartphone, CheckCircle2, ShoppingCart } from 'lucide-react'
+import { Store, Search, X, Star, Smartphone, CheckCircle2, ShoppingCart, Users, ChevronRight } from 'lucide-react'
 
 function makeCode() {
   return String(Math.floor(1000 + Math.random() * 9000))
@@ -499,6 +499,22 @@ const getDiscoveryScore = (deal) => {
           </div>
         </div>
       )}
+
+      {/* Group Orders lives under Home (social decision D1). */}
+      <button
+        type="button"
+        onClick={() => navigate('/dashboard/orders')}
+        className="w-full min-h-11 flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left hover:border-accent/50 transition md:hidden"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
+          <Users size={18} aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium">My group orders</span>
+          <span className="block text-xs text-muted-foreground">Order together with friends and pay once</span>
+        </span>
+        <ChevronRight size={18} className="text-muted-foreground" aria-hidden="true" />
+      </button>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-4 flex-wrap">
