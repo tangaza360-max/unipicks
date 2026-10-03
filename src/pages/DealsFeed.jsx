@@ -26,10 +26,22 @@ function extractBudget(text) {
 
 function getOfferBadge(deal) {
   const type = deal.offer_type || 'percentage'
-  if (type === 'percentage') return `${deal.discount_value ?? deal.discount_percent ?? 0}% OFF`
-  if (type === 'fixed_amount') return `SAVE ${deal.discount_value ?? 0} RWF`
-  if (type === 'bogo') return `BUY ${deal.buy_quantity ?? 1} GET ${deal.get_quantity ?? 1}`
-  if (type === 'fixed_price') return `BUNDLE ${deal.final_price ?? deal.discount_value ?? 0} RWF`
+  if (type === 'percentage') {
+    const val = deal.discount_value ?? deal.discount_percent
+    return val != null && val > 0 ? `${val}% OFF` : null
+  }
+  if (type === 'fixed_amount') {
+    return deal.discount_value != null && deal.discount_value > 0 ? `SAVE ${deal.discount_value} RWF` : null
+  }
+  if (type === 'bogo') {
+    const buy = deal.buy_quantity ?? 1
+    const get = deal.get_quantity ?? 1
+    return `BUY ${buy} GET ${get}`
+  }
+  if (type === 'fixed_price') {
+    const fp = deal.final_price ?? deal.discount_value
+    return fp != null && fp > 0 ? `BUNDLE ${fp} RWF` : null
+  }
   if (type === 'free_shipping') return 'FREE DELIVERY'
   if (type === 'group_buy') return `GROUP BUY · ${deal.min_participants ?? 5} NEEDED`
   return 'TIERED DEAL'
@@ -666,9 +678,11 @@ function DealCard({ deal, ratingStats }) {
           </div>
         )}
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/35 to-transparent" />
-        <div className={`absolute top-3 right-3 font-display font-semibold text-sm rounded-lg px-3 py-1.5 shadow-lg ${getOfferBadgeClass(deal.offer_type || 'percentage')}`}>
-          {getOfferBadge(deal)}
-        </div>
+        {getOfferBadge(deal) && (
+          <div className={`absolute top-3 right-3 font-display font-semibold text-sm rounded-lg px-3 py-1.5 shadow-lg ${getOfferBadgeClass(deal.offer_type || 'percentage')}`}>
+            {getOfferBadge(deal)}
+          </div>
+        )}
       </div>
 
       <div className="p-4 space-y-1">
