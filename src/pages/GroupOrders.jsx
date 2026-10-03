@@ -308,6 +308,8 @@ function JoinOrder() {
 
 function HostedOrderCard({ order, onChanged }) {
   const navigate = useNavigate()
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const unitPrice = finalPriceOf(order.deals)
   const total = unitPrice != null ? order.members.reduce((sum, m) => sum + m.quantity * unitPrice, 0) : null
 
@@ -319,6 +321,30 @@ function HostedOrderCard({ order, onChanged }) {
   async function handleClose() {
     await supabase.from('group_orders').update({ status: 'closed' }).eq('id', order.id)
     onChanged()
+  }
+
+  async function handleSubmitGroupOrder() {
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      const { data, error } = await supabase.functions.invoke('create-group-order-payment', {
+        body: { group_order_id: order.id },
+      })
+      if (error) throw new Error(error.message || 'Failed to submit group order')
+      if (data?.order?.id) {
+        navigate(`/payment?order_id=${data.order.id}`)
+        return
+      }
+      if (data?.order_id) {
+        navigate(`/payment?order_id=${data.order_id}`)
+        return
+      }
+      throw new Error(data?.error || 'Group order submission failed')
+    } catch (err) {
+      console.error('Group order submission error:', err)
+      setSubmitError(err.message || 'Unable to submit group order')
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -373,13 +399,17 @@ function HostedOrderCard({ order, onChanged }) {
       )}
 
       {total != null && total > 0 && (
-        <button
-          type="button"
-          onClick={() => navigate(`/payment?amount=${total}&order_id=${order.id}&deal_id=${order.deal_id}&description=${encodeURIComponent(order.deals?.title || 'Group order')}`)}
-          className="w-full bg-primary text-primary-foreground font-semibold rounded-lg py-2.5 transition"
-        >
-          Pay Now · {total.toLocaleString()} RWF
-        </button>
+        <>
+          {submitError && <p className="text-sm text-red-400">{submitError}</p>}
+          <button
+            type="button"
+            onClick={handleSubmitGroupOrder}
+            disabled={submitting}
+            className="w-full bg-primary text-primary-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
+          >
+            {submitting ? 'Preparing…' : `Pay Now · ${total.toLocaleString()} RWF`}
+          </button>
+        </>
       )}
     </div>
   )
