@@ -21,6 +21,7 @@ Everything produced on branch `claude/unipicks-codebase-audit-9vd6fb` (2026-10-0
 | `e05c266` | `payment-webhook` fails closed (503) without its secret; constant-time HMAC or shared-secret verification; optional IP allowlist; structured rejection logs | 8 Deno tests + `deno check` |
 | `88158ea` | `create-order` prices by `offer_type`, rejects tiered, free_shipping and expired deals; order summary mirrors it | 29 Deno parity tests + build |
 | `7c5fb93` | `create-group-order-payment` rejects groups below `min_participants` | 5 Deno tests in `supabase/functions/tests/` |
+| `43a0d2f` | `redeem_pickup_code` RPC redeems the code and moves the order `paid → redeemed` in one transaction; `VerifyCode` calls it; merchant UPDATE on `redemptions` removed | 18 checks in `supabase/tests/redeem_pickup_code.test.sh` (local Postgres 16) |
 
 Run the committed tests from the repo root:
 ```bash
@@ -30,7 +31,7 @@ deno test --import-map=supabase/functions/tests/import_map.json --allow-env --al
 **To deploy:**
 1. Set `UMUNOTA_WEBHOOK_SECRET` **first**: `supabase secrets set UMUNOTA_WEBHOOK_SECRET=…`.
 2. `supabase db push`.
-3. `supabase functions deploy payment-webhook create-order create-group-order-payment`.
+3. `supabase functions deploy payment-webhook create-order create-group-order-payment` (`supabase db push` in step 2 also applies the `redeem_pickup_code` migration).
 4. Deploy the frontend.
 
 ## Decided, but code still needs approval
