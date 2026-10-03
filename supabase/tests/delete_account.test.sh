@@ -164,6 +164,7 @@ insert into public.orders (id, student_id, merchant_id, deal_id, quantity, unit_
 -- Chat both ways (kept for the counterparty)
 insert into public.chat_messages (sender_id, receiver_id, message) values
  ('$S','$M','Hi, I am Aline, 0788123456'), ('$M','$S','Pickup code: 4821');
+insert into public.chat_messages (sender_id, group_order_id, message) values ('$S','$GC','See you at pickup');
 insert into public.student_reports (reporter_id, reported_id, category) values ('$B','$S','Spam'), ('$S','$X','Spam');
 insert into public.activity_logs (admin_id, action, target_type, target_id, target_name) values ('$AD','approve','student','$S','Aline U');
 
@@ -177,6 +178,7 @@ SQL
 
 PASS=0; FAIL=0
 check() { if [ "$2" = "$3" ]; then echo "  ✅ $1"; PASS=$((PASS+1)); else echo "  ❌ $1"; echo "     expected: $3"; echo "     actual:   $2"; FAIL=$((FAIL+1)); fi; }
+as_anon() { local out; out=$({ "${PSQL[@]}" -At 2>&1 || true; } <<<"set role anon; $1"); echo "$out" | grep 'ERROR:' | head -1 | sed -E 's/^psql:[^:]*:[0-9]+: //; s/^ERROR: +//'; }
 tomb() { as_user '' "select public.tombstone_user('$1', $2)::jsonb ->> 'status';"; }
 
 echo "delete account (B1) tests"
@@ -242,6 +244,13 @@ check "sessions, refresh tokens, identities, MFA removed" "$(q "select (select c
 check "is_banned() (P4) is true" "$(q "select public.is_banned('$S')::text")" "true"
 check "a live token can't write (P4 guard)" "$(as_user $S "insert into public.chat_messages (sender_id, receiver_id, message) values ('$S','$M','hi');")" "Your account is suspended. Contact support."
 check "audit log entry without personal data" "$(q "select action || '|' || target_name || '|' || (details->>'by') || '|' || coalesce(admin_id::text,'∅') from public.activity_logs where action='account_deleted' and target_id='$S'")" "account_deleted|Deleted user|self|∅"
+
+echo "  chat shows \"Deleted user\" (B2b: get_deleted_user_ids)"
+check "1:1 chat partner learns S is deleted" "$(as_user $M "select string_agg(user_id::text, ',') from public.get_deleted_user_ids(array['$S','$B']::uuid[]);")" "$S"
+check "group-chat host learns S is deleted" "$(as_user $B "select count(*) from public.get_deleted_user_ids(array['$S']::uuid[]);")" "1"
+check "a non-partner can't probe S" "$(as_user $X "select count(*) from public.get_deleted_user_ids(array['$S']::uuid[]);")" "0"
+check "live partners are not reported as deleted" "$(as_user $S "select count(*) from public.get_deleted_user_ids(array['$M']::uuid[]);")" "0"
+check "anon can't call it" "$(as_anon "select public.get_deleted_user_ids(array['$S']::uuid[]);")" "permission denied for function get_deleted_user_ids"
 
 echo "  re-signup and trigger interplay"
 check "same email can sign up again as a new account" "$(q "insert into auth.users (id, email, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000a9','$SEMAIL','{\"role\":\"student\",\"student_id\":\"K999\"}') returning 'ok'")" "ok"

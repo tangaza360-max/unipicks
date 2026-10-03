@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
-import { Store } from 'lucide-react'
+import { Store, Trash2 } from 'lucide-react'
+import DeleteAccountDialog from '../components/DeleteAccountDialog.jsx'
 
 export default function MerchantProfile({ merchantId }) {
   const [loading, setLoading] = useState(true)
@@ -18,6 +19,7 @@ export default function MerchantProfile({ merchantId }) {
   const [originalProfile, setOriginalProfile] = useState({})
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -194,6 +196,23 @@ export default function MerchantProfile({ merchantId }) {
         </div>
 
         {success && <p className="text-sm text-green-400">{success}</p>}
+
+        <div className="border border-border rounded-lg p-4">
+          <p className="text-sm font-medium">Account</p>
+          <button
+            onClick={() => setShowDeleteAccount(true)}
+            className="mt-2 min-h-11 flex items-center gap-2 text-sm font-medium text-red-400 hover:text-red-300 transition"
+          >
+            <Trash2 size={16} aria-hidden="true" /> Delete account
+          </button>
+          <p className="text-xs text-muted-foreground">
+            Permanently delete your business account. Orders stay as anonymised records.
+          </p>
+        </div>
+
+        {showDeleteAccount && (
+          <DeleteAccountDialog role="merchant" onClose={() => setShowDeleteAccount(false)} />
+        )}
       </div>
     )
   }

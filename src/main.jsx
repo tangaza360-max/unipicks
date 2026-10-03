@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard.jsx'
 import AdminStudentView from './pages/AdminStudentView.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
+import DeleteAccount from './pages/DeleteAccount.jsx'
 import PaymentCheckout from './pages/PaymentCheckout.jsx'
 import DealDetail from './pages/DealDetail.jsx'
 import OrderConfirmation from './pages/OrderConfirmation.jsx'
@@ -54,6 +55,8 @@ function RouteTitle() {
                 ? 'Privacy'
                 : pathname === '/terms'
                   ? 'Terms'
+                  : pathname === '/delete-account'
+                    ? 'Delete Account'
                   : pathname === '/admin/student-view'
                     ? 'Students'
                     : pathname.endsWith('/confirm')
@@ -89,6 +92,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/admin/student-view" element={<AdminStudentView />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/delete-account" element={<DeleteAccount />} />
           <Route path="/payment" element={<PaymentCheckout />} />
         <Route path="/deal/:id" element={<DealDetail />} />
         <Route path="/deal/:id/confirm" element={<OrderConfirmation />} />

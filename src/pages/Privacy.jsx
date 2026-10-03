@@ -5,7 +5,7 @@ const sections = [
   ['How we use information', 'We use information to provide student discounts, authenticate users, process orders, support merchants, moderate content, send service notifications, and improve the platform. We do not sell personal information.'],
   ['Sharing and visibility', 'Students and merchants see only the information needed for their workflows. Public deal pages may include business names, deal details, images, and aggregated ratings. We may share information with service providers such as Supabase when needed to operate the service.'],
   ['Data retention and security', 'We retain account and transaction records while your account is active or as needed for legitimate business, legal, and security purposes. We use access controls and row-level security, but no online service can guarantee absolute security.'],
-  ['Your choices', 'You may update profile information from your account, request access to or deletion of personal information where applicable, and opt out of non-essential communications. Transactional messages may still be required to provide the service.'],
+  ['Your choices', 'You may update profile information from your account, request access to personal information, delete your account at any time (see Delete your account below), and opt out of non-essential communications. Transactional messages may still be required to provide the service.'],
   ['Children and contact', 'Unipicks is intended for students and businesses, not children under 13. For privacy questions or requests, contact us through the support email listed in the platform settings.'],
 ]
 
@@ -27,6 +27,8 @@ export default function Privacy() {
         ))}
         <footer className="border-t border-border pt-6 text-sm text-muted-foreground">
           <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
+          {' · '}
+          <Link to="/delete-account" className="text-primary hover:underline">Delete your account</Link>
         </footer>
       </article>
     </main>

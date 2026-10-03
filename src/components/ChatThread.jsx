@@ -81,6 +81,17 @@ export default function ChatThread({
           }
         }
       }
+      // Ids with no profile are either students without a social profile or
+      // deleted accounts (profile rows are removed by the tombstone).
+      const unresolved = ids.filter((id) => !profiles[id])
+      if (unresolved.length) {
+        const { data: deletedRows } = await supabase.rpc('get_deleted_user_ids', {
+          p_user_ids: unresolved,
+        })
+        for (const row of deletedRows || []) {
+          profiles[row.user_id] = { displayName: 'Deleted user', role: 'deleted' }
+        }
+      }
       for (const id of ids) {
         if (!profiles[id]) profiles[id] = { displayName: 'Student', role: 'student' }
       }
@@ -209,6 +220,8 @@ export default function ChatThread({
     ? groupOrderLabel || 'Group order chat'
     : senderProfiles[otherUserId]?.displayName || otherUserName || 'Chat'
   const headerRole = isGroup ? 'student' : otherUserRole
+  // 1:1 with a deleted account: history stays readable, nothing can be sent.
+  const otherDeleted = !isGroup && otherUserRole === 'deleted'
 
   return (
     <div className="flex flex-col h-[calc(100dvh-10rem)] md:h-[70vh] bg-card">
@@ -220,7 +233,7 @@ export default function ChatThread({
           Back
         </button>
         <p className="font-display font-semibold text-sm">{headerName}</p>
-        {headerRole && (
+        {headerRole && headerRole !== 'deleted' && (
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
             headerRole === 'merchant'
               ? 'bg-green-100 text-green-700'
@@ -301,6 +314,11 @@ export default function ChatThread({
         <div ref={bottomRef} />
       </div>
 
+      {otherDeleted ? (
+        <p role="status" className="p-3 border-t border-border text-center text-sm text-muted-foreground">
+          This account has been deleted. You can still read this conversation.
+        </p>
+      ) : (
       <form
         onSubmit={handleSend}
         className="p-3 border-t border-border flex items-center gap-2"
@@ -318,6 +336,7 @@ export default function ChatThread({
           Send
         </button>
       </form>
+      )}
     </div>
   )
 }
