@@ -41,12 +41,20 @@ create schema auth; create schema storage;
 create table auth.users (id uuid primary key, email varchar(255), phone text, encrypted_password varchar(255),
   banned_until timestamptz, email_confirmed_at timestamptz, created_at timestamptz default now(),
   updated_at timestamptz default now(), raw_user_meta_data jsonb default '{}'::jsonb,
-  raw_app_meta_data jsonb default '{}'::jsonb, is_sso_user boolean not null default false);
+  raw_app_meta_data jsonb default '{}'::jsonb, is_sso_user boolean not null default false,
+  -- Newer GoTrue columns, as on the hosted project (GoTrue writes '' into the tokens).
+  instance_id uuid, aud varchar(255), role varchar(255), confirmation_token varchar(255), confirmation_sent_at timestamptz,
+  recovery_token varchar(255), email_change_token_new varchar(255), email_change varchar(255),
+  email_change_token_current varchar(255) default '', email_change_confirm_status smallint default 0
+    check (email_change_confirm_status >= 0 and email_change_confirm_status <= 2),
+  phone_change text default '', phone_change_token varchar(255) default '', reauthentication_token varchar(255) default '',
+  last_sign_in_at timestamptz, is_anonymous boolean not null default false);
 create unique index users_email_partial_key on auth.users (email) where is_sso_user = false;
 create table auth.identities (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id) on delete cascade, provider text, identity_data jsonb);
 create table auth.sessions (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id) on delete cascade);
 create table auth.refresh_tokens (id bigserial primary key, user_id varchar(255), session_id uuid references auth.sessions(id) on delete cascade, token text);
 create table auth.mfa_factors (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id) on delete cascade);
+create table auth.one_time_tokens (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, token_type text, token_hash text not null);
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 create function auth.jwt() returns jsonb language sql stable as $$ select '{}'::jsonb $$;
 create function auth.role() returns text language sql stable as $$ select 'authenticated'::text $$;
@@ -79,6 +87,17 @@ OG=00000000-0000-0000-0000-0000000000f2
 GC=00000000-0000-0000-0000-0000000000e1
 GO=00000000-0000-0000-0000-0000000000e2
 SEMAIL='aline@keplercollege.ac.rw'
+# A realistic UmunotaPay webhook_payload (every key production stores); $1 phone, $2 reference.
+payload() {
+  printf '%s' '{"id":"pay_9f2c","items":[{"name":"Chicken wrap","quantity":1,"unit_price":2500}],"phone":"'"$1"'","amount":2500,
+"status":"success","is_test":true,"currency":"RWF","reference":"'"$2"'","wallet_id":"wal_0788","created_at":"2026-10-01T10:00:00Z",
+"product_id":"prod_1","request_id":"req_77","updated_at":"2026-10-01T10:00:05Z","description":"Payment by Aline U","itecpay_fee":25,
+"service_fee":50,"wallet_name":"Aline Uwase","total_to_pay":2575,"income_splits":[{"sub_account_id":"sub_m1","amount":2450}],
+"account_number":"'"$1"'","charged_amount":2575,"correlation_id":"corr_42","sub_account_id":"sub_m1","transfer_scope":"merchant",
+"umunotapay_fee":25,"wallet_debited":true,"transaction_fee":50,"wallet_credited":true,"itecpay_trans_id":"itc_5531","payment_provider":"mtn_momo"}'
+}
+PAYLOAD_S=$(payload 0788123456 ref-1)
+PAYLOAD_B=$(payload 0789999999 ref-b)
 
 # --- Fixtures -----------------------------------------------------------------------
 "${PSQL[@]}" >/dev/null <<SQL
@@ -124,8 +143,11 @@ insert into public.orders (id, student_id, merchant_id, deal_id, quantity, unit_
   values ('$O1','$S','$M','$D',1,2500,2500,'redeemed',now(),'0788123456','0790000000');
 insert into public.redemptions (id, deal_id, student_id, student_name, code, status, order_id)
   values ('00000000-0000-0000-0000-00000000ee01','$D','$S','Aline U','4821','redeemed','$O1');
-insert into public.transactions (student_id, deal_id, amount, phone_number, reference, status, normal_order_id)
-  values ('$S','$D',2500,'0788123456','ref-1','success','$O1');
+insert into public.transactions (student_id, deal_id, amount, phone_number, reference, status, normal_order_id, webhook_payload)
+  values ('$S','$D',2500,'0788123456','ref-1','success','$O1','$PAYLOAD_S');
+-- Another student's payment: must not be touched.
+insert into public.transactions (student_id, deal_id, amount, phone_number, reference, status, webhook_payload)
+  values ('$B','$D',2500,'0789999999','ref-b','success','$PAYLOAD_B');
 insert into public.ratings (deal_id, merchant_id, student_id, redemption_id, rating, review)
   values ('$D','$M','$S','00000000-0000-0000-0000-00000000ee01',5,'Great, ask for Aline');
 insert into public.notifications (merchant_id, deal_id, student_name, student_email, message, type)
@@ -191,6 +213,16 @@ check "membership in the OPEN group removed" "$(q "select count(*) from public.g
 echo "  kept, anonymised (financial / transactional)"
 check "order kept; student phone removed; merchant phone kept" "$(q "select status || '|' || coalesce(student_phone,'∅') || '|' || coalesce(merchant_phone,'∅') from public.orders where id='$O1'")" "redeemed|∅|0790000000"
 check "transaction kept, phone masked 078****456" "$(q "select status || '|' || amount || '|' || phone_number from public.transactions where reference='ref-1'")" "success|2500|078****456"
+PII_KEYS="phone account_number wallet_id wallet_name description"
+check "webhook_payload: payer's PII keys replaced with '[deleted]'" "$(q "select string_agg(webhook_payload->>k, ',' order by k) from public.transactions, unnest(string_to_array('$PII_KEYS',' ')) k where reference='ref-1'")" "[deleted],[deleted],[deleted],[deleted],[deleted]"
+check "webhook_payload: same keys as before (shape kept)" "$(q "select (select array_agg(k order by k) from jsonb_object_keys(webhook_payload) k) = (select array_agg(k order by k) from jsonb_object_keys('$PAYLOAD_S'::jsonb) k) from public.transactions where reference='ref-1'")" "t"
+check "webhook_payload: every financial/reconciliation key unchanged" "$(q "select webhook_payload - array['phone','account_number','wallet_id','wallet_name','description'] = '$PAYLOAD_S'::jsonb - array['phone','account_number','wallet_id','wallet_name','description'] from public.transactions where reference='ref-1'")" "t"
+check "  …e.g. amount, status, reference, itecpay_trans_id, total_to_pay" "$(q "select concat_ws('|', webhook_payload->>'amount', webhook_payload->>'status', webhook_payload->>'reference', webhook_payload->>'itecpay_trans_id', webhook_payload->>'total_to_pay') from public.transactions where reference='ref-1'")" "2500|success|ref-1|itc_5531|2575"
+check "webhook_payload: items (product name + quantity only) kept" "$(q "select webhook_payload->'items' = '$PAYLOAD_S'::jsonb->'items' from public.transactions where reference='ref-1'")" "t"
+check "webhook_payload: no trace of the phone number left anywhere in the row" "$(q "select count(*) from public.transactions where reference='ref-1' and (webhook_payload::text like '%0788123456%' or webhook_payload::text like '%Aline%')")" "0"
+check "another student's payment payload untouched" "$(q "select webhook_payload = '$PAYLOAD_B'::jsonb from public.transactions where reference='ref-b'")" "t"
+check "scrub_payment_payload redacts payer keys inside items, keeps product fields" "$(q "select public.scrub_payment_payload('{\"items\":[{\"name\":\"Wrap\",\"quantity\":2,\"phone\":\"0781\"},\"x\"]}')::text")" '{"items": [{"name": "Wrap", "phone": "[deleted]", "quantity": 2}, "x"]}'
+check "scrub_payment_payload is not callable by clients" "$(as_user $S "select public.scrub_payment_payload('{}');")" "permission denied for function scrub_payment_payload"
 check "redemption kept (code), name removed" "$(q "select code || '|' || coalesce(student_name,'∅') from public.redemptions where order_id='$O1'")" "4821|∅"
 check "rating score kept, review text removed" "$(q "select rating || '|' || coalesce(review,'∅') from public.ratings where student_id='$S'")" "5|∅"
 check "submitted group membership kept as 'Deleted user'" "$(q "select student_name from public.group_order_members where group_order_id='$GC' and student_id='$S'")" "Deleted user"
@@ -218,6 +250,50 @@ q "update auth.users set raw_app_meta_data = '{\"provider\":\"email\"}' where id
 check "auth-server app_metadata rewrite can't resurrect student_id or unban (P1 fix)" "$(q "select (raw_app_meta_data ? 'deleted_at')::text || '|' || (raw_app_meta_data->>'banned') || '|' || (raw_app_meta_data ? 'student_id')::text from auth.users where id='$S'")" "true|true|false"
 check "second call is idempotent" "$(tomb $S null)" "already_deleted"
 
+echo "  production-shaped account (GoTrue columns, identity, session, refresh + one-time token)"
+P=00000000-0000-0000-0000-0000000000a5
+q "insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, confirmation_token, confirmation_sent_at,
+     recovery_token, email_change_token_new, email_change, email_change_token_current, email_change_confirm_status, phone_change,
+     phone_change_token, reauthentication_token, raw_app_meta_data, raw_user_meta_data, last_sign_in_at, is_sso_user, is_anonymous)
+   values ('00000000-0000-0000-0000-000000000000', '$P', 'authenticated', 'authenticated', 'prod-shape@keplercollege.ac.rw',
+     '\$2a\$10\$abcdefghijklmnopqrstuv', now(), '', now(), '', '', '', '', 0, '', '', '',
+     '{\"provider\":\"email\",\"providers\":[\"email\"]}', '{\"role\":\"student\",\"full_name\":\"Prod Shape\",\"student_id\":\"K555\",\"email_verified\":true}',
+     now(), false, false);
+   insert into auth.identities (user_id, provider, identity_data) values ('$P', 'email', '{\"sub\":\"$P\",\"email\":\"prod-shape@keplercollege.ac.rw\"}');
+   insert into auth.sessions (id, user_id) values ('00000000-0000-0000-0000-00000000aa05', '$P');
+   insert into auth.refresh_tokens (user_id, session_id, token) values ('$P', '00000000-0000-0000-0000-00000000aa05', 'rt-p');
+   insert into auth.one_time_tokens (user_id, token_type, token_hash) values ('$P', 'confirmation_token', 'h');" >/dev/null
+# Verbose error of tombstone_user($1) as service_role, after optional SQL $2 run as
+# postgres in the same (rolled back) transaction. Prints "SQLSTATE|hint".
+tomb_error() {
+  local out
+  out=$({ "${PSQL[@]}" -At 2>&1 || true; } <<SQL
+\\set VERBOSITY verbose
+begin;
+$2
+set local role service_role;
+select public.tombstone_user('$1', null);
+rollback;
+SQL
+)
+  echo "$(echo "$out" | grep -oE 'ERROR: +[0-9A-Z]{5}' | head -1 | awk '{print $2}')|$(echo "$out" | grep -E '^HINT:' | head -1 | sed -E 's/^HINT: +//')"
+}
+# Production's transactions table has no phone_number column (it predates
+# 20260904110000); the payer's phone is only in webhook_payload. This is the
+# shape that made the first production deletion fail with 42703.
+q "alter table public.transactions drop column phone_number;
+   insert into public.transactions (student_id, deal_id, amount, reference, status, webhook_payload)
+   values ('$P','$D',2500,'ref-p','success','$(payload 0781112223 ref-p)');" >/dev/null
+DRIFT=$(tomb_error $P "alter table public.deal_searches rename to deal_searches_missing;")
+check "schema drift (missing table): SQLSTATE 42P01 reaches the caller" "${DRIFT%%|*}" "42P01"
+check "  …with the failing statement's location in the hint" "$(echo "${DRIFT#*|}" | grep -cE '^tombstone_user unexpected error; where: PL/pgSQL function tombstone_user_core\(uuid,uuid\) line [0-9]+ at SQL statement')" "1"
+check "  …hint is non-empty and contains no email" "$([ -n "${DRIFT#*|}" ] && ! echo "$DRIFT" | grep -q '@' && echo clean)" "clean"
+check "  …and nothing was changed" "$(q "select (raw_app_meta_data ? 'deleted_at')::text || '|' || (select count(*) from auth.identities where user_id='$P') from auth.users where id='$P'")" "false|1"
+check "pre-check errors keep their code and carry no hint" "$(tomb_error $ACT "")" "P0001|"
+check "production-shaped account is deleted" "$(tomb $P null)" "deleted"
+check "  …with no phone_number column (the 42703 regression): payment kept, payload scrubbed" "$(q "select concat_ws('|', status, amount, webhook_payload->>'phone', webhook_payload->>'account_number', webhook_payload->>'amount', webhook_payload->>'reference') from public.transactions where reference='ref-p'")" "success|2500|[deleted]|[deleted]|2500|ref-p"
+check "  …its identity, session, refresh token and one-time token are gone" "$(q "select (select count(*) from auth.identities where user_id='$P') + (select count(*) from auth.sessions where user_id='$P') + (select count(*) from auth.refresh_tokens where user_id='$P') + (select count(*) from auth.one_time_tokens where user_id='$P')")" "0"
+check "  …and its GoTrue token columns are untouched (no constraint tripped)" "$(q "select email_change_confirm_status || '|' || is_anonymous::text || '|' || (raw_app_meta_data->>'banned') from auth.users where id='$P'")" "0|false|true"
 echo " admin deletion of merchant M (admin_delete_user, previously a raw DELETE)"
 q "update public.orders set status='completed' where student_id='$ACT'" >/dev/null
 check "a merchant with an open dispute (as merchant) is blocked" "$(tomb $M "'$AD'")" "You have an open dispute. Wait for it to be resolved before deleting your account."

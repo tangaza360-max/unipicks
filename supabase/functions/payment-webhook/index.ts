@@ -264,13 +264,29 @@ serve(async (request) => {
       return json({ error: 'Missing payment status' }, 400)
     }
 
-    const { data: transaction, error: transactionError } = await supabaseAdmin
+    // Use only the columns and statuses process-payment (verified in production)
+    // writes. Production's transactions table predates the repo migration: it has
+    // no phone_number (selecting it failed every webhook with 42703), and
+    // process-payment never sets reference/provider_response or 'success'.
+    // The provider's id is umunota_reference; ours is merchant_reference (sent to
+    // UmunotaPay as merchant_reference); the payload goes in webhook_payload.
+    const TRANSACTION_COLUMNS =
+      'id, student_id, deal_id, normal_order_id, amount, merchant_reference, umunota_reference, status'
+
+    let { data: transaction, error: transactionError } = await supabaseAdmin
       .from('transactions')
-      .select(
-        'id, student_id, deal_id, normal_order_id, amount, phone_number, reference, status',
-      )
-      .eq('reference', providerReference)
+      .select(TRANSACTION_COLUMNS)
+      .eq('umunota_reference', providerReference)
       .maybeSingle()
+
+    const merchantReference = String(payload.merchant_reference || providerReference).trim()
+    if (!transactionError && !transaction && merchantReference) {
+      ;({ data: transaction, error: transactionError } = await supabaseAdmin
+        .from('transactions')
+        .select(TRANSACTION_COLUMNS)
+        .eq('merchant_reference', merchantReference)
+        .maybeSingle())
+    }
 
     if (transactionError) {
       console.error('Could not find transaction:', transactionError)
@@ -321,7 +337,8 @@ serve(async (request) => {
       return json({ error: 'Payment amount mismatch' }, 409)
     }
 
-    if (transaction.status === 'success') {
+    // 'paid' is what process-payment writes; 'success' is the legacy value.
+    if (transaction.status === 'paid' || transaction.status === 'success') {
       // A retry after a failed pickup-code delivery lands here: re-send it
       // (idempotent) so the student is never left without their code.
       const { data: existingRedemption } = await supabaseAdmin
@@ -351,8 +368,8 @@ serve(async (request) => {
       const { error: pendingError } = await supabaseAdmin
         .from('transactions')
         .update({
-          status: 'pending',
-          provider_response: payload,
+          status: 'processing',
+          webhook_payload: payload,
           updated_at: new Date().toISOString(),
         })
         .eq('id', transaction.id)
@@ -384,7 +401,7 @@ serve(async (request) => {
         .from('transactions')
         .update({
           status: 'failed',
-          provider_response: payload,
+          webhook_payload: payload,
           updated_at: new Date().toISOString(),
         })
         .eq('id', transaction.id)
@@ -432,7 +449,7 @@ serve(async (request) => {
         .from('transactions')
         .update({
           status: 'failed',
-          provider_response: {
+          webhook_payload: {
             ...payload,
             unipicks_result: 'payment_received_after_deadline',
           },
@@ -452,8 +469,8 @@ serve(async (request) => {
     const { error: successError } = await supabaseAdmin
       .from('transactions')
       .update({
-        status: 'success',
-        provider_response: payload,
+        status: 'paid',
+        webhook_payload: payload,
         updated_at: new Date().toISOString(),
       })
       .eq('id', transaction.id)

@@ -20,6 +20,13 @@ const MERCHANT = 'merchant-1'
 const DEAL = 'deal-1'
 const ORDER = 'order-1'
 const REF = 'umunota-ref-1'
+const MERCHANT_REF = 'tx-1'
+
+// Columns process-payment reads and writes on production's transactions table.
+const PRODUCTION_TRANSACTION_COLUMNS = [
+  'id', 'redemption_id', 'student_id', 'deal_id', 'normal_order_id', 'amount', 'currency', 'payment_method',
+  'merchant_reference', 'umunota_reference', 'status', 'webhook_payload', 'created_at', 'updated_at',
+]
 
 function seed() {
   resetDb()
@@ -28,9 +35,13 @@ function seed() {
     status: 'payment_processing', payment_deadline: new Date(Date.now() + 5 * 60_000).toISOString(),
     merchant_phone: '0788123456',
   }]
+  // Production's transactions shape (what process-payment writes). There is no
+  // phone_number, reference or provider_response column: touching one fails.
+  db.columns.transactions = PRODUCTION_TRANSACTION_COLUMNS
   db.tables.transactions = [{
-    id: 'tx-1', student_id: STUDENT, deal_id: DEAL, normal_order_id: ORDER, amount: 1500,
-    phone_number: '0788000000', reference: REF, status: 'pending',
+    id: 'tx-1', redemption_id: null, student_id: STUDENT, deal_id: DEAL, normal_order_id: ORDER, amount: 1500,
+    currency: 'RWF', payment_method: 'momo', merchant_reference: MERCHANT_REF, umunota_reference: REF,
+    status: 'processing', webhook_payload: {}, created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
   }]
   db.tables.redemptions = []
   db.tables.chat_messages = []
@@ -105,4 +116,50 @@ Deno.test('message already sent by process-payment (same shared text) → webhoo
   assertEquals(res.status, 200)
   assertEquals(pickupMessages().length, 1)
   assertEquals(pickupMessages()[0].message, buildPickupCodeMessage(order, '4821'))
+})
+
+// Regression: production's transactions table has no phone_number column, so
+// the old select failed every webhook with 42703 before the order was paid.
+Deno.test('production transactions shape (no phone_number) → order paid, transaction paid, payload stored', async () => {
+  seed()
+  const res = await deliverSuccessWebhook()
+  assertEquals(res.status, 200)
+  assertEquals(db.tables.orders[0].status, 'paid')
+  assertEquals(db.tables.transactions[0].status, 'paid')
+  assertEquals(db.tables.transactions[0].webhook_payload.reference, REF)
+  assertEquals('phone_number' in db.tables.transactions[0], false)
+  assertEquals('provider_response' in db.tables.transactions[0], false)
+})
+
+Deno.test('the fake really rejects phone_number on production shape (guards the regression test)', async () => {
+  seed()
+  const { error } = await createClient('', '').from('transactions').select('id, phone_number').eq('id', 'tx-1').maybeSingle()
+  assertEquals(error?.code, '42703')
+})
+
+Deno.test('webhook carrying only our merchant_reference still finds the transaction', async () => {
+  seed()
+  const body = JSON.stringify({ reference: 'unknown-provider-id', merchant_reference: MERCHANT_REF, status: 'success', amount: 1500 })
+  const res = await handle(new Request('http://fake/payment-webhook', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Webhook-Signature': await hmac(body) },
+    body,
+  }))
+  assertEquals(res.status, 200)
+  assertEquals(db.tables.orders[0].status, 'paid')
+})
+
+Deno.test('pending and failed webhooks write production statuses and webhook_payload', async () => {
+  for (const [providerStatus, expected] of [['pending', 'processing'], ['failed', 'failed']]) {
+    seed()
+    const body = JSON.stringify({ reference: REF, status: providerStatus, amount: 1500 })
+    const res = await handle(new Request('http://fake/payment-webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Webhook-Signature': await hmac(body) },
+      body,
+    }))
+    assertEquals(res.status, 200)
+    assertEquals(db.tables.transactions[0].status, expected)
+    assertEquals(db.tables.transactions[0].webhook_payload.status, providerStatus)
+  }
 })
