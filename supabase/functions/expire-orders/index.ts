@@ -1,16 +1,19 @@
 // supabase/functions/expire-orders/index.ts
 //
-// Purpose: automatically expire orders whose confirmation_deadline has passed.
+// Purpose: automatically expire orders whose deadline has passed.
 // Called by an external cron service (e.g. cron-job.org) every minute.
 //
-// Logic:
-//   1. Verify caller has the correct CRON_SECRET (or a valid service_role key).
-//   2. Find all orders where status = 'pending_confirmation' AND
-//      confirmation_deadline < now().
-//   3. Update them to status = 'confirmation_expired'.
-//   4. Return how many orders were expired.
+// Rules:
+//   1. pending_confirmation past confirmation_deadline -> confirmation_expired
+//      (the merchant never answered).
+//   2. confirmed past payment_deadline -> payment_expired
+//      (the student never paid; payment_deadline is set when the merchant accepts).
 //
-// Safe to run repeatedly. If nothing is expired, it does nothing.
+// Each rule is one conditional UPDATE (status + deadline in the WHERE clause), so
+// an order that moves on between runs, e.g. accepted or paid a moment before,
+// is never overwritten. Safe to run repeatedly: a second run finds nothing.
+// payment_processing orders are left alone: a payment is in flight and the
+// webhook / process-payment decide them.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
@@ -21,16 +24,31 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-cron-secret',
 }
 
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
+}
+
+type ExpiryRule = {
+  from: 'pending_confirmation' | 'confirmed'
+  deadlineColumn: 'confirmation_deadline' | 'payment_deadline'
+  to: 'confirmation_expired' | 'payment_expired'
+}
+
+const RULES: ExpiryRule[] = [
+  { from: 'pending_confirmation', deadlineColumn: 'confirmation_deadline', to: 'confirmation_expired' },
+  { from: 'confirmed', deadlineColumn: 'payment_deadline', to: 'payment_expired' },
+]
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
+    return json({ error: 'Method not allowed' }, 405)
   }
 
   try {
@@ -41,10 +59,7 @@ serve(async (req) => {
     if (expectedSecret) {
       const providedSecret = req.headers.get('x-cron-secret')
       if (providedSecret !== expectedSecret) {
-        return new Response(
-          JSON.stringify({ error: 'Unauthorized' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-        )
+        return json({ error: 'Unauthorized' }, 401)
       }
     }
 
@@ -56,55 +71,37 @@ serve(async (req) => {
 
     const nowIso = new Date().toISOString()
 
-    // --- Find expired pending orders ---
-    const { data: expired, error: findError } = await supabaseAdmin
-      .from('orders')
-      .select('id')
-      .eq('status', 'pending_confirmation')
-      .lt('confirmation_deadline', nowIso)
+    async function expire(rule: ExpiryRule): Promise<string[]> {
+      // lt() never matches a NULL deadline, so orders without one are skipped.
+      const { data, error } = await supabaseAdmin
+        .from('orders')
+        .update({ status: rule.to, updated_at: nowIso })
+        .eq('status', rule.from)
+        .lt(rule.deadlineColumn, nowIso)
+        .select('id')
 
-    if (findError) {
-      console.error('Failed to find expired orders:', findError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to query orders', details: findError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      )
+      if (error) {
+        throw new Error(`${rule.from} -> ${rule.to}: ${error.message}`)
+      }
+      return (data ?? []).map((o: { id: string }) => o.id)
     }
 
-    const expiredIds = (expired ?? []).map((o) => o.id)
+    const [pendingIds, confirmedIds] = [await expire(RULES[0]), await expire(RULES[1])]
 
-    if (expiredIds.length === 0) {
-      return new Response(
-        JSON.stringify({ success: true, expired_count: 0 }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      )
-    }
-
-    // --- Mark them as confirmation_expired ---
-    const { error: updateError } = await supabaseAdmin
-      .from('orders')
-      .update({ status: 'confirmation_expired' })
-      .in('id', expiredIds)
-
-    if (updateError) {
-      console.error('Failed to update expired orders:', updateError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to update orders', details: updateError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      )
-    }
-
-    console.log(`Expired ${expiredIds.length} order(s):`, expiredIds)
-
-    return new Response(
-      JSON.stringify({ success: true, expired_count: expiredIds.length, ids: expiredIds }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    console.log(
+      `[expire-orders] expired ${pendingIds.length} pending_confirmation, ${confirmedIds.length} confirmed`,
+      { confirmation_expired: pendingIds, payment_expired: confirmedIds },
     )
+
+    return json({
+      success: true,
+      expired_pending: pendingIds.length,
+      expired_confirmed: confirmedIds.length,
+      // Kept for existing callers: total across both rules.
+      expired_count: pendingIds.length + confirmedIds.length,
+    })
   } catch (error) {
-    console.error('Unexpected error in expire-orders:', error)
-    return new Response(
-      JSON.stringify({ error: 'Unexpected server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
+    console.error('[expire-orders] failed:', error)
+    return json({ error: 'Failed to expire orders' }, 500)
   }
 })
