@@ -411,15 +411,18 @@ serve(async (request) => {
         return json({ error: 'Could not save payment status' }, 500)
       }
 
-      if (order.status === 'confirmed' || order.status === 'payment_processing') {
-        await supabaseAdmin
-          .from('orders')
-          .update({
-            status: 'confirmed',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', order.id)
-      }
+      // Failed: the student may try again while the 5-minute window is open;
+      // after it, the order expires.
+      const windowOpen = Boolean(order.payment_deadline) &&
+        new Date(order.payment_deadline) > new Date()
+      await supabaseAdmin
+        .from('orders')
+        .update({
+          status: windowOpen ? 'confirmed' : 'payment_expired',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', order.id)
+        .in('status', ['confirmed', 'payment_processing'])
 
       return json({
         success: true,
@@ -432,40 +435,11 @@ serve(async (request) => {
       return json({ error: 'Unknown payment status' }, 400)
     }
 
-    if (
-      !order.payment_deadline ||
-      new Date(order.payment_deadline) <= new Date()
-    ) {
-      await supabaseAdmin
-        .from('orders')
-        .update({
-          status: 'payment_expired',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', order.id)
-        .in('status', ['confirmed', 'payment_processing'])
-
-      await supabaseAdmin
-        .from('transactions')
-        .update({
-          status: 'failed',
-          webhook_payload: {
-            ...payload,
-            unipicks_result: 'payment_received_after_deadline',
-          },
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', transaction.id)
-
-      return json(
-        {
-          error: 'Payment arrived after the payment deadline',
-          order_id: order.id,
-        },
-        409,
-      )
-    }
-
+    // Late payments are accepted (founder decision, fix 4): the 5-minute
+    // window limits *starting* the payment, which process-payment enforces.
+    // A transaction only exists if the student pressed Pay in time, so when
+    // the money is confirmed the order is paid, even if it took longer or the
+    // order was meanwhile marked payment_expired. Never "charged but expired".
     const { error: successError } = await supabaseAdmin
       .from('transactions')
       .update({
@@ -487,7 +461,7 @@ serve(async (request) => {
         updated_at: new Date().toISOString(),
       })
       .eq('id', order.id)
-      .in('status', ['confirmed', 'payment_processing'])
+      .in('status', ['confirmed', 'payment_processing', 'payment_expired'])
 
     if (paidOrderError) {
       console.error('Could not mark order as paid:', paidOrderError)

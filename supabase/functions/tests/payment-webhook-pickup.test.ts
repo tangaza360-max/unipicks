@@ -163,3 +163,48 @@ Deno.test('pending and failed webhooks write production statuses and webhook_pay
     assertEquals(db.tables.transactions[0].webhook_payload.status, providerStatus)
   }
 })
+
+// Fix 4 (founder decision): the 5-minute window limits starting the payment;
+// money that arrives later is accepted, never "charged but expired".
+async function deliver(status: string) {
+  const body = JSON.stringify({ reference: REF, status, amount: 1500 })
+  return handle(new Request('http://fake/payment-webhook', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Webhook-Signature': await hmac(body) },
+    body,
+  }))
+}
+
+Deno.test('late success (after the payment deadline) → order paid and pickup code sent', async () => {
+  seed()
+  db.tables.orders[0].payment_deadline = new Date(Date.now() - 4 * 60_000).toISOString()
+  const res = await deliver('success')
+  assertEquals(res.status, 200)
+  assertEquals(db.tables.orders[0].status, 'paid')
+  assertEquals(db.tables.transactions[0].status, 'paid')
+  assertEquals(pickupMessages().length, 1)
+})
+
+Deno.test('success for an order already marked payment_expired → paid (money arrived)', async () => {
+  seed()
+  db.tables.orders[0].status = 'payment_expired'
+  db.tables.orders[0].payment_deadline = new Date(Date.now() - 10 * 60_000).toISOString()
+  const res = await deliver('success')
+  assertEquals(res.status, 200)
+  assertEquals(db.tables.orders[0].status, 'paid')
+  assertEquals(pickupMessages().length, 1)
+})
+
+Deno.test('failed inside the window → back to confirmed (retry possible)', async () => {
+  seed()
+  await deliver('failed')
+  assertEquals(db.tables.orders[0].status, 'confirmed')
+})
+
+Deno.test('failed after the window → payment_expired', async () => {
+  seed()
+  db.tables.orders[0].payment_deadline = new Date(Date.now() - 60_000).toISOString()
+  await deliver('failed')
+  assertEquals(db.tables.orders[0].status, 'payment_expired')
+  assertEquals(db.tables.transactions[0].status, 'failed')
+})
