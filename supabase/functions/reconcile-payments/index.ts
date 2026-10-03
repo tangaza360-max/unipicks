@@ -62,6 +62,7 @@ type Order = {
   deal_id: string
   status: string
   merchant_phone: string | null
+  payment_deadline: string | null
   created_at: string | null
   updated_at: string | null
 }
@@ -180,7 +181,7 @@ serve(async (req) => {
   try {
     const { data: candidates, error: ordersError } = await supabaseAdmin
       .from('orders')
-      .select('id, student_id, merchant_id, deal_id, status, merchant_phone, created_at, updated_at')
+      .select('id, student_id, merchant_id, deal_id, status, merchant_phone, payment_deadline, created_at, updated_at')
       .eq('status', 'payment_processing')
       .lt('updated_at', staleBefore)
       .order('updated_at', { ascending: true })
@@ -282,9 +283,11 @@ serve(async (req) => {
         }
 
         if (result.status === 'failed') {
+          // Retry only while the 5-minute window is open; otherwise expire.
+          const windowOpen = Boolean(order.payment_deadline) && Date.parse(order.payment_deadline!) > now
           const { data: reverted, error: orderError } = await supabaseAdmin
             .from('orders')
-            .update({ status: 'confirmed', updated_at: nowIso })
+            .update({ status: windowOpen ? 'confirmed' : 'payment_expired', updated_at: nowIso })
             .eq('id', order.id)
             .eq('status', 'payment_processing')
             .select('id')
@@ -306,13 +309,15 @@ serve(async (req) => {
             user_id: order.student_id,
             type: 'payment_failed',
             reference_id: order.id,
-            message: `Your payment for order ${order.id.slice(0, 8).toUpperCase()} did not go through. You can try again from your orders.`,
+            message: windowOpen
+              ? `Your payment for order ${order.id.slice(0, 8).toUpperCase()} did not go through. You can try again from your orders.`
+              : `Your payment for order ${order.id.slice(0, 8).toUpperCase()} did not go through, and the payment window has closed. You were not charged.`,
             link_path: '/dashboard/profile?view=orders',
           })
           if (notifyError) console.error(`[reconcile-payments] order=${order.id} student notification failed: ${notifyError.message}`)
 
           counts.failed += 1
-          logAction('failed', 'reverted_to_confirmed')
+          logAction('failed', windowOpen ? 'reverted_to_confirmed' : 'payment_expired')
           continue
         }
 

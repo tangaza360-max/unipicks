@@ -1202,56 +1202,11 @@ serve(async (req) => {
    */
   if (isPaid) {
     /*
-     * Keep the existing payment-window rule.
+     * Late payments are accepted (founder decision, fix 4): the 5-minute
+     * window limits *starting* the payment (checked above, before the
+     * order moved to payment_processing). Once UmunotaPay confirms the
+     * money, the order is paid even if the call took longer.
      */
-    if (
-      typedOrder.payment_deadline &&
-      new Date(
-        typedOrder.payment_deadline,
-      ) <= new Date()
-    ) {
-      await supabaseAdmin
-        .from('transactions')
-        .update({
-          status: 'failed',
-          webhook_payload: {
-            ...umunotaResponse,
-            unipicks_result:
-              'Payment arrived after the payment deadline.',
-          },
-          updated_at:
-            new Date().toISOString(),
-        })
-        .eq(
-          'id',
-          transaction.id,
-        )
-
-      await supabaseAdmin
-        .from('orders')
-        .update({
-          status:
-            'payment_expired',
-          updated_at:
-            new Date().toISOString(),
-        })
-        .eq(
-          'id',
-          typedOrder.id,
-        )
-        .eq(
-          'status',
-          'payment_processing',
-        )
-
-      return json(
-        {
-          error:
-            'The payment arrived after the 5-minute payment window expired.',
-        },
-        409,
-      )
-    }
 
     /*
      * Mark the Order as paid.
@@ -1271,9 +1226,9 @@ serve(async (req) => {
           'id',
           typedOrder.id,
         )
-        .eq(
+        .in(
           'status',
-          'payment_processing',
+          ['payment_processing', 'payment_expired'],
         )
 
     if (paidOrderError) {
@@ -1332,10 +1287,15 @@ serve(async (req) => {
    * the Order remains confirmed.
    */
   if (isFailed) {
+    // Retry is possible only while the 5-minute window is still open.
+    const windowOpen =
+      Boolean(typedOrder.payment_deadline) &&
+      new Date(typedOrder.payment_deadline as string) > new Date()
+
     await supabaseAdmin
       .from('orders')
       .update({
-        status: 'confirmed',
+        status: windowOpen ? 'confirmed' : 'payment_expired',
         updated_at:
           new Date().toISOString(),
       })

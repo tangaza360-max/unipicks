@@ -85,3 +85,38 @@ Deno.test('min_participants null → allowed as before', async () => {
   const res = await submit()
   assertEquals(res.status, 201)
 })
+
+// Fix 7: 24-hour groups, deal expiry, resubmission after a dead order.
+Deno.test('group past its 24 hours → 409, no order', async () => {
+  seed({ members: 3, minParticipants: null })
+  db.tables.group_orders[0].expires_at = new Date(Date.now() - 60_000).toISOString()
+  const res = await submit()
+  assertEquals(res.status, 409)
+  assertEquals((await res.json()).error, 'This group closed after 24 hours. Start a new group to order.')
+  assertEquals(db.tables.orders.length, 0)
+})
+
+Deno.test('expired deal → 409, no order, group stays open', async () => {
+  seed({ members: 3, minParticipants: null })
+  db.tables.deals[0].expires_at = new Date(Date.now() - 60_000).toISOString()
+  const res = await submit()
+  assertEquals(res.status, 409)
+  assertEquals((await res.json()).error, 'This deal has ended')
+  assertEquals(db.tables.group_orders[0].status, 'open')
+})
+
+Deno.test('previous order declined (group reopened) → host can submit again → 201', async () => {
+  seed({ members: 3, minParticipants: null })
+  db.tables.orders.push({ id: 'dead', group_order_id: GROUP, status: 'declined' })
+  const res = await submit()
+  assertEquals(res.status, 201)
+  assertEquals(db.tables.orders.filter((o) => o.group_order_id === GROUP).length, 2)
+})
+
+Deno.test('a live order for the group already exists → 409', async () => {
+  seed({ members: 3, minParticipants: null })
+  db.tables.orders.push({ id: 'live', group_order_id: GROUP, status: 'pending_confirmation' })
+  const res = await submit()
+  assertEquals(res.status, 409)
+  assertEquals((await res.json()).order_id, 'live')
+})

@@ -25,6 +25,11 @@ function seed() {
     { id: 'paid-late', status: 'paid', confirmation_deadline: past(), payment_deadline: past() },
     { id: 'processing-late', status: 'payment_processing', confirmation_deadline: past(), payment_deadline: past() },
   ]
+  db.tables.group_orders = [
+    { id: 'group-old', status: 'open', expires_at: past() },
+    { id: 'group-fresh', status: 'open', expires_at: future() },
+    { id: 'group-closed', status: 'closed', expires_at: past() },
+  ]
 }
 
 const run = async () => {
@@ -64,7 +69,7 @@ Deno.test('response reports both counts', async () => {
   seed()
   const { status, body } = await run()
   assertEquals(status, 200)
-  assertEquals(body, { success: true, expired_pending: 1, expired_confirmed: 1, expired_count: 2 })
+  assertEquals(body, { success: true, expired_pending: 1, expired_confirmed: 1, expired_groups: 1, expired_count: 2 })
 })
 
 Deno.test('running twice in a row has no additional effect', async () => {
@@ -72,8 +77,17 @@ Deno.test('running twice in a row has no additional effect', async () => {
   await run()
   const after1 = JSON.stringify(db.tables.orders)
   const { body } = await run()
-  assertEquals(body, { success: true, expired_pending: 0, expired_confirmed: 0, expired_count: 0 })
+  assertEquals(body, { success: true, expired_pending: 0, expired_confirmed: 0, expired_groups: 0, expired_count: 0 })
   assertEquals(JSON.stringify(db.tables.orders), after1)
+})
+
+Deno.test('open group past its 24 hours → cancelled; fresh and closed groups untouched', async () => {
+  seed()
+  await run()
+  const statusOfGroup = (id: string) => db.tables.group_orders.find((g) => g.id === id)!.status
+  assertEquals(statusOfGroup('group-old'), 'cancelled')
+  assertEquals(statusOfGroup('group-fresh'), 'open')
+  assertEquals(statusOfGroup('group-closed'), 'closed')
 })
 
 Deno.test('wrong cron secret → 401, nothing changes', async () => {

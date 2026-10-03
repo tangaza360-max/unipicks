@@ -120,18 +120,31 @@ Deno.test('provider PAID → order paid, transaction paid, pickup code sent, mer
   assertEquals(/^[0-9a-f]{64}$/.test(requests[0].headers.get('X-Signature') ?? ''), true)
 })
 
-Deno.test('provider FAILED → order back to confirmed, transaction failed, student notified', async () => {
+Deno.test('provider FAILED after the 5-minute window → payment_expired, transaction failed, student notified (not charged)', async () => {
   seed()
   addOrder('o1', 6 * MIN)
+  order('o1').payment_deadline = ago(1 * MIN)
   provider = { 'umu-o1': [200, { data: { status: 'declined' } }] }
   const { body } = await run()
   assertEquals(body.failed, 1)
-  assertEquals(order('o1').status, 'confirmed')
+  assertEquals(order('o1').status, 'payment_expired')
+  assertStringIncludes(String(db.tables.user_notifications[0].message), 'You were not charged')
   assertEquals(tx('o1').status, 'failed')
   assertEquals(db.tables.user_notifications.length, 1)
   assertEquals(db.tables.user_notifications[0].user_id, STUDENT)
   assertEquals(db.tables.user_notifications[0].type, 'payment_failed')
   assertEquals(pickupMessages().length, 0)
+})
+
+Deno.test('provider FAILED while the window is still open → order back to confirmed (student can retry)', async () => {
+  seed()
+  addOrder('o1', 6 * MIN)
+  order('o1').payment_deadline = new Date(Date.now() + 2 * MIN).toISOString()
+  provider = { 'umu-o1': [200, { status: 'failed' }] }
+  await run()
+  assertEquals(order('o1').status, 'confirmed')
+  assertEquals(tx('o1').status, 'failed')
+  assertStringIncludes(String(db.tables.user_notifications[0].message), 'You can try again')
 })
 
 Deno.test('provider PENDING → no change', async () => {
