@@ -379,3 +379,9 @@ A late payment is accepted (unlike the 5-minute window in `process-payment` / `p
 - Data already exists: `group_order_members` per `group_orders`, with `orders.status` showing which groups actually completed. "Ordered together" should count completed orders only (paid / redeemed), not abandoned groups.
 - Needs consent: members should be able to leave a saved group, and blocks (`blocked_students`) must break it.
 - Likely shape: a `friend_groups` + `friend_group_members` pair, suggested after the 3rd completed co-order, plus "Start a group with …" on Home.
+
+---
+
+## 2026-10-03 — Session summary
+
+The full list of today's audits, fixes (with commits), deploy status, the deploy checklist and open items is in [`03-session-2026-10-03.md`](./03-session-2026-10-03.md).

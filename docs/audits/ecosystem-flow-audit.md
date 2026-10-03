@@ -15,6 +15,26 @@ Earlier audits are referenced, not repeated: e-commerce (`ecommerce-audit.md`), 
 
 ---
 
+## Status update — fixes applied after this audit (2026-10-03)
+
+All fixes below are **committed on the branch, not yet deployed** (deploy checklist: `docs/03-session-2026-10-03.md` §4).
+
+| Finding | Fix | Commit |
+|---|---|---|
+| U1 — unverified emails get a Verified identity and student prices; merchant signup breaks with email confirmation | Only verified students can order; merchant profile created by the database at signup. Founder must then turn on email confirmation | `0906bda` |
+| U2 — chat RLS holes | Direct messages only between friends / accepted requests; student → approved merchant; merchant → student who ordered or wrote first; receivers can only mark read | `167acc6` |
+| U3 — late payment kept but order expired | The 5 minutes limit starting the payment; a confirmed payment always makes the order paid; a failure after the window expires the order | `c94aea5` |
+| J3/J4 — static checkout page | Live status on the payment page (Realtime + polling) | `30cccbb` |
+| J6 — merchants/admins never see dispute alerts | Dashboard bell merges `user_notifications`; admins get the bell | `8e3bb6c` |
+| J2/J8 — bans and deactivation don't stop merchants | Deals hidden unless the merchant is in good standing; banned merchants can't write deals, accept orders or redeem codes | `5ed6057` |
+| J5 — groups never end; dead groups stuck; members not told; expired deals | 24-hour groups, reopen on decline/expiry, member notifications, expired deals refused | `96bea38` |
+| J7 — no report flow | Report button (chat, profiles) + admin Reports queue with 24 h alerts | `c857b05` |
+| J7 — Social missing on mobile | Mobile nav Home · Search · Social · Profile · Camera | `00e17ea` |
+
+**Still open:** merchant payouts and recorded refunds (J9), webhook signature/callback confirmation and enabling the reconciler (J4, blocked on UmunotaPay), support inbox, end-to-end tests with test money (§4).
+
+---
+
 ## ⚠️ Urgent flags (read first)
 
 | # | Flag | Why it is urgent | Evidence |
