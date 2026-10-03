@@ -45,6 +45,14 @@
 
 Size: about 4 files and 1 migration. **🔴 Blocking MVP** (identity integrity for admins and future multi-university pricing).
 
+**Status: implemented (P1).** Migration `20261003190000_server_owned_verified_identity.sql` + `ProfileTab.jsx`; 21 checks in `supabase/tests/verified_identity.test.sh`. Committed, not deployed.
+
+**Founder decision (2026-10-03): student ID is fixed at signup.** There's no correction-request flow for MVP. If a student emails support, an admin corrects it via SQL:
+`update auth.users set raw_app_meta_data = raw_app_meta_data || '{"student_id":"<new>"}' where id = '<user id>';`
+The trigger keeps an explicitly set value. A self-service correction-request flow is **post-MVP**.
+
+**Related finding (found during P1, not fixed): bans aren't enforced.** `admin_ban_user` stores `banned` in user-editable `raw_user_meta_data` (`20260914006000_replace_admin_user_management_auth.sql:19`), and nothing in `src/` or `supabase/functions/` checks it. So a "banned" user keeps full access, and could even clear the flag themselves. Recommended fix: ban through Supabase Auth's own ban (`banned_until`, set via the admin API from an Edge Function) or `app_metadata`, and check it in RLS-sensitive RPCs. 🔴 before moderation (social audit D5) relies on bans.
+
 *Related, lower risk:* **phone** is also in `user_metadata`, and `create-order` copies it onto orders as `student_phone` (`create-order/index.ts:113`). That's acceptable (it's a contact number), but it's unverified. Verify it when MoMo payment links the number (post-MVP).
 
 ---

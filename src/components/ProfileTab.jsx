@@ -17,6 +17,18 @@ import { supabase } from '../lib/supabaseClient.js'
 import { useTheme } from '../context/ThemeContext.jsx'
 import OrdersTab from './OrdersTab.jsx'
 
+// University and student ID are set server-side from the verified email
+// domain (auth app_metadata, which the client cannot write). user_metadata
+// is user-editable, so it is never used for verified identity.
+function verifiedIdentityOf(user) {
+  const app = user?.app_metadata || {}
+  return {
+    university: app.university || '',
+    studentId: app.student_id || '',
+    emailDomain: app.verified_email_domain || '',
+  }
+}
+
 export default function ProfileTab() {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
@@ -28,8 +40,6 @@ export default function ProfileTab() {
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
-    university: '',
-    student_id: '',
     business_name: '',
     address: '',
   })
@@ -122,8 +132,6 @@ export default function ProfileTab() {
     setFormData({
       full_name: meta.full_name || '',
       phone: meta.phone || '',
-      university: meta.university || '',
-      student_id: meta.student_id || '',
       business_name: meta.business_name || '',
       address: meta.address || '',
     })
@@ -171,8 +179,6 @@ export default function ProfileTab() {
     const updates = {
       full_name: formData.full_name.trim(),
       phone: formData.phone.trim(),
-      university: formData.university.trim(),
-      student_id: formData.student_id.trim(),
       business_name: formData.business_name.trim(),
       address: formData.address.trim(),
     }
@@ -202,7 +208,8 @@ export default function ProfileTab() {
 
     const username = socialFormData.username.trim()
     const displayName = socialFormData.display_name.trim()
-    const university = socialFormData.university.trim()
+    // The database also enforces this (student_profiles trigger).
+    const university = (verified.university || socialFormData.university).trim()
     const campus = socialFormData.campus.trim()
     const studentDescription = socialFormData.student_description.trim()
     const shortBio = socialFormData.short_bio.trim()
@@ -345,8 +352,6 @@ export default function ProfileTab() {
     setFormData({
       full_name: meta.full_name || '',
       phone: meta.phone || '',
-      university: meta.university || '',
-      student_id: meta.student_id || '',
       business_name: meta.business_name || '',
       address: meta.address || '',
     })
@@ -370,6 +375,7 @@ export default function ProfileTab() {
   }
 
   const isStudent = role === 'student'
+  const verified = verifiedIdentityOf(user)
   const isMerchant = role === 'merchant'
 
   if (showOrderHistory) {
@@ -438,35 +444,10 @@ export default function ProfileTab() {
           </div>
 
           {isStudent && (
-            <>
-              <div>
-                <label className="field-label">University</label>
-                <input
-                  className="field-input"
-                  value={formData.university}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      university: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="field-label">Student ID</label>
-                <input
-                  className="field-input"
-                  value={formData.student_id}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      student_id: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </>
+            <p className="text-xs text-muted-foreground">
+              University and student ID come from your verified student email and
+              can't be changed here. Contact support if they're wrong.
+            </p>
           )}
 
           {isMerchant && (
@@ -543,6 +524,14 @@ export default function ProfileTab() {
               <span className="text-xs capitalize px-2 py-0.5 rounded-lg bg-muted text-muted-foreground inline-block mt-1">
                 {role || 'user'}
               </span>
+              {isStudent && verified.university && (
+                <span
+                  className="ml-2 text-xs px-2 py-0.5 rounded-lg bg-accent/15 text-accent inline-block mt-1 font-medium"
+                  title={`Verified via @${verified.emailDomain}`}
+                >
+                  ✓ Verified student
+                </span>
+              )}
             </div>
           </div>
 
@@ -560,14 +549,14 @@ export default function ProfileTab() {
                   <span className="flex items-center gap-2 text-muted-foreground">
                     <GraduationCap size={15} /> University
                   </span>
-                  <span>{formData.university || '—'}</span>
+                  <span>{verified.university || '—'}</span>
                 </div>
 
                 <div className="flex items-center justify-between gap-4 border-b border-border/60 pb-3">
                   <span className="flex items-center gap-2 text-muted-foreground">
                     <IdCard size={15} /> Student ID
                   </span>
-                  <span>{formData.student_id || '—'}</span>
+                  <span>{verified.studentId || '—'}</span>
                 </div>
               </>
             )}
@@ -721,14 +710,10 @@ export default function ProfileTab() {
                 <label className="field-label">University</label>
 
                 <input
-                  className="field-input"
-                  value={socialFormData.university}
-                  onChange={(e) =>
-                    setSocialFormData({
-                      ...socialFormData,
-                      university: e.target.value,
-                    })
-                  }
+                  className="field-input opacity-70"
+                  value={verified.university || socialFormData.university}
+                  readOnly
+                  aria-readonly="true"
                 />
               </div>
 
