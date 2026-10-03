@@ -29,7 +29,7 @@ function verifiedIdentityOf(user) {
   }
 }
 
-export default function ProfileTab() {
+export default function ProfileTab({ needsActionCount = 0 }) {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
 
@@ -899,14 +899,31 @@ export default function ProfileTab() {
         <button
           onClick={() => setShowOrderHistory(true)}
           className="w-full flex items-center justify-between text-left group"
+          aria-label={
+            needsActionCount > 0
+              ? `Order History, ${needsActionCount} order${needsActionCount === 1 ? '' : 's'} waiting for payment`
+              : 'Order History'
+          }
         >
           <div>
             <p className="font-display text-lg font-semibold">Order History</p>
             <p className="text-sm text-muted-foreground mt-1">
-              View all your past orders
+              {needsActionCount > 0
+                ? `${needsActionCount} order${needsActionCount === 1 ? '' : 's'} accepted — pay before the deadline`
+                : 'View all your past orders'}
             </p>
           </div>
-          <span className="text-muted-foreground group-hover:text-accent transition">&rarr;</span>
+          <span className="flex items-center gap-2">
+            {needsActionCount > 0 && (
+              <span
+                aria-hidden="true"
+                className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
+              >
+                {needsActionCount > 99 ? '99+' : needsActionCount}
+              </span>
+            )}
+            <span className="text-muted-foreground group-hover:text-accent transition">&rarr;</span>
+          </span>
         </button>
       </div>
 
@@ -945,34 +962,7 @@ export default function ProfileTab() {
          </button>
        </div>
 
-       {/* Notifications */}
-       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-         <div>
-           <p className="text-sm font-medium">Notifications</p>
-           <p className="text-xs text-muted-foreground mt-1">
-             Control the types of notifications you receive.
-           </p>
-         </div>
-
-         {[
-           ['Messages', 'Message notifications'],
-           ['Friend requests', 'Friend request notifications'],
-           ['Orders', 'Order and pickup notifications'],
-           ['Deals', 'Deal notifications'],
-           ['Events', 'Event notifications'],
-         ].map(([label, description]) => (
-           <div
-             key={label}
-             className="flex items-center justify-between gap-4 border-t border-border pt-3"
-           >
-             <div>
-               <p className="text-sm">{label}</p>
-               <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-             </div>
-             <span className="text-xs text-muted-foreground">Coming soon</span>
-           </div>
-         ))}
-       </div>
+       {/* Real notification preferences land with Web Push (post-MVP). */}
 
        {/* Privacy & Security */}
        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -984,9 +974,7 @@ export default function ProfileTab() {
          </div>
 
          {[
-           ['Password & security', 'Manage your password and account security.'],
            ['Blocked students', 'View and manage students you have blocked.'],
-           ['Other privacy controls', 'More privacy controls will appear here as they become available.'],
          ].map(([label, description]) => (
            <div
              key={label}
@@ -996,23 +984,6 @@ export default function ProfileTab() {
              <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
            </div>
          ))}
-       </div>
-
-       {/* Communication */}
-       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-         <div>
-           <p className="text-sm font-medium">Communication</p>
-           <p className="text-xs text-muted-foreground mt-1">
-             Choose how Unipicks communicates with you.
-           </p>
-         </div>
-
-         <div className="border-t border-border pt-3">
-           <p className="text-sm">Email/SMS notification preferences</p>
-           <p className="text-xs text-muted-foreground mt-0.5">
-             Communication preferences are coming soon.
-           </p>
-         </div>
        </div>
 
        {/* Account */}
@@ -1025,7 +996,6 @@ export default function ProfileTab() {
          </div>
 
          {[
-           ['Change password', 'Change your account password.'],
            ['Delete/deactivate account', 'Account deactivation and deletion options are coming soon.'],
          ].map(([label, description]) => (
            <div

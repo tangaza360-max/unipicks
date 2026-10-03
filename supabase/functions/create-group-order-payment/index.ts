@@ -38,6 +38,15 @@ serve(async (req) => {
       )
     }
 
+    // Orders are written with the service role, so the database ban triggers
+    // can't see the caller here. app_metadata is server-only (P4 migration).
+    if (user.app_metadata?.banned === true) {
+      return new Response(
+        JSON.stringify({ error: 'Your account is suspended. Contact support.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
     const body = await req.json()
     const { group_order_id } = body
 

@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [merchantUnreadCount, setMerchantUnreadCount] = useState(0)
   const [pendingOrderCount, setPendingOrderCount] = useState(0)
+  const [openDisputeCount, setOpenDisputeCount] = useState(0)
   const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
@@ -188,6 +189,51 @@ return () => {
     }
   }, [role, user])
 
+  // Admin dispute badge: count of orders with an open dispute, live.
+  // Realtime filters match the NEW row, so filtering on 'open' alone would miss
+  // the open -> under_review/resolved/rejected transition and leave the count
+  // stale. Listen to every dispute state, then re-count only 'open'.
+  useEffect(() => {
+    if (role !== 'admin' || !user) return
+
+    let active = true
+    let channel = null
+
+    async function refetchOpenDisputes() {
+      const { count, error } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('dispute_status', 'open')
+
+      if (error) {
+        console.error('[admin disputes] count failed:', error)
+      } else if (active) {
+        setOpenDisputeCount(count || 0)
+      }
+    }
+
+    refetchOpenDisputes()
+
+    channel = supabase
+      .channel(`admin-open-disputes:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: 'dispute_status=in.(open,under_review,resolved,rejected)',
+        },
+        () => refetchOpenDisputes()
+      )
+      .subscribe()
+
+    return () => {
+      active = false
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [role, user])
+
   async function handleLogout() {
     await supabase.auth.signOut()
     setUser(null)
@@ -314,6 +360,14 @@ return () => {
               >
                 <Icon size={16} />
                 <span>{tab.label}</span>
+                {tab.id === 'disputes' && openDisputeCount > 0 && (
+                  <span
+                    className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
+                    aria-label={`${openDisputeCount} open dispute${openDisputeCount === 1 ? '' : 's'}`}
+                  >
+                    {openDisputeCount > 99 ? '99+' : openDisputeCount}
+                  </span>
+                )}
               </button>
             )
           })}

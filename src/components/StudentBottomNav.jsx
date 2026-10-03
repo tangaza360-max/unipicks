@@ -34,6 +34,7 @@ export default function StudentBottomNav({
   activeTab = 'home',
   onNavigate,
   onCamera,
+  badges = {},
   className = '',
 }) {
   function handleNavigate(tab) {
@@ -94,19 +95,22 @@ export default function StudentBottomNav({
           item={navigationItems[3]}
           active={activeTab === navigationItems[3].id}
           onClick={() => handleNavigate(navigationItems[3].id)}
+          badgeCount={badges.profile}
+          badgeLabel={(n) => `${n} order${n === 1 ? '' : 's'} need${n === 1 ? 's' : ''} payment`}
         />
       </div>
     </nav>
   )
 }
 
-function NavItem({ item, active, onClick }) {
+function NavItem({ item, active, onClick, badgeCount = 0, badgeLabel }) {
   const { Icon, label } = item
+  const showBadge = badgeCount > 0
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="relative flex items-center justify-center">
       <IconButton
-        ariaLabel={label}
+        ariaLabel={showBadge && badgeLabel ? `${label}, ${badgeLabel(badgeCount)}` : label}
         active={active}
         onClick={onClick}
         className={[
@@ -121,6 +125,14 @@ function NavItem({ item, active, onClick }) {
           aria-hidden="true"
         />
       </IconButton>
+      {showBadge && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-0.5 ml-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
+        >
+          {badgeCount > 99 ? '99+' : badgeCount}
+        </span>
+      )}
     </div>
   )
 }
