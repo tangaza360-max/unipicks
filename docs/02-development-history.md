@@ -232,3 +232,104 @@ Standards: ISO 32111 §7.3.3 (order confirmation), IS 19598 ("efficient delivery
 ### Result
 - Real-time awareness of new orders and messages without manual refresh.
 - Symmetric with the student side (chat bubble unread badge).
+
+## 2026-10-03 — Session: Multi-offer deals, group orders, search, chat identity
+
+### Standards context
+- **E-commerce offer-type taxonomy** — deals are not just percentage discounts. Platforms standardize on a typed enum (percentage, fixed_amount, bogo, fixed_price, tiered, free_shipping, group_buy). This matches Medusa, Salesforce Commerce, Shopify, and Spree.
+- **Group-buy model (hybrid)** — merchants design group deals; students form groups. Matches Pinduoduo, Temu, Groupon, AliExpress Group Buy.
+- **Chat identity (marketplace standard)** — chat headers carry display name + role badge. Trust signal between strangers.
+- **URL-based navigation for SPAs** — every perceived page needs a distinct URL, unique title, and history entry. Post-action redirects use `replace: true`.
+- **User discovery (privacy-first)** — search is scoped, requests require approval, mutual visibility.
+- **AI title generation standard** — generate 3-5 options, never invent features, disclose AI assistance (FTC / EU AI Act direction).
+
+### Task 1 — AI deal generator crash fix
+- `supabase/functions/generate-deal/index.ts` contained raw shell heredoc lines (`cat > ... << 'EOF'` and a trailing `EOF`) baked into the TypeScript file. Deno failed to parse the module at boot, producing `WORKER_ERROR` and a browser-side "Failed to fetch".
+- Removed the stray lines. Redeployed. CORS preflight returned `HTTP/2 200`.
+- Subsequent testing revealed OpenAI credits were exhausted (`429 insufficient_quota`). Migrated the function to **Gemini 2.5 Flash** with structured JSON output via `response_mime_type` and `response_schema`. `GEMINI_API_KEY` added as a Supabase secret.
+- **Blocker:** Gemini returns `403 PERMISSION_DENIED — project has been denied access` for new users. The function retains the OpenAI fallback path and a hardcoded local fallback. AI generation is effectively **paused** pending Google verification or credit addition.
+
+### Task 2 — Multi-offer-type deal creation
+- Migration `20261001033906_add_deal_offer_fields.sql`:
+  - New enum `deal_offer_type` with values: `percentage`, `fixed_amount`, `bogo`, `fixed_price`, `tiered`, `free_shipping`, `group_buy`.
+  - New columns on `deals`: `offer_type` (NOT NULL default `percentage`), `discount_value`, `final_price`, `buy_quantity`, `get_quantity`, `min_participants`, `tiered_rules` (jsonb).
+  - Backfilled legacy rows and added index `idx_deals_offer_type`.
+- `MerchantDeals.jsx` rewritten to support a dynamic form:
+  - Offer-type dropdown drives which fields render.
+  - Validation branches per type (percentage 0-100; BOGO ≥1; group_buy ≥2 participants; tier rules parsed as `"N for M"`).
+  - **Critical bug fix:** `const maxDiscountPercent = Number(maxDiscount)` coerced `null` to `0`, causing a false "Discount cannot exceed 0%" error. Replaced with null-safe defaults (100% and 1,000,000 RWF).
+  - Live preview card with type-aware badge colors (green/accent for discounts, blue for quantity deals, purple for group/special).
+- `DealsFeed.jsx` — badge rendering moved to shared `getOfferBadge` / `getOfferBadgeClass` helpers. **Hides the badge when a percentage deal has no discount value** (was previously rendering a misleading "0% OFF").
+- `DealsFeed.jsx` — for `group_buy` deals, the "Order now" button becomes a purple "🛒 Start group order" that creates the group in one click and navigates to `/dashboard/orders`.
+
+### Task 3 — URL-based dashboard routing + back button
+- `main.jsx`: `/dashboard/*` wildcard route; `RouteTitle` component sets `document.title` per route (e.g., `Orders | Unipicks`).
+- `Dashboard.jsx`: tab state derived from URL (`pathname.split('/')[2]`), invalid tabs redirect to the role default with `replace: true`.
+- `StudentLayout.jsx` and merchant/admin tabs navigate via `navigate('/dashboard/<tab>')`.
+- `navigate(-1)` usages removed; explicit back targets used instead.
+- Post-action redirects (`Login`, `Register`, `RegisterMerchant`, `PaymentCheckout`, `OrderConfirmation`, `Dashboard.handleLogout`, `ProfileTab`) now use `replace: true` to prevent back-button loops.
+
+### Task 4 — Chat sender names + role badges
+- `ChatThread.jsx`:
+  - Loads sender profiles for merchant (`merchant_profiles.business_name`) and student (`get_student_message_profiles` RPC returning `display_name`).
+  - Received messages show sender name above the bubble; own messages are unlabeled.
+  - Chat header shows display name + a role pill: "🏪 Merchant" (green) or "🎓 Student" (blue).
+  - Group chats label all non-self senders.
+  - Works with Realtime inserts.
+
+### Task 5 — Multi-tab student search
+- Migration `20261003083422_add_search_merchants.sql`: new RPC `search_merchants(search_query text)` returning `user_id, business_name, full_name, address`. Only approved merchants, normalizes query, `SECURITY DEFINER`, authenticated-only.
+- New page `src/pages/StudentSearch.jsx`:
+  - Single search input with 300 ms debounce.
+  - Three tabs: **People** (via existing `search_students`), **Businesses** (via new `search_merchants`), **Deals** (direct query on `deals`).
+  - People cards use `StudentAvatar` + friend state via `are_students_friends` + `send_friend_request`.
+  - Informative empty and loading states; error surfaced inline.
+- `StudentLayout.jsx` — `case 'search'` now renders `<StudentSearch />` instead of the previous placeholder that re-rendered `DealsFeed`.
+- `DealsFeed.jsx` search input icon overlap fixed with `!pl-10` (Tailwind important modifier to beat `field-input` padding).
+
+### Task 6 — Group order payment path
+- Problem discovered: hosts clicking "Pay Now" on a group order routed to `/payment?order_id=<group_orders.id>`, but `PaymentCheckout` queried the `orders` table by that id — always "Order not found". Payments were structurally unreachable.
+- Migration `20261003092115_add_group_order_id_to_orders.sql`: added `group_order_id uuid` FK on `orders` + index.
+- New Edge Function `create-group-order-payment`:
+  - Auth via Bearer token; only the host can submit.
+  - Rejects already-submitted groups (dedup via `group_order_id`).
+  - Aggregates member quantities; computes unit price (respecting `discount_percent`); creates **one** `orders` row with `group_order_id` set, `status='pending_confirmation'`, 5-minute confirmation deadline.
+  - Closes the group (`status='closed'`) and notifies the merchant via `notifications`.
+- `GroupOrders.jsx` — "Pay Now" now calls the new function, then navigates to `/payment?order_id=<new orders.id>`.
+
+### Task 7 — Group order discovery on deal detail
+- Migration `20261003100909_add_get_open_groups_for_deal.sql`: new RPC `get_open_groups_for_deal(p_deal_id uuid)` returning id, host_name, join_code, created_at, member_count, total_quantity. Returns up to 20 open groups per deal.
+- `DealDetail.jsx` — new "Open groups for this deal" section listing open groups with host, member count, total quantity, relative start time, and a one-tap **Join** button that navigates to `/dashboard/orders?join_code=XXX`.
+- `GroupOrders.jsx` — reads `?join_code=` from URL, auto-opens the join form, and prefills the code (`JoinOrder({ initialCode })`).
+
+### Task 8 — Merchant group activity
+- Migration `20261003102534_add_merchant_group_activity_rpc.sql`: new RPC `get_merchant_group_activity()` returning `(deal_id, open_group_count, total_members, total_quantity)` scoped to the authenticated merchant's own `group_buy` deals.
+- `MerchantDeals.jsx` — group-buy deal cards now show a muted line: `🛒 N open groups · M joined · K items`. Hidden when count is 0. Separate subtle "Waiting for the first group" hint when `min_participants` is set but no groups exist yet.
+
+### Task 9 — My Groups page redesign
+- `GroupOrders.jsx` rewritten as **"My Groups"**:
+  - Removed the "Start one" dropdown flow (group creation now happens from deal cards).
+  - "Join with a code" is now an inline, dismissible form; still auto-opens when `?join_code=` is present.
+  - Two sections: **Groups you're hosting** and **Groups you've joined** (query joins `group_order_members` to `group_orders` to `deals`).
+  - Shared `GroupOrderCard` renders deal thumbnail, title · business, host label, status pill (Open/Closed), member progress bar driven by `min_participants`, item count + total, expandable member list.
+  - Hosted card keeps **Copy invite code**, **View & Pay**, **Mark as ordered / close**, and **Cancel order**. Joined card has **View** only.
+  - Loading uses skeleton cards; empty state has a "Browse deals" CTA when both lists are empty; each section shows "None right now." when only one is empty.
+
+### Migrations added in this session
+1. `20261001033906_add_deal_offer_fields.sql` — offer type enum + columns
+2. `20261003083422_add_search_merchants.sql` — merchant search RPC
+3. `20261003092115_add_group_order_id_to_orders.sql` — order ↔ group link
+4. `20261003100909_add_get_open_groups_for_deal.sql` — group discovery RPC
+5. `20261003102534_add_merchant_group_activity_rpc.sql` — merchant group stats RPC
+
+### Edge Functions added or modified
+- `generate-deal` — migrated from OpenAI to Gemini; AI still blocked by Google `403`
+- `create-group-order-payment` — **NEW**; converts a group order into a merchant-facing `orders` row
+
+### Known issues / untested paths
+- **AI deal generator** — Gemini 403 (project denied). Fallback behaves as a regex parser.
+- **Group order payment end-to-end** — the `create-group-order-payment` path has never been exercised with a real host paying. This is the top testing priority.
+- **Merchant fulfillment of group orders** — merchant sees the order with `group_order_id` set, but the accept → prepare → fulfill loop has not been tested for group-sourced orders.
+- **Group order deadline** — no `group_deadline` column exists. Groups stay open indefinitely. Blocks min-participant enforcement and countdown UX.
+- **Min-participant enforcement** — payment currently proceeds regardless of member count vs. `min_participants`.
+- **Purple nav badge on Orders icon** — planned (Phase 3), not yet shipped.
