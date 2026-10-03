@@ -18,7 +18,10 @@ export const db: {
   // bucket -> object paths, for storage.list/remove
   storage: Record<string, string[]>
   signIns: string[]
-} = { tables: {}, users: {}, tokens: {}, failInserts: {}, passwords: {}, rpcs: {}, rpcCalls: [], storage: {}, signIns: [] }
+  // table -> its real column list. When set, selecting, filtering or writing
+  // any other column fails with 42703, like PostgREST on the real schema.
+  columns: Record<string, string[]>
+} = { tables: {}, users: {}, tokens: {}, failInserts: {}, passwords: {}, rpcs: {}, rpcCalls: [], storage: {}, signIns: [], columns: {} }
 
 export function resetDb() {
   db.tables = {}
@@ -30,6 +33,7 @@ export function resetDb() {
   db.rpcCalls = []
   db.storage = {}
   db.signIns = []
+  db.columns = {}
 }
 
 class Query {
@@ -37,27 +41,35 @@ class Query {
   private max: number | null = null
   private op: 'select' | 'insert' | 'update' = 'select'
   private payload: Row | null = null
+  private usedColumns: string[] = []
 
   constructor(private table: string) {}
 
-  select(_cols?: string) {
+  select(cols?: string) {
+    if (cols && cols.trim() !== '*') {
+      this.usedColumns.push(...cols.split(',').map((c) => c.trim()).filter(Boolean))
+    }
     return this
   }
   insert(row: Row) {
     this.op = 'insert'
     this.payload = row
+    this.usedColumns.push(...Object.keys(row ?? {}))
     return this
   }
   update(values: Row) {
     this.op = 'update'
     this.payload = values
+    this.usedColumns.push(...Object.keys(values ?? {}))
     return this
   }
   eq(col: string, value: unknown) {
+    this.usedColumns.push(col)
     this.filters.push([col, (v) => v === value])
     return this
   }
   in(col: string, values: unknown[]) {
+    this.usedColumns.push(col)
     this.filters.push([col, (v) => values.includes(v)])
     return this
   }
@@ -70,6 +82,11 @@ class Query {
     return (db.tables[this.table] ??= [])
   }
   private run(): Row[] {
+    const known = db.columns[this.table]
+    const unknown = known && this.usedColumns.find((c) => !known.includes(c))
+    if (unknown) {
+      throw { code: '42703', message: `column ${this.table}.${unknown} does not exist` }
+    }
     if (this.op === 'insert') {
       if ((db.failInserts[this.table] ?? 0) > 0) {
         db.failInserts[this.table] -= 1
