@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
+import { sendPickupCodeMessage } from '../_shared/pickup-code-message.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -288,7 +289,7 @@ serve(async (request) => {
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .select(
-        'id, student_id, merchant_id, deal_id, total_price, status, payment_deadline',
+        'id, student_id, merchant_id, deal_id, total_price, status, payment_deadline, merchant_phone',
       )
       .eq('id', transaction.normal_order_id)
       .maybeSingle()
@@ -321,6 +322,23 @@ serve(async (request) => {
     }
 
     if (transaction.status === 'success') {
+      // A retry after a failed pickup-code delivery lands here: re-send it
+      // (idempotent) so the student is never left without their code.
+      const { data: existingRedemption } = await supabaseAdmin
+        .from('redemptions')
+        .select('id, code, status')
+        .eq('order_id', order.id)
+        .maybeSingle()
+
+      if (existingRedemption?.code) {
+        try {
+          await sendPickupCodeMessage(supabaseAdmin, order, existingRedemption.code)
+        } catch (messageError) {
+          console.error('Could not re-send pickup code message:', messageError)
+          return json({ error: 'Pickup code message could not be delivered' }, 500)
+        }
+      }
+
       return json({
         success: true,
         status: 'success',
@@ -476,6 +494,17 @@ serve(async (request) => {
         },
         500,
       )
+    }
+
+    // The student may have left checkout before the MoMo prompt completed
+    // (async path), so this is often the only way they receive their code.
+    // On failure return 500: the provider retries, and the retry path above
+    // re-sends idempotently.
+    try {
+      await sendPickupCodeMessage(supabaseAdmin, order, redemption.code)
+    } catch (messageError) {
+      console.error('Could not send pickup code message:', messageError)
+      return json({ error: 'Payment recorded but the pickup code message could not be delivered' }, 500)
     }
 
     const { error: notificationError } = await supabaseAdmin

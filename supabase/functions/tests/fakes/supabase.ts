@@ -2,22 +2,26 @@
 // query shapes the Edge Functions under test use. Tests mutate `db` directly.
 // Untyped rows, like the real client without generated types.
 // deno-lint-ignore no-explicit-any
-type Row = Record<string, any>
+type Row = any
 
 export const db: {
   tables: Record<string, Row[]>
   users: Record<string, { id: string; email?: string; user_metadata?: Row }>
   tokens: Record<string, string>
-} = { tables: {}, users: {}, tokens: {} }
+  // Make the next N inserts into a table fail, to test error handling.
+  failInserts: Record<string, number>
+} = { tables: {}, users: {}, tokens: {}, failInserts: {} }
 
 export function resetDb() {
   db.tables = {}
   db.users = {}
   db.tokens = {}
+  db.failInserts = {}
 }
 
 class Query {
-  private filters: [string, unknown][] = []
+  private filters: [string, (v: unknown) => boolean][] = []
+  private max: number | null = null
   private op: 'select' | 'insert' | 'update' = 'select'
   private payload: Row | null = null
 
@@ -37,7 +41,15 @@ class Query {
     return this
   }
   eq(col: string, value: unknown) {
-    this.filters.push([col, value])
+    this.filters.push([col, (v) => v === value])
+    return this
+  }
+  in(col: string, values: unknown[]) {
+    this.filters.push([col, (v) => values.includes(v)])
+    return this
+  }
+  limit(n: number) {
+    this.max = n
     return this
   }
 
@@ -46,17 +58,30 @@ class Query {
   }
   private run(): Row[] {
     if (this.op === 'insert') {
+      if ((db.failInserts[this.table] ?? 0) > 0) {
+        db.failInserts[this.table] -= 1
+        throw { message: `simulated insert failure on ${this.table}` }
+      }
       const row = { id: crypto.randomUUID(), ...this.payload }
       this.rows().push(row)
       return [row]
     }
-    const matched = this.rows().filter((r) => this.filters.every(([c, v]) => r[c] === v))
+    const matched = this.rows().filter((r) => this.filters.every(([c, test]) => test(r[c])))
     if (this.op === 'update') matched.forEach((r) => Object.assign(r, this.payload))
-    return matched
+    return this.max == null ? matched : matched.slice(0, this.max)
+  }
+
+  private safeRun(): { rows: Row[]; error: { message: string; code?: string } | null } {
+    try {
+      return { rows: this.run(), error: null }
+    } catch (e) {
+      return { rows: [], error: e as { message: string; code?: string } }
+    }
   }
 
   single() {
-    const rows = this.run()
+    const { rows, error } = this.safeRun()
+    if (error) return Promise.resolve({ data: null, error })
     return Promise.resolve(
       rows.length === 1
         ? { data: rows[0], error: null }
@@ -64,15 +89,12 @@ class Query {
     )
   }
   maybeSingle() {
-    const rows = this.run()
-    return Promise.resolve({ data: rows[0] ?? null, error: null })
+    const { rows, error } = this.safeRun()
+    return Promise.resolve({ data: error ? null : rows[0] ?? null, error })
   }
-  then<T>(resolve: (v: { data: Row[]; error: null }) => T, reject?: (e: unknown) => T) {
-    try {
-      return Promise.resolve(resolve({ data: this.run(), error: null }))
-    } catch (e) {
-      return reject ? Promise.resolve(reject(e)) : Promise.reject(e)
-    }
+  then<T>(resolve: (v: { data: Row[] | null; error: { message: string; code?: string } | null }) => T) {
+    const { rows, error } = this.safeRun()
+    return Promise.resolve(resolve({ data: error ? null : rows, error }))
   }
 }
 

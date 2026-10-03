@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
+import { sendPickupCodeMessage as sendSharedPickupCodeMessage } from '../_shared/pickup-code-message.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -343,10 +344,8 @@ async function ensureRedemption({
 /*
  * Send the pickup code through the existing
  * student-business messaging system.
- *
- * The merchant is the sender because the
- * conversation is between the student and
- * the business.
+ * Shared with payment-webhook so both paths
+ * produce identical, de-duplicated messages.
  */
 async function sendPickupCodeMessage({
   order,
@@ -355,66 +354,11 @@ async function sendPickupCodeMessage({
   order: Order
   redemption: Redemption
 }): Promise<void> {
-  const phoneLine = order.merchant_phone
-    ? `\n\n📞 Merchant contact: ${order.merchant_phone}\nCall them if you have any issue with this order.`
-    : ''
-
-  const pickupMessage =
-    `Payment received 🎉\n\n` +
-    `Your order is confirmed.\n` +
-    `Pickup code: ${redemption.code}\n\n` +
-    `Show this code to the business when collecting your order.` +
-    phoneLine
-
-  /*
-   * chat_messages does not currently have an
-   * order_id column, so we identify this system
-   * message using the exact pickup-code text.
-   *
-   * This prevents the same payment call from
-   * creating duplicate pickup-code messages.
-   */
-  const {
-    data: existingMessages,
-    error: existingMessageError,
-  } = await supabaseAdmin
-    .from('chat_messages')
-    .select('id, message')
-    .eq('sender_id', order.merchant_id)
-    .eq('receiver_id', order.student_id)
-    .eq('deal_id', order.deal_id)
-    .eq(
-      'message',
-      pickupMessage,
-    )
-    .limit(1)
-
-  if (existingMessageError) {
-    throw existingMessageError
-  }
-
-  if (
-    existingMessages &&
-    existingMessages.length > 0
-  ) {
-    return
-  }
-
-  const {
-    error: messageError,
-  } = await supabaseAdmin
-    .from('chat_messages')
-    .insert({
-      sender_id: order.merchant_id,
-      receiver_id: order.student_id,
-      deal_id: order.deal_id,
-      message: pickupMessage,
-      is_read: false,
-    })
-
-  if (messageError) {
-    throw messageError
-  }
+  await sendSharedPickupCodeMessage(
+    supabaseAdmin,
+    order,
+    redemption.code,
+  )
 }
 
 serve(async (req) => {
