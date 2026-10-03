@@ -24,6 +24,23 @@ function extractBudget(text) {
   return null
 }
 
+function getOfferBadge(deal) {
+  const type = deal.offer_type || 'percentage'
+  if (type === 'percentage') return `${deal.discount_value ?? deal.discount_percent ?? 0}% OFF`
+  if (type === 'fixed_amount') return `SAVE ${deal.discount_value ?? 0} RWF`
+  if (type === 'bogo') return `BUY ${deal.buy_quantity ?? 1} GET ${deal.get_quantity ?? 1}`
+  if (type === 'fixed_price') return `BUNDLE ${deal.final_price ?? deal.discount_value ?? 0} RWF`
+  if (type === 'free_shipping') return 'FREE DELIVERY'
+  if (type === 'group_buy') return `GROUP BUY · ${deal.min_participants ?? 5} NEEDED`
+  return 'TIERED DEAL'
+}
+
+function getOfferBadgeClass(type) {
+  if (type === 'percentage' || type === 'fixed_amount') return 'bg-accent text-background-foreground'
+  if (type === 'bogo' || type === 'fixed_price' || type === 'tiered') return 'bg-blue-600 text-white'
+  return 'bg-purple-600 text-white'
+}
+
 export default function DealsFeed({ advisorOpen = false } = {}) {
   const [deals, setDeals] = useState([])
   const [loading, setLoading] = useState(true)
@@ -649,11 +666,9 @@ function DealCard({ deal, ratingStats }) {
           </div>
         )}
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/35 to-transparent" />
-        {deal.discount_percent != null && (
-          <div className="absolute top-3 right-3 bg-accent text-background-foreground font-display font-semibold text-sm rounded-lg px-3 py-1.5 shadow-lg">
-            {deal.discount_percent}% off
-          </div>
-        )}
+        <div className={`absolute top-3 right-3 font-display font-semibold text-sm rounded-lg px-3 py-1.5 shadow-lg ${getOfferBadgeClass(deal.offer_type || 'percentage')}`}>
+          {getOfferBadge(deal)}
+        </div>
       </div>
 
       <div className="p-4 space-y-1">
