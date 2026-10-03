@@ -69,7 +69,7 @@ The video promises features. Make sure each promise is true in the live app, bot
 | "Verified with your Kepler email" | ✅ Email-domain check at signup (`src/lib/universities.js`) | Turn on Supabase **email confirmation** so the inbox itself is verified |
 | Deal cards with % OFF / BUY 1 GET 1 / GROUP BUY | ✅ Offer types and badges exist; pricing fixed in commit `88158ea` | Deploy that fix first |
 | "Order in two taps" → accepted → pay | ✅ Flow exists (`create-order` → merchant accept → "Pay Now" chat button) | — |
-| **"Group price unlocked" when the group fills** | ⚠️ **Not yet enforced.** The group discount currently applies regardless of size (founder decision Q4, recommended in the e-commerce audit) | Ship the `min_participants` enforcement before publishing, or change that frame's text in `explainer.html` |
+| **"Group price unlocked" when the group fills** | ✅ **Enforced** once commit `7c5fb93` is deployed: a group can't be submitted below the deal's `min_participants` | Deploy `create-group-order-payment`. Optional polish: show "N more needed" in the group screen |
 | "Pay with MoMo" | ⚠️ UmunotaPay integration is **sandbox/untested** | Run one live end-to-end payment before launch. Use "MoMo" as a generic term: **don't** use MTN's logo or yellow branding without permission |
 | Pickup code after paying | ✅ (`process-payment` generates it) | — |
 | Group chat with friends | ✅ Group-order chat exists | — |

@@ -12,20 +12,21 @@
 
 ## Status update — fixes applied after the audit (2026-10-03)
 
-With the founder's explicit approval, three findings were fixed in separate commits on this branch. **None of them is deployed yet.**
+With the founder's explicit approval, four findings were fixed in separate commits on this branch. **None of them is deployed yet.**
 
 | Finding | Commit | What changed | Verification |
 |---|---|---|---|
 | §3 Students could create their own pickup codes | `efbc86c` | Migration `20261003145500_revoke_student_redemption_insert.sql` drops the student INSERT policy and revokes INSERT from `anon`/`authenticated`. `VerifyCode.jsx` rejects codes whose parent order isn't `paid`/`redeemed`. | Local Postgres 16: student and anon INSERT fail with *permission denied*; service-role INSERT and merchant UPDATE still work. |
 | §3 Webhook not verified | `e05c266` | `payment-webhook` returns **503** when the secret is unset. It verifies HMAC-SHA256 of the raw body, or the legacy shared-secret header, in constant time; has an optional `UMUNOTA_WEBHOOK_ALLOWED_IPS` allowlist; and logs each rejection with a structured reason. | 8 Deno tests and `deno check`. |
 | §1/§2 Wrong price for 4 offer types; expired deals orderable | `88158ea` | `create-order` prices by `offer_type` (fixed_amount, bogo, fixed_price; rejects tiered and free_shipping) and rejects expired deals. `OrderConfirmation.jsx` mirrors the same logic. | 29 Deno parity tests (server and UI agree), `deno check`, `npm run build`. |
+| §2 Group discount applied below the group minimum (founder decision 4) | `7c5fb93` | `create-group-order-payment` refuses to submit a group with fewer distinct members than the deal's `min_participants` (409, "This group needs N more member(s)…"). A null minimum behaves as before. Price calculation is unchanged. | 5 Deno tests with an in-memory Supabase fake (`supabase/functions/tests/`); the rejection tests fail without the fix. |
 
-**Still open from §1/§2:** `create-group-order-payment` still applies the group discount below `min_participants` and still doesn't check expiry. Availability windows aren't enforced, and the feed still lists expired deals.
+**Still open from §1/§2:** `create-group-order-payment` doesn't check deal expiry. Availability windows aren't enforced, and the feed still lists expired deals.
 
 **To deploy (founder):**
 1. `supabase db push` (applies the redemptions migration).
 2. **Set `UMUNOTA_WEBHOOK_SECRET` first**: `supabase secrets set UMUNOTA_WEBHOOK_SECRET=...`. Without it, the webhook now rejects every request with 503, by design.
-3. `supabase functions deploy payment-webhook create-order`.
+3. `supabase functions deploy payment-webhook create-order create-group-order-payment`.
 4. Deploy the frontend.
 5. Confirm with UmunotaPay which signature scheme they use (HMAC of the body, or a shared secret), then delete the unused path in `verifyWebhookSignature()`.
 
@@ -326,6 +327,6 @@ Also recommended (documentation hygiene): **update or archive `docs/group-orders
    Refunds then become merchant-originated reversals: the admin dispute action records the refund, and the merchant (or UmunotaPay's reversal API) sends the money back. Confirm with UmunotaPay and BNR whether direct-to-merchant collection changes Unipicks' licensing position.
 2. **BOGO:** the student pays for `buy_quantity` items and receives `buy_quantity + get_quantity`. **Implemented** in `88158ea`.
 3. **Free delivery:** hide until a delivery feature exists. **Recommended: (a) reject at deal creation.** Remove `free_shipping` from the merchant offer-type dropdown, and add a DB check constraint or trigger that rejects new `free_shipping` deals so merchants find out immediately. Order-time rejection is already in place as a backstop (`88158ea`).
-4. **Group-buy discount:** applies only once `min_participants` is reached; below that, students pay the original price. **Recommended (not yet implemented):** in `create-group-order-payment`, use `price` (no discount) when `members.length < min_participants`, return the applied price in the response, and show "N more needed to unlock the group price" in `GroupOrders.jsx`. The server must decide this, not the UI.
+4. **Group-buy discount:** applies only once `min_participants` is reached. **Implemented** in `7c5fb93` by refusing to submit a group below the minimum: the merchant never receives an under-filled group order, so the group price is only ever charged to full groups. Price calculation untouched. Follow-up UI work (not done): show "N more needed to unlock the group price" in `GroupOrders.jsx`, and disable the host's Pay button until the group is full.
 5. **Supabase region: eu-west-3 (Paris).** Student personal data is therefore stored **outside Rwanda**. The privacy policy must say so, name the hosting provider and region, and state the legal basis for the transfer. Under Law N° 058/2021, storing personal data outside Rwanda requires authorisation from the supervisory authority (NCSA). Apply for it as part of controller registration. Suggested policy text: *"Unipicks stores your data with Supabase, Inc. on servers located in the European Union (Paris, France, region eu-west-3). We transfer data outside Rwanda under [authorisation reference] from the National Cyber Security Authority, with contractual and technical safeguards including encryption in transit and at rest and access controls."*
 6. **Production policy check:** the founder will run the `pg_policies` query separately. Until then, the audit assumes the finding is correct.

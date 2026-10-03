@@ -172,7 +172,7 @@ Create the form (`forms.create` with only `info.title`), then send `google-forms
 > 👉 [link]
 > Murakoze! 💚
 
-**Incentive (optional):** a small raffle, e.g. 5 × 2,000 RWF airtime or a free lunch deal for respondents who leave an email. Say in the description that taking part is voluntary and the raffle is optional. Keep it small so it doesn't attract low-quality responses.
+**Incentive:** none for v1 (founder decision: no raffle, to avoid the extra logistics). The ask is short (2 minutes) and the payoff is early access through the beta (Q9).
 
 ---
 
@@ -197,8 +197,8 @@ This matches the privacy commitments in the app's own policy and Law N° 058/202
 
 ---
 
-## Open questions for the founder
+## Decisions (2026-10-03)
 
-1. **Raffle:** do you want to offer the airtime/lunch incentive? If yes, I'll add one line to the form description.
-2. **Kinyarwanda:** should the form be bilingual (English + Kinyarwanda helper text)? A native speaker should write the translation.
-3. **Who owns the form:** create it from a dedicated Unipicks Google account rather than a personal one, so responses stay with the project.
+- **No raffle or incentive** for v1.
+- **English only** for v1. A bilingual (English + Kinyarwanda) version is a **v2 improvement**; see `README.md`.
+- **Still to decide:** create the form from a dedicated Unipicks Google account rather than a personal one, so responses stay with the project.
