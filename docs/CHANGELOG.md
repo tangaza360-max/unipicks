@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-03
 
+- 18:00 — `fix(payments)`: payment-webhook sends the pickup-code chat message on the async payment path (shared idempotent helper with process-payment; 500 + retry re-send on failure) — `supabase/functions/_shared/pickup-code-message.ts`, `supabase/functions/payment-webhook/index.ts`, `supabase/functions/process-payment/index.ts`, `supabase/functions/tests/`
+- 17:30 — `docs(audit)`: notifications audit (in-app/Web Push scope, all roles) and student profile audit with merchant appendix — `docs/audits/notifications-audit.md`, `docs/audits/profile-audit.md`, `docs/audits/README.md`
 - 17:00 — `fix(orders)`: redeem_pickup_code RPC redeems the code and moves the parent order paid → redeemed in one transaction; VerifyCode calls it; merchant UPDATE on redemptions removed — `supabase/migrations/20261003170000_add_redeem_pickup_code_rpc.sql`, `src/pages/VerifyCode.jsx`, `supabase/tests/redeem_pickup_code.test.sh`
 - 16:05 — `fix(group-orders)`: create-group-order-payment rejects groups below the deal's min_participants (409, "needs N more member(s)"); Deno tests with in-memory Supabase fake — `supabase/functions/create-group-order-payment/index.ts`, `supabase/functions/tests/`
 - 15:30 — `fix(orders)`: price orders by offer_type (fixed_amount, bogo, fixed_price; reject tiered/free_shipping), reject expired deals; order summary mirrors server pricing — `supabase/functions/create-order/index.ts`, `src/pages/OrderConfirmation.jsx`
