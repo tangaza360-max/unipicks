@@ -333,3 +333,7 @@ Standards: ISO 32111 §7.3.3 (order confirmation), IS 19598 ("efficient delivery
 - **Group order deadline** — no `group_deadline` column exists. Groups stay open indefinitely. Blocks min-participant enforcement and countdown UX.
 - **Min-participant enforcement** — payment currently proceeds regardless of member count vs. `min_participants`.
 - **Purple nav badge on Orders icon** — planned (Phase 3), not yet shipped.
+
+### 2026-10-03 — Historical order cleanup
+
+5 orders from 2026-09-15 (created before migration `20260915100000_add_payment_deadline_to_orders.sql`) had `status = 'confirmed'` with `payment_deadline = NULL`. They were moved to `payment_expired` via a one-time SQL update setting `payment_deadline = confirmation_deadline + interval '5 minutes'`.
