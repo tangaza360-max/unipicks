@@ -97,7 +97,7 @@ export default function GroupOrders() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="mx-auto w-full max-w-xl space-y-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
           <ShoppingCart size={20} className="text-accent" /> My Groups
