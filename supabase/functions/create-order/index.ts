@@ -7,6 +7,87 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
 }
 
+type PricedDeal = {
+  offer_type: string | null
+  price: number | string | null
+  discount_percent: number | null
+  discount_value: number | string | null
+  final_price: number | string | null
+  buy_quantity: number | null
+}
+
+type PriceResult =
+  | { ok: true; unitPrice: number; totalPrice: number }
+  | { ok: false; status: number; error: string }
+
+const roundMoney = (value: number) => Math.round(value * 100) / 100
+
+// Server-side source of truth for what a student is charged.
+// Keep in sync with priceOrder() in src/pages/OrderConfirmation.jsx.
+function priceOrder(deal: PricedDeal, quantity: number): PriceResult {
+  const offerType = deal.offer_type ?? 'percentage'
+  const price = deal.price == null ? null : Number(deal.price)
+
+  if (offerType === 'tiered') {
+    return { ok: false, status: 409, error: 'Tiered deals are not yet supported at checkout' }
+  }
+
+  if (offerType === 'free_shipping') {
+    return { ok: false, status: 409, error: 'This deal cannot be ordered yet' }
+  }
+
+  if (offerType === 'fixed_price') {
+    const bundlePrice = Number(deal.final_price ?? deal.discount_value)
+
+    if (!Number.isFinite(bundlePrice) || bundlePrice <= 0) {
+      return { ok: false, status: 409, error: 'This deal does not have a valid price' }
+    }
+
+    if (quantity > 1) {
+      return { ok: false, status: 400, error: 'Bundle deals can only be ordered one at a time' }
+    }
+
+    return { ok: true, unitPrice: roundMoney(bundlePrice), totalPrice: roundMoney(bundlePrice) }
+  }
+
+  if (price == null || !Number.isFinite(price) || price <= 0) {
+    return { ok: false, status: 409, error: 'This deal does not have a valid price' }
+  }
+
+  if (offerType === 'percentage' || offerType === 'group_buy') {
+    const discountPercent = Number(deal.discount_percent ?? 0)
+    const unitPrice = roundMoney(price * (1 - discountPercent / 100))
+    return { ok: true, unitPrice, totalPrice: roundMoney(unitPrice * quantity) }
+  }
+
+  if (offerType === 'fixed_amount') {
+    const discountValue = Number(deal.discount_value)
+
+    if (!Number.isFinite(discountValue) || discountValue <= 0 || discountValue >= price) {
+      return { ok: false, status: 409, error: 'This deal has an invalid discount' }
+    }
+
+    const unitPrice = roundMoney(price - discountValue)
+    return { ok: true, unitPrice, totalPrice: roundMoney(unitPrice * quantity) }
+  }
+
+  if (offerType === 'bogo') {
+    // The student pays for buy_quantity items and receives
+    // buy_quantity + get_quantity. unit_price is stored per bundle so that
+    // quantity × unit_price = total_price holds everywhere it is displayed.
+    const buyQuantity = Number(deal.buy_quantity ?? 1)
+
+    if (!Number.isInteger(buyQuantity) || buyQuantity < 1) {
+      return { ok: false, status: 409, error: 'This deal has an invalid offer' }
+    }
+
+    const unitPrice = roundMoney(price * buyQuantity)
+    return { ok: true, unitPrice, totalPrice: roundMoney(unitPrice * quantity) }
+  }
+
+  return { ok: false, status: 409, error: 'This deal cannot be ordered yet' }
+}
+
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -59,7 +140,7 @@ serve(async (req) => {
 
     const { data: deal, error: dealError } = await supabaseAdmin
       .from('deals')
-      .select('id, merchant_id, price, discount_percent, active, expires_at')
+      .select('id, merchant_id, price, discount_percent, active, expires_at, offer_type, discount_value, final_price, buy_quantity')
       .eq('id', deal_id)
       .single()
 
@@ -77,19 +158,23 @@ serve(async (req) => {
       )
     }
 
-    if (deal.price == null) {
+    if (deal.expires_at && new Date(deal.expires_at) <= new Date()) {
       return new Response(
-        JSON.stringify({ error: 'This deal does not have a valid price' }),
+        JSON.stringify({ error: 'This deal has expired' }),
         { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
 
-    const discountPercent = Number(deal.discount_percent ?? 0)
-    const unitPrice =
-      Math.round(Number(deal.price) * (1 - discountPercent / 100) * 100) / 100
+    const pricing = priceOrder(deal, quantity)
 
-    const totalPrice =
-      Math.round(unitPrice * quantity * 100) / 100
+    if (!pricing.ok) {
+      return new Response(
+        JSON.stringify({ error: pricing.error }),
+        { status: pricing.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    const { unitPrice, totalPrice } = pricing
 
     const confirmationDeadline = new Date(
       Date.now() + 5 * 60 * 1000,

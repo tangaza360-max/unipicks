@@ -4,10 +4,76 @@ import { ArrowLeft, Store } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { createOrder } from '../lib/orders.js'
 
-function finalPriceOf(deal) {
-  if (deal.price == null) return null
-  if (deal.discount_percent == null) return deal.price
-  return Math.round(deal.price * (1 - deal.discount_percent / 100))
+const roundMoney = (value) => Math.round(value * 100) / 100
+
+// Mirrors priceOrder() in supabase/functions/create-order/index.ts, which is
+// the source of truth for what the student is charged. Keep the two in sync.
+function priceOrder(deal, quantity) {
+  const offerType = deal.offer_type || 'percentage'
+  const price = deal.price == null ? null : Number(deal.price)
+
+  if (deal.expires_at && new Date(deal.expires_at) <= new Date()) {
+    return { error: 'This deal has expired.' }
+  }
+
+  if (offerType === 'tiered') {
+    return { error: 'Tiered deals are not yet supported at checkout.' }
+  }
+
+  if (offerType === 'free_shipping') {
+    return { error: 'This deal cannot be ordered yet.' }
+  }
+
+  if (offerType === 'fixed_price') {
+    const bundlePrice = Number(deal.final_price ?? deal.discount_value)
+    if (!Number.isFinite(bundlePrice) || bundlePrice <= 0) {
+      return { error: 'This deal does not have a valid price.' }
+    }
+    if (quantity > 1) {
+      return { error: 'Bundle deals can only be ordered one at a time.', maxQuantity: 1 }
+    }
+    return {
+      unitPrice: roundMoney(bundlePrice),
+      total: roundMoney(bundlePrice),
+      unitLabel: 'Bundle price',
+      maxQuantity: 1,
+    }
+  }
+
+  if (price == null || !Number.isFinite(price) || price <= 0) {
+    return { error: 'This deal does not have a valid price.' }
+  }
+
+  if (offerType === 'percentage' || offerType === 'group_buy') {
+    const unitPrice = roundMoney(price * (1 - Number(deal.discount_percent ?? 0) / 100))
+    return { unitPrice, total: roundMoney(unitPrice * quantity), unitLabel: 'Price each' }
+  }
+
+  if (offerType === 'fixed_amount') {
+    const discountValue = Number(deal.discount_value)
+    if (!Number.isFinite(discountValue) || discountValue <= 0 || discountValue >= price) {
+      return { error: 'This deal has an invalid discount.' }
+    }
+    const unitPrice = roundMoney(price - discountValue)
+    return { unitPrice, total: roundMoney(unitPrice * quantity), unitLabel: 'Price each' }
+  }
+
+  if (offerType === 'bogo') {
+    const buyQuantity = Number(deal.buy_quantity ?? 1)
+    const getQuantity = Number(deal.get_quantity ?? 1)
+    if (!Number.isInteger(buyQuantity) || buyQuantity < 1) {
+      return { error: 'This deal has an invalid offer.' }
+    }
+    const unitPrice = roundMoney(price * buyQuantity)
+    return {
+      unitPrice,
+      total: roundMoney(unitPrice * quantity),
+      unitLabel: `Price per deal (pay ${buyQuantity}, get ${getQuantity} free)`,
+      itemsReceived: (buyQuantity + getQuantity) * quantity,
+    }
+  }
+
+  return { error: 'This deal cannot be ordered yet.' }
 }
 
 export default function OrderConfirmation() {
@@ -101,8 +167,10 @@ export default function OrderConfirmation() {
     )
   }
 
-  const unitPrice = finalPriceOf(deal)
-  const total = unitPrice != null ? unitPrice * quantity : null
+  const pricing = priceOrder(deal, quantity)
+  const unitPrice = pricing.unitPrice ?? null
+  const total = pricing.total ?? null
+  const maxQuantity = pricing.maxQuantity ?? Infinity
 
   return (
     <div className="min-h-screen bg-background">
@@ -174,8 +242,8 @@ export default function OrderConfirmation() {
 
                 <button
                   type="button"
-                  onClick={() => setQuantity((q) => q + 1)}
-                  disabled={placing}
+                  onClick={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
+                  disabled={placing || quantity >= maxQuantity}
                   className="w-9 h-9 rounded-lg border border-border text-lg disabled:opacity-50"
                 >
                   +
@@ -185,9 +253,16 @@ export default function OrderConfirmation() {
 
             <div className="rounded-lg border border-border bg-muted/30 p-4">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Price each</span>
+                <span className="text-muted-foreground">{pricing.unitLabel || 'Price each'}</span>
                 <span>{unitPrice != null ? `${unitPrice.toLocaleString()} RWF` : '—'}</span>
               </div>
+
+              {pricing.itemsReceived != null && (
+                <div className="mt-2 flex justify-between text-sm">
+                  <span className="text-muted-foreground">You'll receive</span>
+                  <span>{pricing.itemsReceived} items</span>
+                </div>
+              )}
 
               <div className="mt-2 flex justify-between text-base font-semibold">
                 <span>Total</span>
@@ -213,16 +288,16 @@ export default function OrderConfirmation() {
               </button>
             </div>
 
-            {error && (
+            {(pricing.error || error) && (
               <p className="text-sm text-red-400">
-                {error}
+                {pricing.error || error}
               </p>
             )}
 
             <button
               type="button"
               onClick={handlePlaceOrder}
-              disabled={placing}
+              disabled={placing || Boolean(pricing.error)}
               className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-accent-dim disabled:cursor-not-allowed disabled:opacity-60"
             >
               {placing ? 'Placing order…' : 'Place Order'}
