@@ -116,7 +116,8 @@ insert into auth.sessions (id, user_id) values ('00000000-0000-0000-0000-0000000
 insert into auth.refresh_tokens (user_id, session_id, token) values ('$S','00000000-0000-0000-0000-00000000aaaa','tok');
 insert into auth.mfa_factors (user_id) values ('$S');
 
-insert into public.merchant_profiles (id, business_name, approved, momo_pay_code) values ('$M','Mama Rose Kitchen',true,'123456');
+insert into public.merchant_profiles (id, business_name, approved, momo_pay_code) values ('$M','Mama Rose Kitchen',true,'123456')
+  on conflict (id) do update set business_name = excluded.business_name, approved = true, momo_pay_code = excluded.momo_pay_code;
 insert into public.deals (id, merchant_id, business_name, title, active, price, image_url)
   values ('$D','$M','Mama Rose Kitchen','Lunch plate',true,2500,'https://x/deal-images/$M/a.jpg');
 insert into public.merchant_stories (merchant_id, media_url) values ('$M','https://x/story-images/merchants/$M/s.jpg');
@@ -316,6 +317,15 @@ check "orders as merchant kept; merchant phone removed" "$(q "select count(*) ||
 check "other students' records untouched (B's group order)" "$(q "select status from public.orders where id='$OG'")" "completed"
 check "audit log records the admin as actor" "$(q "select (details->>'by') || '|' || (admin_id = '$AD')::text from public.activity_logs where action='account_deleted' and target_id='$M'")" "admin|true"
 
+echo " signup creates the merchant profile in the database (fix 1, 20261003270000)"
+NM=00000000-0000-0000-0000-0000000000b9; NS=00000000-0000-0000-0000-0000000000a8; NN=00000000-0000-0000-0000-0000000000a7
+q "insert into auth.users (id, email, raw_user_meta_data) values
+   ('$NM','new.shop@gmail.com','{\"role\":\"merchant\",\"business_name\":\"  Kigali Bites  \"}'),
+   ('$NS','new.student@keplercollege.ac.rw','{\"role\":\"student\"}'),
+   ('$NN','no.role@keplercollege.ac.rw','{}')" >/dev/null
+check "merchant signup (no session needed) gets an unapproved profile with its business name" "$(q "select business_name || '|' || approved::text from public.merchant_profiles where id='$NM'")" "Kigali Bites|false"
+check "student signup gets no merchant profile" "$(q "select count(*) from public.merchant_profiles where id='$NS'")" "0"
+check "signup with no role becomes a student (was NULL before)" "$(q "select role from public.user_roles where user_id='$NN'")" "student"
 echo
 echo "Result: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

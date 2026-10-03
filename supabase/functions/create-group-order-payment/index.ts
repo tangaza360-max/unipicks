@@ -3,6 +3,7 @@
 // The merchant sees a single order with a group_order_id link and fulfills it normally.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
+import { verifiedStudentError } from '../_shared/verified-student.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -43,6 +44,14 @@ serve(async (req) => {
     if (user.app_metadata?.banned === true) {
       return new Response(
         JSON.stringify({ error: 'Your account is suspended. Contact support.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    const notVerified = await verifiedStudentError(supabaseAdmin, user)
+    if (notVerified) {
+      return new Response(
+        JSON.stringify({ error: notVerified }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }

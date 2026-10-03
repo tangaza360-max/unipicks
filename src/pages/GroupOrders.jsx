@@ -345,7 +345,18 @@ function HostedOrderCard({ order, onChanged }) {
       const { data, error } = await supabase.functions.invoke('create-group-order-payment', {
         body: { group_order_id: order.id },
       })
-      if (error) throw new Error(error.message || 'Failed to submit group order')
+      if (error) {
+        let message = error.message || 'Failed to submit group order'
+        if (error.context && typeof error.context.json === 'function') {
+          try {
+            const body = await error.context.json()
+            if (body?.error) message = body.error
+          } catch {
+            // keep the generic message
+          }
+        }
+        throw new Error(message)
+      }
       if (data?.order?.id) {
         navigate(`/payment?order_id=${data.order.id}`)
         return

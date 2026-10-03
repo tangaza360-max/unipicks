@@ -22,7 +22,7 @@ function seed(banned: boolean) {
   db.users[STUDENT] = {
     id: STUDENT, email: 's@keplercollege.ac.rw',
     user_metadata: { full_name: 'S', phone: '0780000000', banned: false }, // user-editable copy is ignored
-    app_metadata: banned ? { banned: true } : {},
+    app_metadata: { university: 'Kepler College', ...(banned ? { banned: true } : {}) },
   } as typeof db.users[string]
   db.users['merchant-1'] = { id: 'merchant-1', user_metadata: { phone: '0790000000' } }
   db.tokens['tok'] = STUDENT
@@ -31,6 +31,7 @@ function seed(banned: boolean) {
     expires_at: null, offer_type: 'percentage', discount_value: null, final_price: null, buy_quantity: null,
     min_participants: null,
   }]
+  db.tables.user_roles = [{ user_id: STUDENT, role: 'student' }]
   db.tables.orders = []
   db.tables.notifications = []
   db.tables.group_orders = [{ id: 'g-1', deal_id: 'deal-1', created_by: STUDENT, host_name: 'S', join_code: 'K7Q2', status: 'open' }]
