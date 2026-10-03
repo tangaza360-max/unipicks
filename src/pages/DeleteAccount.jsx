@@ -27,6 +27,30 @@ export default function DeleteAccount() {
   const [params] = useSearchParams()
   const justDeleted = params.get('deleted') === '1'
 
+  // Right after a deletion: confirmation only, none of the how-to content.
+  if (justDeleted) {
+    return (
+      <main className="min-h-screen bg-background px-4 py-10 text-foreground">
+        <article className="mx-auto max-w-3xl space-y-6">
+          <Link to="/register" className="text-sm text-primary hover:underline">← Back to Unipicks</Link>
+          <h1 className="font-display text-3xl font-semibold">Your account has been deleted</h1>
+          <p role="status" className="rounded-xl border border-border bg-card p-4 text-sm">
+            Your account has been deleted and you have been signed out on every device.
+          </p>
+          <p className="text-muted-foreground leading-7">
+            You can sign up again at any time with the same email address.
+          </p>
+          <Link
+            to="/register"
+            className="inline-flex min-h-11 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground"
+          >
+            Create a new account
+          </Link>
+        </article>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-background px-4 py-10 text-foreground">
       <article className="mx-auto max-w-3xl space-y-8">
@@ -35,12 +59,6 @@ export default function DeleteAccount() {
           <h1 className="font-display text-3xl font-semibold">Delete your Unipicks account</h1>
           <p className="text-muted-foreground">Last updated: October 3, 2026</p>
         </header>
-
-        {justDeleted && (
-          <p role="status" className="rounded-xl border border-border bg-card p-4 text-sm">
-            Your account has been deleted and you have been signed out on every device.
-          </p>
-        )}
 
         <section className="space-y-2 border-t border-border pt-6">
           <h2 className="font-display text-xl font-semibold">How to delete your account</h2>
