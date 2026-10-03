@@ -26,6 +26,7 @@ export default function StudentLayout({ children, onLogout }) {
   const [checkingSocialProfile, setCheckingSocialProfile] = useState(false)
   const [messageTarget, setMessageTarget] = useState(null)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [needsActionCount, setNeedsActionCount] = useState(0)
 
   useEffect(() => {
     function handleOpenStudentChat(event) {
@@ -101,6 +102,68 @@ export default function StudentLayout({ children, onLogout }) {
 
     return () => {
       active = false
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [])
+
+  // Orders that need the student to act: accepted by the merchant and still
+  // inside the payment window. Computed from the student's own orders (RLS),
+  // live via Realtime, and re-counted when the earliest deadline passes
+  // (a deadline expiring changes no row, so Realtime alone would go stale).
+  useEffect(() => {
+    let active = true
+    let channel = null
+    let deadlineTimer = null
+
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || !active) return
+
+      async function refetchNeedsAction() {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('payment_deadline')
+          .eq('student_id', user.id)
+          .eq('status', 'confirmed')
+          .gt('payment_deadline', new Date().toISOString())
+
+        if (!active) return
+        if (error) {
+          console.error('[needs-action] fetch failed:', error)
+          return
+        }
+
+        setNeedsActionCount(data.length)
+
+        clearTimeout(deadlineTimer)
+        if (data.length > 0) {
+          const earliest = Math.min(...data.map((o) => new Date(o.payment_deadline).getTime()))
+          deadlineTimer = setTimeout(refetchNeedsAction, Math.max(0, earliest - Date.now()) + 1000)
+        }
+      }
+
+      await refetchNeedsAction()
+
+      channel = supabase
+        .channel(`needs-action:${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'orders',
+            filter: `student_id=eq.${user.id}`,
+          },
+          () => refetchNeedsAction()
+        )
+        .subscribe()
+    }
+
+    init()
+
+    return () => {
+      active = false
+      clearTimeout(deadlineTimer)
       if (channel) supabase.removeChannel(channel)
     }
   }, [])
@@ -207,7 +270,7 @@ export default function StudentLayout({ children, onLogout }) {
         return <GroupOrders />
 
       case 'profile':
-        return <ProfileTab />
+        return <ProfileTab needsActionCount={needsActionCount} />
 
       case 'messages':
         return (
@@ -256,6 +319,7 @@ export default function StudentLayout({ children, onLogout }) {
         }
         onNavigate={handleNavigate}
         onCamera={() => setCameraOpen(true)}
+        badges={{ profile: needsActionCount }}
         className="md:hidden"
       />
           {cameraOpen && <StudentCamera onClose={() => setCameraOpen(false)} />}

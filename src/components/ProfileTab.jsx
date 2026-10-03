@@ -29,7 +29,7 @@ function verifiedIdentityOf(user) {
   }
 }
 
-export default function ProfileTab() {
+export default function ProfileTab({ needsActionCount = 0 }) {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
 
@@ -899,14 +899,31 @@ export default function ProfileTab() {
         <button
           onClick={() => setShowOrderHistory(true)}
           className="w-full flex items-center justify-between text-left group"
+          aria-label={
+            needsActionCount > 0
+              ? `Order History, ${needsActionCount} order${needsActionCount === 1 ? '' : 's'} waiting for payment`
+              : 'Order History'
+          }
         >
           <div>
             <p className="font-display text-lg font-semibold">Order History</p>
             <p className="text-sm text-muted-foreground mt-1">
-              View all your past orders
+              {needsActionCount > 0
+                ? `${needsActionCount} order${needsActionCount === 1 ? '' : 's'} accepted — pay before the deadline`
+                : 'View all your past orders'}
             </p>
           </div>
-          <span className="text-muted-foreground group-hover:text-accent transition">&rarr;</span>
+          <span className="flex items-center gap-2">
+            {needsActionCount > 0 && (
+              <span
+                aria-hidden="true"
+                className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
+              >
+                {needsActionCount > 99 ? '99+' : needsActionCount}
+              </span>
+            )}
+            <span className="text-muted-foreground group-hover:text-accent transition">&rarr;</span>
+          </span>
         </button>
       </div>
 
