@@ -10,6 +10,20 @@
 
 ---
 
+## Founder decisions (2026-10-03)
+
+These answer the open questions from the first version of this audit. They're **decided**. Items marked *code pending* still need an approved code change; per the founder's instruction, no app code was changed for them.
+
+| # | Topic | Decision | Status |
+|---|---|---|---|
+| D1 | **Mobile nav** | Move Group Orders into Home. Mobile bottom nav becomes **Home · Search · Social · Profile · Camera**. | Decided; code pending (`StudentBottomNav.jsx`, plus a Group Orders entry on Home). See §0 |
+| D2 | **Student messaging** | **No non-friend messaging for MVP.** A student can message another student only if they're friends or the recipient accepted a message request. The "anyone can message anyone" RLS path gets closed in a future migration (spec in §3). | Decided; migration pending |
+| D3 | **Merchant messaging** | Merchants may message **any student who has ordered from them. No cold outreach.** | Decided; migration pending (same migration as D2) |
+| D4 | **Student stories** | **Not in MVP; a v2 feature.** Relabel the camera button **"Snap & share"** and make clear it's photo capture + share to other apps, not a story post. | Decided; relabel is code pending. See §5 |
+| D5 | **Moderation** | **Admins review reports, with a 24-hour first-response SLA.** | Decided. The admin Reports UI is a **gap** (§6) |
+
+---
+
 ## Summary
 
 The **database** for the social layer is far ahead of the **UI**. `20260917130000_create_student_profiles.sql` defines 14 well-constrained tables (profiles, friend requests, friendships, blocks, reports, message requests, notifications, student stories with views and reactions, business follows, interests, saved items, interactions), with RLS and atomic RPCs. Mutual-consent friendships are implemented exactly as product doc §8 describes.
@@ -32,15 +46,15 @@ Two **safety bugs in chat RLS** stand out:
 | 2 | Friend requests & approval | ⚠️ partial | 🟡 |
 | 3 | Direct messaging | ⚠️ partial (+ safety bugs) | 🔴 |
 | 4 | Group conversations | ⚠️ partial | 🟡 |
-| 5 | Stories | ❌ missing (student) / ⚠️ partial (merchant) | 🟡 |
-| 6 | Content moderation | ❌ missing | 🔴 |
+| 5 | Stories | ❌ missing (student; v2 per D4) / ⚠️ partial (merchant) | 🔴 relabel · 🟢 v2 |
+| 6 | Content moderation | ❌ missing (SLA decided: 24h; admin UI is a gap) | 🔴 |
 | 7 | Notifications | ⚠️ partial | 🟡 |
 | 8 | Profile pages & privacy | ⚠️ partial | 🟡 |
 | 9 | Feed algorithm | ❌ missing (social feed) | 🟢 |
 | 10 | Onboarding | ⚠️ partial | 🟡 |
 | 11 | Account deletion / data export | ❌ missing | 🔴 |
 | 12 | Safety features | ⚠️ partial | 🔴 |
-| + | Mobile Social entry point (founder-confirmed bug) | ❌ missing | 🔴 |
+| + | Mobile Social entry point (founder-confirmed bug; nav fix decided, D1) | ❌ missing | 🔴 |
 
 ---
 
@@ -49,11 +63,12 @@ Two **safety bugs in chat RLS** stand out:
 - **Status:** ❌ missing
 - **Evidence:** `src/components/StudentBottomNav.jsx:12-28` defines Home, Search, Group Orders and Profile, plus a centre Camera action. `src/components/DesktopNav.jsx:5-9` defines Home, **Social**, Group Orders, Messages and Profile. `StudentLayout.jsx:186` renders `<Social />` for the `social` tab, but on a phone nothing links to it; the only way in is typing `/dashboard/social`.
 - **Gap:** The main social surface (friends, requests, activity) can't be reached on mobile. Every major social app puts its social hub in the primary mobile nav (the Instagram / TikTok / Snapchat bottom-bar standard).
-- **Recommended fix:** Add Social to the mobile bottom nav. With 5 slots including the camera, the cleanest options are:
-  - **(a) Recommended:** Home · Search · [Camera] · Social · Profile, with Group Orders moved into a top segment on Home or into Profile. Group orders are started from deal cards anyway.
-  - **(b)** Replace Search with Social and put search in the top bar (the Instagram pattern before 2020).
-
-  Either way, show the unread-requests badge on the Social icon.
+- **Nav fix (decided, D1):** the mobile bottom nav becomes **Home · Search · Social · Profile · Camera**. **Group Orders moves into Home**: a "My Groups" entry near the top of the Home feed (e.g. a pill or segmented control "Deals | My Groups" that routes to the existing `/dashboard/orders` page). Group orders are already started from deal cards, and join links (`?join_code=`) keep working because the route doesn't change. Show the unread friend/message-request count as a badge on the Social icon.
+- **Implementation notes (for when the code change is approved):**
+  - `StudentBottomNav.jsx`: replace the `group-orders` item with `{ id: 'social', label: 'Social' }`. Keep Camera as an action button rather than a nav destination.
+  - `StudentLayout.jsx`: `handleNavigate` already maps `social` correctly. Remove the `group-orders → orders` active-tab special case from the bottom nav.
+  - `DealsFeed.jsx` (Home): add the "My Groups" entry, with a purple dot when the student has an open group (the planned "purple nav badge", dev history Phase 3).
+  - Keep `DesktopNav.jsx` as is (it already has Social and Group Orders).
 - **Priority:** 🔴 blocking for the social layer to exist on mobile
 
 ## 1. User discovery (search, mutual friends, suggestions)
@@ -94,8 +109,39 @@ Two **safety bugs in chat RLS** stand out:
   - **⚠️ Safety bug B: receivers can edit messages.** Same file, lines 18-21: `"Users can update messages they receive" … USING (auth.uid() = receiver_id)` has no `WITH CHECK` and no column restriction. A receiver can change the `message`, `sender_id` or `link_path` of any message they received. Merchant "accepted / pickup code / decline reason" messages are what disputes rely on as evidence (`AdminDisputes.jsx`), so they can't be trusted.
   - No delete-for-me, no message reporting, no mute-conversation.
 - **Gap:** Chat consent and integrity are enforced only in the UI. Expected messaging features are missing.
+- **Decided messaging policy (D2, D3):**
+  - **Student → student:** allowed only if the two are **friends** (`friendships`) **or** the receiver **accepted a message request** (`message_requests.status = 'accepted'`), **and** neither has blocked the other.
+  - **Merchant → student:** allowed only if the student **has ordered from that merchant** (any row in `orders` with `merchant_id = sender` and `student_id = receiver`). No cold outreach.
+  - **Student → merchant:** allowed (students contact businesses about deals and orders).
+  - **Group chat:** unchanged (members of the group order only).
+  - **System messages** (accept, decline, pickup code) keep coming from Edge Functions using the service role, which bypasses RLS.
+- **Future migration spec** (not written now, per founder): replace `"Users can insert their own chat messages"` with:
+  ```sql
+  create policy chat_insert_direct on public.chat_messages for insert to authenticated
+  with check (
+    sender_id = auth.uid() and group_order_id is null and receiver_id is not null and (
+      -- student → student: friends or accepted request, and not blocked
+      (public.get_my_role() = 'student'
+        and exists (select 1 from public.student_profiles where user_id = receiver_id)
+        and not public.are_students_blocked(auth.uid(), receiver_id)
+        and (exists (select 1 from public.friendships f
+                     where (f.student_a, f.student_b) = (least(auth.uid(), receiver_id), greatest(auth.uid(), receiver_id)))
+             or exists (select 1 from public.message_requests r
+                        where r.status = 'accepted'
+                          and ((r.sender_id, r.receiver_id) = (auth.uid(), receiver_id)
+                            or (r.sender_id, r.receiver_id) = (receiver_id, auth.uid())))))
+      -- student → merchant
+      or (public.get_my_role() = 'student'
+          and exists (select 1 from public.merchant_profiles where id = receiver_id and approved))
+      -- merchant → student who has ordered from them
+      or (public.get_my_role() = 'merchant'
+          and exists (select 1 from public.orders o where o.merchant_id = auth.uid() and o.student_id = receiver_id))
+    )
+  );
+  ```
+  Check the exact signature of `are_students_blocked` and add an index on `orders (merchant_id, student_id)` when writing it. Test with a student who isn't a friend (rejected), a blocked friend (rejected), and a merchant writing to a student with no orders (rejected).
 - **Recommended fix:**
-  1. Replace the INSERT policy so student-to-student messages require an accepted message request or a friendship, and neither side has blocked the other (use `are_students_blocked`, which exists but is unused). Merchant ↔ student messages should require an order or deal context. System messages should come only from the service role.
+  1. Ship the migration above (D2/D3).
   2. Replace the UPDATE policy with a SECURITY DEFINER `mark_messages_read(thread)` RPC, or `GRANT UPDATE (is_read)` only, plus `WITH CHECK`.
   3. Add read receipts ("Seen" under the last outgoing message, WhatsApp/iMessage standard) with a privacy toggle to turn them off (WhatsApp standard).
   4. Add a typing indicator via Supabase Realtime broadcast.
@@ -128,15 +174,21 @@ Two **safety bugs in chat RLS** stand out:
   - The centre **Camera** button (`StudentCamera.jsx`) captures a photo and only offers **download** (line 122) or the **OS share sheet** (line 138). It never posts a story.
   - `students_view_own_stories` (line 1423) lets a student `SELECT` only their **own** stories; there's no policy or RPC for viewing friends' or "everyone" stories, so even with a UI, nobody else could see them.
 - **Gap:** Student stories are advertised in the UI (the camera button, the "Your Story" circle) but don't work, which is a broken promise.
-- **Recommended fix:**
-  - Short term: hide the placeholder tray and relabel the camera "Snap & share", so the UI doesn't promise something it can't do.
-  - To build it, follow the Instagram standard:
+- **Decision (D4): student stories are a v2 feature, not MVP.**
+  - **MVP (code pending):**
+    - Relabel the camera button **"Snap & share"**: `ariaLabel` "Snap & share" in `StudentBottomNav.jsx`, plus a one-line hint in `StudentCamera.jsx`: *"Take a photo and share it to WhatsApp, Instagram or any app. It isn't posted on Unipicks."*
+    - Keep the download and OS share actions as they are.
+    - Remove the placeholder story tray ("Your Story" and the grey circles) from `Social.jsx` so nothing implies posting.
+    - Merchant stories stay as they are; they work.
+  - **v2 backlog (when stories are prioritised):** the build steps below.
+- **v2 build plan:**
+  - Follow the Instagram standard:
     - Posting from the camera uploads to storage, inserts into `student_stories` with a visibility picker (Friends / Everyone), and expires after 24h.
     - A `get_story_tray()` RPC returns friends' and public active stories, excluding blocked users, unseen first.
     - The viewer shows "Seen by N" to the owner.
     - Replies arrive as DMs, subject to the message-request rules.
     - Merchant stories get a view count.
-- **Priority:** 🟡 should-have (🔴 for hiding the fake tray)
+- **Priority:** 🔴 MVP for the relabel and removing the fake tray; 🟢 v2 for student stories
 
 ## 6. Content moderation (reports, blocks, mute)
 
@@ -148,10 +200,17 @@ Two **safety bugs in chat RLS** stand out:
   - No reporting of merchants, stories or messages. Product doc §15 requires "Students can report comments or businesses. Businesses can also report students."
   - Admin moderation of ratings is a hard delete (`AdminReviews.jsx:25-27`). Product doc §15 requires hidden-but-retained.
 - **Gap:** The reporting loop users expect on every social platform (report → review → action) doesn't exist. App stores require user-generated-content apps to offer reporting and blocking (Apple Guideline 1.2: a way to filter objectionable content, report it, and block abusive users, with timely responses).
+- **Moderation SLA (decided, D5):** **admins review all reports, with a first response within 24 hours** (acknowledge and either act or move to `reviewing`). Serious safety reports (threats, harassment, sexual content, minors) should get immediate action: suspend first, then review. Publish the SLA in the Terms under "Reports and enforcement" so users know what to expect. It also answers Apple's "timely response" expectation.
+- **⚠️ Gap: there is no admin Reports UI.** To meet the SLA, admins need:
+  - an **Admin → Reports** tab (alongside Disputes), with filters for New, Reviewing, Resolved and Dismissed;
+  - each report's age, highlighted once it's more than 24h old (an SLA breach);
+  - actions: dismiss, warn, hide content, suspend user, with each action written to `activity_logs` via `log_admin_action`;
+  - a red badge on the tab with the count of reports older than 12h;
+  - optional: an email or Web Push to the admin when a new report arrives, so the 24h clock doesn't depend on opening the dashboard.
 - **Recommended fix:**
-  - Add a "Report" option in the ⋯ menu on profiles, messages, stories and businesses, inserting into `student_reports` (extended with `target_type`, `target_id`).
-  - Add an Admin → "Reports" queue alongside Disputes, with actions: dismiss, warn, hide content, suspend (product doc §15 ladder).
-  - Add mute for stories and conversations.
+  - Add a "Report" option in the ⋯ menu on profiles, messages and businesses (and stories in v2), inserting into `student_reports` (extended with `target_type`, `target_id`).
+  - Build the Admin → Reports queue described above.
+  - Add mute for conversations (and stories in v2).
 - **Priority:** 🔴 blocking (an App Store requirement for user-generated content, and a basic safety need)
 
 ## 7. Notifications (push, in-app, digest)
@@ -246,23 +305,19 @@ Two **safety bugs in chat RLS** stand out:
 
 | Rank | Action | Why | Effort | Refs |
 |---|---|---|---|---|
-| 1 | **Fix `chat_messages` RLS**: INSERT requires friendship, an accepted request or order context, and no block; UPDATE limited to `is_read` through an RPC | Blocks and consent can be bypassed; message evidence can be edited | S (1 migration) | §3, §12 |
-| 2 | **Add Social to the mobile bottom nav** (Home · Search · Camera · Social · Profile) | The social layer can't be reached on phones | XS | §0 |
-| 3 | **Reporting + admin Reports queue** (profiles, messages, stories, businesses) | Safety baseline; Apple Guideline 1.2 | M | §6 |
+| 1 | **Fix `chat_messages` RLS** per D2/D3 (spec in §3): students need a friendship or accepted request; merchants only message students who ordered from them; no blocked pairs; UPDATE limited to `is_read` through an RPC | Blocks and consent can be bypassed; message evidence can be edited | S (1 migration) | §3, §12 |
+| 2 | **Mobile nav fix (D1):** Home · Search · Social · Profile · Camera; Group Orders moves into Home | The social layer can't be reached on phones | XS | §0 |
+| 3 | **Reporting + admin Reports queue** with the 24h SLA (D5) | Safety baseline; Apple Guideline 1.2 | M | §6 |
 | 4 | **In-app account deletion + data export** | Apple 5.1.1(v) / Google Play; Law 058/2021 | M | §11 |
-| 5 | **Hide or stub the fake UI**: the placeholder story tray, empty feed tabs, and the camera's implied posting | Broken promises erode trust | XS | §5, §9 |
+| 5 | **"Snap & share" relabel + remove the fake story tray and empty feed tabs** (D4) | Broken promises erode trust | XS | §5, §9 |
 | 6 | **Activity bell in the top bar** (wire up `SocialActivity`, remove the dead event) with an unread count | Friend and message requests go unseen | S | §7 |
 | 7 | **Friends list + remove friend + requests badge** | Required by product doc §8 | S | §2 |
-| 8 | **Student stories end to end** (post from camera, tray RPC respecting friends/everyone and blocks, viewer list, replies to DM) | The schema is ready; this completes the camera's promise | L | §5 |
+| 8 | **v2: Student stories end to end** (post from camera, tray RPC respecting friends/everyone and blocks, viewer list, replies to DM) | Deferred to v2 (D4); the schema is ready | L | §5 |
 | 9 | **Read receipts ("Seen") + typing indicator + image attachments** | WhatsApp-level baseline expectations | M | §3 |
 | 10 | **Onboarding: prefill university/campus, end with "Find classmates" + WhatsApp invite** | First session ends with an empty graph | S | §10 |
 
 ---
 
-## Open questions for the founder
+## Open questions
 
-1. **Mobile nav layout:** if Social takes a bottom-nav slot, which goes: Group Orders (moved to Home or Profile; recommended) or Search (moved to the top bar)?
-2. **Who can DM whom:** should students be able to message non-friends at all (through message requests, as built), or friends-only for MVP? Should merchants be able to message students who haven't ordered?
-3. **Student stories:** are they in MVP scope, or should the camera be repositioned as "snap & share" until later? Product doc §26 lists only "basic profiles" for MVP.
-4. **Moderation staffing:** who reviews reports, and in what target time? Apple expects a "timely" response, so even "within 24h by the founder" should be written down.
-5. **Profile photos:** OK to allow them? They need moderation, which ties to question 4.
+All five original questions were answered on 2026-10-03; see **Founder decisions** at the top. Remaining follow-up: approve the code changes marked *code pending* (D1 nav, D4 relabel) and the D2/D3 chat migration when ready.

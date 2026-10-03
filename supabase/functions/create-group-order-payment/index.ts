@@ -116,7 +116,7 @@ serve(async (req) => {
     // Load the deal
     const { data: deal, error: dealError } = await supabaseAdmin
       .from('deals')
-      .select('id, merchant_id, price, discount_percent, active, expires_at')
+      .select('id, merchant_id, price, discount_percent, active, expires_at, min_participants')
       .eq('id', groupOrder.deal_id)
       .single()
 
@@ -132,6 +132,22 @@ serve(async (req) => {
         JSON.stringify({ error: 'This deal is no longer active' }),
         { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
+    }
+
+    // Enforce the deal's minimum group size before the merchant ever sees the order.
+    // Members are counted as distinct students; a null minimum means no requirement.
+    if (deal.min_participants != null) {
+      const memberCount = new Set(members.map((m) => m.student_id)).size
+      const missing = Number(deal.min_participants) - memberCount
+
+      if (missing > 0) {
+        return new Response(
+          JSON.stringify({
+            error: `This group needs ${missing} more member${missing === 1 ? '' : 's'} before it can be submitted`,
+          }),
+          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      }
     }
 
     if (deal.price == null) {

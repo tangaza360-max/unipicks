@@ -69,12 +69,34 @@ The video promises features. Make sure each promise is true in the live app, bot
 | "Verified with your Kepler email" | ✅ Email-domain check at signup (`src/lib/universities.js`) | Turn on Supabase **email confirmation** so the inbox itself is verified |
 | Deal cards with % OFF / BUY 1 GET 1 / GROUP BUY | ✅ Offer types and badges exist; pricing fixed in commit `88158ea` | Deploy that fix first |
 | "Order in two taps" → accepted → pay | ✅ Flow exists (`create-order` → merchant accept → "Pay Now" chat button) | — |
-| **"Group price unlocked" when the group fills** | ⚠️ **Not yet enforced.** The group discount currently applies regardless of size (founder decision Q4, recommended in the e-commerce audit) | Ship the `min_participants` enforcement before publishing, or change that frame's text in `explainer.html` |
+| **"Group price unlocked" when the group fills** | ✅ **Enforced** once commit `7c5fb93` is deployed: a group can't be submitted below the deal's `min_participants` | Deploy `create-group-order-payment`. Optional polish: show "N more needed" in the group screen |
 | "Pay with MoMo" | ⚠️ UmunotaPay integration is **sandbox/untested** | Run one live end-to-end payment before launch. Use "MoMo" as a generic term: **don't** use MTN's logo or yellow branding without permission |
 | Pickup code after paying | ✅ (`process-payment` generates it) | — |
 | Group chat with friends | ✅ Group-order chat exists | — |
-| "You saved this week 3,200 RWF" | Illustrative | Fine as an individual example; don't present it as an average or a platform statistic |
+| "Group price saves you 800 RWF each" | ✅ Derived from the deal shown (2,500 → 1,700 RWF) | Keep the on-screen deal and the saving consistent if you edit prices |
 | "Link in bio" | — | Add the real sign-up URL to your bio and caption. No public domain was found in the repo |
+
+### Shipped-features review (2026-10-03)
+
+Every element of the video was checked against the code. **Not shown anywhere:** student stories, non-friend direct messages, refunds, delivery, the camera. The only chat shown is a group-order chat between group members, which is shipped and stays allowed under social decision D2.
+
+**Edited** because they showed things the app doesn't have:
+
+| Was | Problem | Now |
+|---|---|---|
+| "You saved this week 3,200 RWF" | No savings tracker exists | "Group price saves you 800 RWF each", worked out from the deal on screen |
+| Deal card embedded in a chat message | Chat is text-only | Plain-text message with the group code |
+| "Campus Chips · 4 min walk" | No location or distance feature | Business name only |
+| "Lunch" / "Snacks" category chips | Real categories are Pizza, Tacos, Burgers, Drinks, Desserts, Specials | All · Pizza · Burgers · Drinks |
+| "👥 Lunch squad · 5 members" chat header | No custom group names | "Group order (code K7Q2)", the real header |
+| "✅ Accepted… Tap to pay." toast | Acceptance arrives as a chat message | Merchant chat message with a **Pay Now** button (the real wording) |
+| "★ 4.7 · 38 reviews" | App format differs | "★ 4.7 (38 reviews)" |
+
+**Flagged, kept** (accurate in behaviour, stylised in presentation; founder to decide):
+- **"🎉 Group price unlocked"**: the rule is enforced by `7c5fb93` (a group can't be submitted below the minimum), but the app shows no such banner. Fine as a stylised caption; adding "N more needed / unlocked" to `GroupOrders.jsx` would make it literal.
+- **"Verified with your Kepler email"**: the domain is checked at signup, but inbox ownership is only verified if Supabase email confirmation is on.
+- **"Pay with MoMo" → Paid → pickup code**: the flow exists, but UmunotaPay is still sandbox/untested.
+- **"Order in two taps"**: two taps place the order (Order now → Place order). The merchant must then accept within 5 minutes before payment. The order beat shows that acceptance step.
 
 ## 6. Optional upgrades (later)
 

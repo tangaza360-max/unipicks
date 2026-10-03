@@ -49,8 +49,8 @@ A step-pill row (1 Browse · 2 Order · 3 Group up · 4 Pay) stays on screen; th
 
 | Time | Beat | Phone screen |
 |---|---|---|
-| 12.0–13.9 s | **Browse deals near campus.** | Search bar types "chips" (from 12.4 s); "Lunch" chip active; Campus Chips card pops at 13.0 s |
-| 14.0–15.9 s | **Order in two taps.** | Deal detail; tap ripple on "Order now" at 14.7 s; toast "✅ Accepted by Campus Chips. Tap to pay." at 15.1 s |
+| 12.0–13.9 s | **Browse deals near campus.** | Search bar types "chips" (from 12.4 s); real category chips (All · Pizza · Burgers); Campus Chips card pops at 13.0 s |
+| 14.0–15.9 s | **Order in two taps.** | Deal detail; tap ripple on "Order now" at 14.7 s; the merchant's acceptance arrives as a chat message with a **Pay Now** button (as in the real app) at 15.1 s |
 | 16.0–17.9 s | **Group up with friends.** | Group "Lunch plate for the squad", code K7Q2; avatars G, J, M join at 16.5 / 16.8 / 17.1 s; progress bar fills; counter 2/5 → 5/5; "🎉 Group price unlocked, 2,500 → 1,700 RWF each" at 17.3 s |
 | 18.0–20.0 s | **Pay with MoMo.** | "Mobile money payment, 1,500 RWF, approve the prompt on your phone" → ✓ Paid at 18.8 s → pickup code **4821** at 19.15 s |
 
@@ -61,9 +61,9 @@ A step-pill row (1 Browse · 2 Order · 3 Group up · 4 Pay) stays on screen; th
 | Time | Action |
 |---|---|
 | 20.1–20.5 s | "BETTER TOGETHER" / "Share a deal." / "Save together." (lime) |
-| 20.6 s | Group chat: Aline shares a Mama Rose Kitchen deal card, "join my group?" |
+| 20.6 s | Group-order chat "Group order (code K7Q2)" (the app's real header): Aline "Found a lunch deal at Mama Rose Kitchen 🍛 Join my group with code K7Q2!" (plain text; chat is text-only) |
 | 21.4 / 22.1 / 23.3 / 24.2 s | Kevin "I'm in! 🙌" · You "Same! That's 5 of us 🎉" · Grace "Best lunch this week 😋" · Jean "Tomorrow: chips deal? 🍟" |
-| 22.6 s | Savings card pops; counter runs 0 → **3,200 RWF** (22.9–24.4 s, ease-out) |
+| 22.6 s | Savings card "Group price saves you": counter runs 0 → **800 RWF each** (22.9–24.4 s), i.e. the group deal's 2,500 → 1,700 RWF |
 | 24.5–27 s | Confetti (🎉 ✨ 🍟 🍛 💚 🌯 ⭐) falls (seeded, identical on every render) |
 | 26.6 s | Fade out |
 
