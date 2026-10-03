@@ -13,7 +13,7 @@ export default function VerifyCode() {
 
     const { data, error } = await supabase
       .from('redemptions')
-      .select('id, status, student_name, deal_id, deals(title)')
+      .select('id, status, student_name, deal_id, deals(title), orders(status)')
       .eq('code', codeInput.trim())
       .maybeSingle()
 
@@ -26,6 +26,15 @@ export default function VerifyCode() {
     if (data.status === 'redeemed') {
       setChecking(false)
       setResult({ ok: false, message: 'This code was already used.' })
+      return
+    }
+
+    // A pickup code is only valid when it belongs to an order that was
+    // actually paid. Codes with no parent order (or an unpaid one) are rejected.
+    const orderStatus = data.orders?.status
+    if (orderStatus !== 'paid' && orderStatus !== 'redeemed') {
+      setChecking(false)
+      setResult({ ok: false, message: 'This code is not linked to a paid order. Do not hand over the item.' })
       return
     }
 

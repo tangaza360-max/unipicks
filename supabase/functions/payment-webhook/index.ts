@@ -20,6 +20,83 @@ function json(body: unknown, status = 200) {
   })
 }
 
+const encoder = new TextEncoder()
+
+// Constant-time string comparison. Both sides are hashed first so the
+// comparison always runs over 32 bytes, regardless of input length.
+async function timingSafeEqual(a: string, b: string): Promise<boolean> {
+  const [hashA, hashB] = await Promise.all([
+    crypto.subtle.digest('SHA-256', encoder.encode(a)),
+    crypto.subtle.digest('SHA-256', encoder.encode(b)),
+  ])
+  const viewA = new Uint8Array(hashA)
+  const viewB = new Uint8Array(hashB)
+  let diff = 0
+  for (let i = 0; i < viewA.length; i++) diff |= viewA[i] ^ viewB[i]
+  return diff === 0
+}
+
+async function hmacSha256Hex(secret: string, message: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  )
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(message))
+  return Array.from(new Uint8Array(signature))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+/*
+ * UmunotaPay's webhook signing scheme is not yet confirmed. Accept either:
+ *   1. HMAC-SHA256(secret, raw body) as hex, optionally prefixed "sha256=", or
+ *   2. the shared secret itself in the signature header (legacy behavior).
+ * Both are compared in constant time. Once the provider's scheme is
+ * confirmed, remove the path it does not use.
+ */
+async function verifyWebhookSignature(
+  secret: string,
+  rawBody: string,
+  providedSignature: string,
+): Promise<'hmac' | 'shared_secret' | null> {
+  const normalized = providedSignature.trim().replace(/^sha256=/i, '').toLowerCase()
+  const expectedHmac = await hmacSha256Hex(secret, rawBody)
+
+  if (await timingSafeEqual(normalized, expectedHmac)) return 'hmac'
+  if (await timingSafeEqual(providedSignature.trim(), secret)) return 'shared_secret'
+  return null
+}
+
+function clientIp(request: Request): string {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+}
+
+function rejectWebhook(
+  request: Request,
+  reason: string,
+  status: number,
+  extra: Record<string, unknown> = {},
+) {
+  // Never log the secret or the signature value itself.
+  console.error('[payment-webhook] rejected request', {
+    reason,
+    status,
+    ip: clientIp(request),
+    user_agent: request.headers.get('user-agent') ?? null,
+    has_signature_header: Boolean(
+      request.headers.get('X-Webhook-Signature') ||
+        request.headers.get('X-Umunota-Signature'),
+    ),
+    ...extra,
+  })
+  const message =
+    status === 503 ? 'Webhook not configured' : status === 400 ? 'Invalid request body' : 'Unauthorized'
+  return json({ error: message }, status)
+}
+
 function normalizeProviderStatus(value: unknown) {
   return String(value ?? '').trim().toLowerCase()
 }
@@ -117,18 +194,54 @@ serve(async (request) => {
 
   try {
     const expectedSecret = Deno.env.get('UMUNOTA_WEBHOOK_SECRET')
+
+    // Fail closed: never process payment updates without a configured secret.
+    if (!expectedSecret) {
+      console.error(
+        '[payment-webhook] CRITICAL: UMUNOTA_WEBHOOK_SECRET is not set. All webhook requests are being rejected until it is configured.',
+      )
+      return rejectWebhook(request, 'secret_not_configured', 503)
+    }
+
+    // Optional source allowlist, e.g. "1.2.3.4,5.6.7.8". Skipped when unset.
+    const allowedIps = (Deno.env.get('UMUNOTA_WEBHOOK_ALLOWED_IPS') ?? '')
+      .split(',')
+      .map((ip) => ip.trim())
+      .filter(Boolean)
+
+    if (allowedIps.length > 0 && !allowedIps.includes(clientIp(request))) {
+      return rejectWebhook(request, 'ip_not_allowed', 403)
+    }
+
     const providedSignature =
       request.headers.get('X-Webhook-Signature') ||
       request.headers.get('X-Umunota-Signature')
 
-    if (expectedSecret) {
-      if (!providedSignature || providedSignature !== expectedSecret) {
-        console.error('Webhook signature mismatch')
-        return json({ error: 'Unauthorized' }, 401)
-      }
+    if (!providedSignature) {
+      return rejectWebhook(request, 'missing_signature', 401)
     }
 
-    const payload = await request.json()
+    // Read the raw body once: the signature is computed over the exact bytes.
+    const rawBody = await request.text()
+
+    const verifiedBy = await verifyWebhookSignature(
+      expectedSecret,
+      rawBody,
+      providedSignature,
+    )
+
+    if (!verifiedBy) {
+      return rejectWebhook(request, 'signature_mismatch', 401, {
+        body_length: rawBody.length,
+      })
+    }
+
+    let payload: Record<string, unknown>
+    try {
+      payload = JSON.parse(rawBody)
+    } catch {
+      return rejectWebhook(request, 'invalid_json', 400, { body_length: rawBody.length })
+    }
 
     const providerReference = String(
       payload.reference ||

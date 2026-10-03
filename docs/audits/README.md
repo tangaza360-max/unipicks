@@ -1,0 +1,10 @@
+# Unipicks — Audit & Research Deliverables
+
+Index of the four deliverables produced on branch `claude/unipicks-codebase-audit-9vd6fb` (2026-10-03). The audits and content are documentation only. Three security and pricing fixes were applied separately with founder approval (commits `efbc86c`, `e05c266`, `88158ea`; see the status section at the top of `ecommerce-audit.md`). They are **not yet deployed**.
+
+| # | Deliverable | Location | Summary | Status |
+|---|---|---|---|---|
+| 1 | E-Commerce Standards Audit | [`ecommerce-audit.md`](./ecommerce-audit.md) | 14-point audit against WCAG 2.1, ISO 20488/32111, Rwanda Laws 058/2021 and 36/2012, OWASP. Top risks: self-created pickup codes, unverified payment webhook, charged price ≠ advertised price for 4 offer types, no refunds/settlement. | ✅ Done |
+| 2 | Social App Standards Audit | [`social-audit.md`](./social-audit.md) | 12-point audit + mobile-nav finding against Instagram/WhatsApp/Facebook norms and Apple/Google store rules. Top risks: chat RLS lets anyone message anyone and lets receivers edit messages; no reporting; Social missing from mobile nav; student stories and feed are placeholders; no account deletion. | ✅ Done |
+| 3 | 30-Second Explainer Video | [`../video-explainer/`](../video-explainer/) | Rendered 30.0 s MP4s: `unipicks-explainer.mp4` (1080×1920) and `unipicks-explainer-16x9.mp4` (1920×1080), on-screen text only. Plus `script.md` (63-word voiceover), `storyboard.md` (frame-accurate time codes), `assets.md` (royalty-free music, CapCut steps, pre-publish accuracy checklist), and the re-renderable source (`explainer.html` + `render.mjs`). | ✅ Done |
+| 4 | Student Feedback Google Form | [`../user-research/google-form.md`](../user-research/google-form.md) | 12-question, 5-section form (7 required, ~2 min) with wording, options, types and rationale; paste-ready `google-form-paste.txt`; one-click `create-form.gs` (Apps Script); `google-forms-api.json` (Forms API batchUpdate); WhatsApp/class-rep/poster distribution plan and analysis guide. | ✅ Done |
