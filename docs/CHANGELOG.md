@@ -9,6 +9,7 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-03
 
+- 19:25 — `feat(admin)`: open-dispute count badge on the admin Disputes tab, live via Realtime — `src/pages/Dashboard.jsx`
 - 19:10 — `feat(notifications)`: student "needs action" badge (accepted orders still inside the payment window) on the Profile nav item and the Order History row; live via Realtime + deadline timer — `src/components/StudentLayout.jsx`, `src/components/StudentBottomNav.jsx`, `src/components/ProfileTab.jsx`
 - 18:40 — `fix(identity)`: university derived from the email domain and student ID frozen at signup, both in server-only app_metadata; admin list and student_profiles use the verified values; profile shows them read-only with a Verified badge — `supabase/migrations/20261003190000_server_owned_verified_identity.sql`, `src/components/ProfileTab.jsx`, `supabase/tests/verified_identity.test.sh`, `docs/audits/profile-audit.md`
 - 18:00 — `fix(payments)`: payment-webhook sends the pickup-code chat message on the async payment path (shared idempotent helper with process-payment; 500 + retry re-send on failure) — `supabase/functions/_shared/pickup-code-message.ts`, `supabase/functions/payment-webhook/index.ts`, `supabase/functions/process-payment/index.ts`, `supabase/functions/tests/`
