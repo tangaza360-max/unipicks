@@ -33,6 +33,7 @@ function seed({ role, university }: { role: string | null; university?: string }
     expires_at: null, offer_type: 'percentage', discount_value: null, final_price: null, buy_quantity: null,
     min_participants: null,
   }]
+  db.tables.merchant_profiles = [{ id: 'merchant-1', approved: true }]
   db.tables.orders = []
   db.tables.notifications = []
   db.tables.group_orders = [{ id: 'g-1', deal_id: 'deal-1', created_by: USER, host_name: 'X', join_code: 'K7Q2', status: 'open' }]

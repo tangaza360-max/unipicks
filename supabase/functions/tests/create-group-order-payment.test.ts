@@ -30,6 +30,7 @@ function seed({ members, minParticipants }: { members: number; minParticipants: 
   db.tables.group_order_members = Array.from({ length: members }, (_, i) => ({
     id: `m${i}`, group_order_id: GROUP, student_id: i === 0 ? HOST : `student-${i}`, student_name: `S${i}`, quantity: 1,
   }))
+  db.tables.merchant_profiles = [{ id: 'merchant-1', approved: true }]
   db.tables.orders = []
   db.tables.notifications = []
 }

@@ -32,6 +32,7 @@ function seed(banned: boolean) {
     min_participants: null,
   }]
   db.tables.user_roles = [{ user_id: STUDENT, role: 'student' }]
+  db.tables.merchant_profiles = [{ id: 'merchant-1', approved: true }]
   db.tables.orders = []
   db.tables.notifications = []
   db.tables.group_orders = [{ id: 'g-1', deal_id: 'deal-1', created_by: STUDENT, host_name: 'S', join_code: 'K7Q2', status: 'open' }]
