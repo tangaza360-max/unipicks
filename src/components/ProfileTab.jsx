@@ -962,34 +962,7 @@ export default function ProfileTab({ needsActionCount = 0 }) {
          </button>
        </div>
 
-       {/* Notifications */}
-       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-         <div>
-           <p className="text-sm font-medium">Notifications</p>
-           <p className="text-xs text-muted-foreground mt-1">
-             Control the types of notifications you receive.
-           </p>
-         </div>
-
-         {[
-           ['Messages', 'Message notifications'],
-           ['Friend requests', 'Friend request notifications'],
-           ['Orders', 'Order and pickup notifications'],
-           ['Deals', 'Deal notifications'],
-           ['Events', 'Event notifications'],
-         ].map(([label, description]) => (
-           <div
-             key={label}
-             className="flex items-center justify-between gap-4 border-t border-border pt-3"
-           >
-             <div>
-               <p className="text-sm">{label}</p>
-               <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-             </div>
-             <span className="text-xs text-muted-foreground">Coming soon</span>
-           </div>
-         ))}
-       </div>
+       {/* Real notification preferences land with Web Push (post-MVP). */}
 
        {/* Privacy & Security */}
        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -1001,9 +974,7 @@ export default function ProfileTab({ needsActionCount = 0 }) {
          </div>
 
          {[
-           ['Password & security', 'Manage your password and account security.'],
            ['Blocked students', 'View and manage students you have blocked.'],
-           ['Other privacy controls', 'More privacy controls will appear here as they become available.'],
          ].map(([label, description]) => (
            <div
              key={label}
@@ -1013,23 +984,6 @@ export default function ProfileTab({ needsActionCount = 0 }) {
              <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
            </div>
          ))}
-       </div>
-
-       {/* Communication */}
-       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-         <div>
-           <p className="text-sm font-medium">Communication</p>
-           <p className="text-xs text-muted-foreground mt-1">
-             Choose how Unipicks communicates with you.
-           </p>
-         </div>
-
-         <div className="border-t border-border pt-3">
-           <p className="text-sm">Email/SMS notification preferences</p>
-           <p className="text-xs text-muted-foreground mt-0.5">
-             Communication preferences are coming soon.
-           </p>
-         </div>
        </div>
 
        {/* Account */}
@@ -1042,7 +996,6 @@ export default function ProfileTab({ needsActionCount = 0 }) {
          </div>
 
          {[
-           ['Change password', 'Change your account password.'],
            ['Delete/deactivate account', 'Account deactivation and deletion options are coming soon.'],
          ].map(([label, description]) => (
            <div
