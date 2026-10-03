@@ -401,6 +401,7 @@ return () => {
           </div>
           <div className="flex items-center gap-2">
             {role === 'merchant' && <NotificationBell />}
+            {role === 'admin' && <NotificationBell includeMerchantInbox={false} />}
             <button
               onClick={toggleTheme}
               aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}

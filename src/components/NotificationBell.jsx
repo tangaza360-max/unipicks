@@ -1,13 +1,42 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { Bell } from 'lucide-react'
 
-export default function NotificationBell() {
+// Dashboard bell for merchants and admins. It merges two inboxes:
+//  - `notifications` (merchant order events: new order, payment received), and
+//  - `user_notifications` (dispute raised / status changed, written by the
+//    notify_dispute_change trigger for the merchant and every admin), which no
+//    merchant or admin screen showed before.
+// Items are normalised to { key, source, id, message, created_at, read, link_path }.
+
+const LIMIT = 20
+
+function fromMerchantInbox(row) {
+  return { key: `n:${row.id}`, source: 'notifications', id: row.id, message: row.message, created_at: row.created_at, read: Boolean(row.read), link_path: null }
+}
+
+function fromUserInbox(row) {
+  return { key: `u:${row.id}`, source: 'user_notifications', id: row.id, message: row.message, created_at: row.created_at, read: Boolean(row.is_read), link_path: row.link_path || null }
+}
+
+function mergeNewestFirst(items) {
+  const seen = new Set()
+  return items
+    .filter((item) => (seen.has(item.key) ? false : seen.add(item.key)))
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, LIMIT)
+}
+
+export default function NotificationBell({ includeMerchantInbox = true }) {
+  const navigate = useNavigate()
   const [notifications, setNotifications] = useState([])
-  const [unreadCount, setUnreadCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [userId, setUserId] = useState(null)
   const dropdownRef = useRef(null)
+
+  const unreadCount = notifications.filter((n) => !n.read).length
 
   useEffect(() => {
     let channel = null
@@ -23,11 +52,16 @@ export default function NotificationBell() {
       subscribedUserId = null
     }
 
+    function addLive(item) {
+      setNotifications((prev) => mergeNewestFirst([item, ...prev]))
+    }
+
     async function startSubscription(user) {
       if (!active || !user || subscribedUserId === user.id) return
 
       stopSubscription()
       subscribedUserId = user.id
+      setUserId(user.id)
       try {
         await fetchNotifications(user.id)
       } catch (error) {
@@ -36,26 +70,21 @@ export default function NotificationBell() {
       }
       if (!active || subscribedUserId !== user.id) return
 
-      channel = supabase
-        .channel(`notifications:${user.id}`)
+      channel = supabase.channel(`notifications:${user.id}`)
+      if (includeMerchantInbox) {
+        channel = channel.on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'notifications', filter: `merchant_id=eq.${user.id}` },
+          (payload) => addLive(fromMerchantInbox(payload.new)),
+        )
+      }
+      channel = channel
         .on(
           'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'notifications',
-            filter: `merchant_id=eq.${user.id}`,
-          },
-          (payload) => {
-            setNotifications((prev) => {
-              if (prev.some((notification) => notification.id === payload.new.id)) return prev
-              return [payload.new, ...prev].slice(0, 20)
-            })
-            setUnreadCount((prev) => prev + 1)
-          }
+          { event: 'INSERT', schema: 'public', table: 'user_notifications', filter: `user_id=eq.${user.id}` },
+          (payload) => addLive(fromUserInbox(payload.new)),
         )
         .subscribe((status, error) => {
-          console.info('[notifications] realtime status:', status)
           if (error) console.error('[notifications] realtime error:', error)
           if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
             console.warn('[notifications] realtime unavailable; polling fallback is active')
@@ -73,7 +102,7 @@ export default function NotificationBell() {
       } else {
         stopSubscription()
         setNotifications([])
-        setUnreadCount(0)
+        setUserId(null)
         setLoading(false)
       }
     })
@@ -93,56 +122,71 @@ export default function NotificationBell() {
       authListener?.subscription?.unsubscribe()
       stopSubscription()
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [includeMerchantInbox])
 
-  async function fetchNotifications(userId, showLoading = true) {
+  async function fetchNotifications(currentUserId, showLoading = true) {
     if (showLoading) setLoading(true)
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('merchant_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(20)
 
-    if (error) {
-      console.error('[notifications] fetch failed:', error)
-    } else {
-      setNotifications(data || [])
-      const unread = data?.filter((n) => !n.read).length || 0
-      setUnreadCount(unread)
+    const [merchantResult, userResult] = await Promise.all([
+      includeMerchantInbox
+        ? supabase
+          .from('notifications')
+          .select('*')
+          .eq('merchant_id', currentUserId)
+          .order('created_at', { ascending: false })
+          .limit(LIMIT)
+        : Promise.resolve({ data: [], error: null }),
+      supabase
+        .from('user_notifications')
+        .select('id, message, created_at, is_read, link_path')
+        .eq('user_id', currentUserId)
+        .order('created_at', { ascending: false })
+        .limit(LIMIT),
+    ])
+
+    if (merchantResult.error) console.error('[notifications] fetch failed:', merchantResult.error)
+    if (userResult.error) console.error('[notifications] user inbox fetch failed:', userResult.error)
+
+    if (!merchantResult.error || !userResult.error) {
+      setNotifications(mergeNewestFirst([
+        ...(merchantResult.data || []).map(fromMerchantInbox),
+        ...(userResult.data || []).map(fromUserInbox),
+      ]))
     }
     if (showLoading) setLoading(false)
   }
 
-  async function markAsRead(notificationId) {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('id', notificationId)
+  async function markAsRead(item) {
+    if (!item.read) {
+      const { error } = item.source === 'notifications'
+        ? await supabase.from('notifications').update({ read: true }).eq('id', item.id)
+        : await supabase.from('user_notifications').update({ is_read: true }).eq('id', item.id)
 
-    if (!error) {
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, read: true } : n
-        )
-      )
-      setUnreadCount((prev) => Math.max(0, prev - 1))
+      if (!error) {
+        setNotifications((prev) => prev.map((n) => (n.key === item.key ? { ...n, read: true } : n)))
+      }
+    }
+
+    if (item.link_path) {
+      setIsOpen(false)
+      navigate(item.link_path)
     }
   }
 
   async function markAllAsRead() {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('merchant_id', (await supabase.auth.getUser()).data.user.id)
-      .eq('read', false)
+    if (!userId) return
+    const [merchantResult, userResult] = await Promise.all([
+      includeMerchantInbox
+        ? supabase.from('notifications').update({ read: true }).eq('merchant_id', userId).eq('read', false)
+        : Promise.resolve({ error: null }),
+      supabase.from('user_notifications').update({ is_read: true }).eq('user_id', userId).eq('is_read', false),
+    ])
 
-    if (!error) {
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, read: true }))
-      )
-      setUnreadCount(0)
-    }
+    setNotifications((prev) => prev.map((n) => {
+      const failed = n.source === 'notifications' ? merchantResult.error : userResult.error
+      return failed ? n : { ...n, read: true }
+    }))
   }
 
   // Click outside to close dropdown
@@ -161,7 +205,8 @@ export default function NotificationBell() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-full hover:bg-muted transition-colors"
-        aria-label="Notifications"
+        aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+        aria-expanded={isOpen}
       >
         <Bell size={22} className="text-muted-foreground hover:text-foreground" />
         {unreadCount > 0 && (
@@ -172,7 +217,7 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-card border border-border rounded-lg shadow-2xl z-50">
+        <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto bg-card border border-border rounded-lg shadow-2xl z-50">
           <div className="sticky top-0 bg-card p-3 border-b border-border flex items-center justify-between">
             <span className="font-display font-semibold text-sm">Notifications</span>
             {unreadCount > 0 && (
@@ -195,12 +240,13 @@ export default function NotificationBell() {
           ) : (
             <div className="divide-y divide-base-700">
               {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-3 hover:bg-card-alt transition cursor-pointer ${
+                <button
+                  type="button"
+                  key={notification.key}
+                  className={`block w-full text-left p-3 hover:bg-card-alt transition ${
                     !notification.read ? 'bg-accent/5 border-l-2 border-accent' : ''
                   }`}
-                  onClick={() => markAsRead(notification.id)}
+                  onClick={() => markAsRead(notification)}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
@@ -212,10 +258,10 @@ export default function NotificationBell() {
                       </p>
                     </div>
                     {!notification.read && (
-                      <span className="w-2 h-2 rounded-full bg-accent flex-shrink-0 mt-1.5" />
+                      <span className="w-2 h-2 rounded-full bg-accent flex-shrink-0 mt-1.5" aria-hidden="true" />
                     )}
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
