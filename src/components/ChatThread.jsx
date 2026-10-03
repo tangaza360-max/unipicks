@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { linkPhoneNumbers } from '../lib/linkPhoneNumbers.jsx'
+import { Flag } from 'lucide-react'
+import ReportDialog from './ReportDialog.jsx'
 
 function formatTime(iso) {
   if (!iso) return ''
@@ -43,6 +45,7 @@ export default function ChatThread({
   const [otherUserRole, setOtherUserRole] = useState(null)
   const [input, setInput] = useState('')
   const [sendError, setSendError] = useState('')
+  const [showReport, setShowReport] = useState(false)
   const [loading, setLoading] = useState(true)
   const bottomRef = useRef(null)
   const hasScrolledOnce = useRef(false)
@@ -256,6 +259,15 @@ export default function ChatThread({
             {headerRole === 'merchant' ? '🏪 Merchant' : '🎓 Student'}
           </span>
         )}
+        {!isGroup && !otherDeleted && otherUserId && (
+          <button
+            type="button"
+            onClick={() => setShowReport(true)}
+            className="ml-auto inline-flex min-h-11 items-center gap-1 px-2 text-xs text-muted-foreground hover:text-red-400 transition"
+          >
+            <Flag size={14} aria-hidden="true" /> Report
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
@@ -355,6 +367,15 @@ export default function ChatThread({
         </button>
       </form>
       </>
+      )}
+
+      {showReport && (
+        <ReportDialog
+          reportedId={otherUserId}
+          reportedName={headerName}
+          context={headerRole === 'merchant' ? 'business' : 'chat'}
+          onClose={() => setShowReport(false)}
+        />
       )}
     </div>
   )

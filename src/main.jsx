@@ -39,6 +39,7 @@ function RouteTitle() {
       'activity-logs': 'Activity Logs',
       reviews: 'Reviews',
       disputes: 'Disputes',
+      reports: 'Reports',
     }
     const dashboardTab = pathname.split('/')[2]
     const pageTitle = pathname.startsWith('/dashboard')

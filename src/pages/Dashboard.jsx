@@ -9,7 +9,7 @@ import MerchantAnalytics from './MerchantAnalytics.jsx'
 import MerchantProfile from './MerchantProfile.jsx'
 import MerchantStories from './MerchantStories.jsx'
 import Messages from './Messages.jsx'
-import { ClipboardCheck, ClipboardList, GraduationCap, BarChart3, Users, Settings, FileClock, FileText, Camera, MessageCircle, ShoppingBag, Sun, Moon, LogOut, AlertCircle } from 'lucide-react'
+import { ClipboardCheck, ClipboardList, GraduationCap, BarChart3, Users, Settings, FileClock, FileText, Camera, MessageCircle, ShoppingBag, Sun, Moon, LogOut, AlertCircle, Flag } from 'lucide-react'
 import Logo from '../components/Logo.jsx'
 import AdminAnalytics from './AdminAnalytics.jsx'
 import AdminApprovals from './AdminApprovals.jsx'
@@ -19,6 +19,7 @@ import AdminSettings from './AdminSettings.jsx'
 import AdminActivityLogs from './AdminActivityLogs.jsx'
 import AdminReviews from './AdminReviews.jsx'
 import AdminDisputes from './AdminDisputes.jsx'
+import AdminReports from './AdminReports.jsx'
 import StudentLayout from '../components/StudentLayout.jsx'
 import NotificationBell from '../components/NotificationBell.jsx'
 
@@ -32,6 +33,7 @@ export default function Dashboard() {
   const [merchantUnreadCount, setMerchantUnreadCount] = useState(0)
   const [pendingOrderCount, setPendingOrderCount] = useState(0)
   const [openDisputeCount, setOpenDisputeCount] = useState(0)
+  const [openReportCount, setOpenReportCount] = useState(0)
   const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
@@ -79,7 +81,7 @@ return () => {
       student: ['deals', 'search', 'social', 'advisor', 'orders', 'profile', 'messages'],
       merchant: ['deals', 'orders', 'stats', 'profile', 'stories', 'messages'],
       delivery: ['jobs'],
-      admin: ['approvals', 'student-view', 'analytics', 'users', 'settings', 'activity-logs', 'reviews', 'disputes'],
+      admin: ['approvals', 'student-view', 'analytics', 'users', 'settings', 'activity-logs', 'reviews', 'disputes', 'reports'],
     }
     const defaultTab = role === 'admin' ? 'approvals' : role === 'delivery' ? 'jobs' : 'deals'
 
@@ -188,6 +190,33 @@ return () => {
       if (channel) supabase.removeChannel(channel)
     }
   }, [role, user])
+
+  // Admin reports badge (fix 8): reports not yet decided. Refreshed every
+  // minute and whenever the admin opens a tab; new reports also reach the
+  // admin bell via user_notifications.
+  useEffect(() => {
+    if (role !== 'admin' || !user) return
+    let active = true
+
+    async function refetchOpenReports() {
+      const { count, error } = await supabase
+        .from('student_reports')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['pending', 'reviewing'])
+      if (error) {
+        console.error('[admin reports] count failed:', error)
+      } else if (active) {
+        setOpenReportCount(count || 0)
+      }
+    }
+
+    refetchOpenReports()
+    const timer = setInterval(refetchOpenReports, 60_000)
+    return () => {
+      active = false
+      clearInterval(timer)
+    }
+  }, [role, user, dashboardTab])
 
   // Admin dispute badge: count of orders with an open dispute, live.
   // Realtime filters match the NEW row, so filtering on 'open' alone would miss
@@ -346,6 +375,7 @@ return () => {
             { id: 'activity-logs', label: 'Activity logs', icon: FileClock },
             { id: 'reviews', label: 'Reviews', icon: FileText },
             { id: 'disputes', label: 'Disputes', icon: AlertCircle },
+            { id: 'reports', label: 'Reports', icon: Flag },
           ].map((tab) => {
             const Icon = tab.icon
             return (
@@ -368,6 +398,14 @@ return () => {
                     {openDisputeCount > 99 ? '99+' : openDisputeCount}
                   </span>
                 )}
+                {tab.id === 'reports' && openReportCount > 0 && (
+                  <span
+                    className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
+                    aria-label={`${openReportCount} open report${openReportCount === 1 ? '' : 's'}`}
+                  >
+                    {openReportCount > 99 ? '99+' : openReportCount}
+                  </span>
+                )}
               </button>
             )
           })}
@@ -379,6 +417,7 @@ return () => {
          dashboardTab === 'settings' ? <AdminSettings /> :
          dashboardTab === 'activity-logs' ? <AdminActivityLogs /> :
          dashboardTab === 'disputes' ? <AdminDisputes /> :
+         dashboardTab === 'reports' ? <AdminReports /> :
          <AdminReviews />}
       </>
     )
