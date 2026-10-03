@@ -208,13 +208,36 @@ const [studentConversations, setStudentConversations] = useState([])
         }
       }
 
-      const studentList = studentProfiles.map((student) => ({
-        id: student.user_id,
-        displayName: student.display_name || 'Student',
-        username: student.username || null,
-        lastMessage: lastMessageByMerchant[student.user_id]?.lastMessage || null,
-        createdAt: lastMessageByMerchant[student.user_id]?.createdAt || null,
-        unreadCount: unreadCounts[student.user_id] || 0,
+      // Partners with no profile may be deleted accounts: keep those
+      // conversations visible (decision D4), labelled "Deleted user".
+      const unresolvedIds = studentIds.filter(
+        (id) => !studentProfiles.some((student) => student.user_id === id)
+      )
+      let deletedIds = []
+      if (unresolvedIds.length > 0) {
+        const { data: deletedRows, error: deletedError } = await supabase.rpc(
+          'get_deleted_user_ids',
+          { p_user_ids: unresolvedIds }
+        )
+        if (deletedError) {
+          console.error('Failed to check deleted accounts:', deletedError.message)
+        } else {
+          deletedIds = (deletedRows || []).map((row) => row.user_id)
+        }
+      }
+
+      const studentList = [
+        ...studentProfiles.map((student) => ({
+          id: student.user_id,
+          displayName: student.display_name || 'Student',
+          username: student.username || null,
+        })),
+        ...deletedIds.map((id) => ({ id, displayName: 'Deleted user', username: null })),
+      ].map((student) => ({
+        ...student,
+        lastMessage: lastMessageByMerchant[student.id]?.lastMessage || null,
+        createdAt: lastMessageByMerchant[student.id]?.createdAt || null,
+        unreadCount: unreadCounts[student.id] || 0,
       }))
 
       studentList.sort((a, b) => {
@@ -288,6 +311,20 @@ const [studentConversations, setStudentConversations] = useState([])
       }
 
       const merchantConversations = Object.values(conversationsByStudent)
+
+      if (merchantConversations.length > 0) {
+        const { data: deletedRows, error: deletedError } = await supabase.rpc(
+          'get_deleted_user_ids',
+          { p_user_ids: merchantConversations.map((conversation) => conversation.otherId) }
+        )
+        if (deletedError) {
+          console.error('Failed to check deleted accounts:', deletedError.message)
+        }
+        const deletedIds = new Set((deletedRows || []).map((row) => row.user_id))
+        for (const conversation of merchantConversations) {
+          if (deletedIds.has(conversation.otherId)) conversation.otherName = 'Deleted user'
+        }
+      }
 
       merchantConversations.sort((a, b) => {
         return new Date(b.createdAt) - new Date(a.createdAt)
