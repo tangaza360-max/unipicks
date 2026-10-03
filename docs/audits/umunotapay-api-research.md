@@ -16,6 +16,7 @@ Goal: the values needed to turn on `supabase/functions/reconcile-payments` (`REC
 | S5 | Screenshot, Developers → Integrations → "Authentication & request signing" | 2026-10-03 | Headers and signature message |
 | S6 | OpenAPI file downloaded from S4 ("Download OpenAPI"): `UmunotaPay Gateway API`, version `1.0.0`, OpenAPI 3.0.3, 279 KB | 2026-10-03 | All endpoints; no response schemas for the merchant API |
 | S8 | Founder's production query result (status words only), `Supabase Snippet Transaction Status Comparison.csv` | 2026-10-03 | `success`/`paid` ×17, null/`processing` ×6 |
+| S9 | Founder's production query result (the 6 processing rows: ids, dates, reference presence, order status, payload key names) | 2026-10-03 | Pre-orders era, no order, no provider payload |
 | S7 | Our own code: `supabase/functions/process-payment/index.ts` (collect call), production `transactions.webhook_payload` key list given by the founder | 2026-10-03 | How we already call UmunotaPay |
 
 The OpenAPI file was not added to the repo (it is UmunotaPay's document).
@@ -99,6 +100,9 @@ It shows the status words UmunotaPay has really returned so far. It will not sho
 - Confirmed in our data: UmunotaPay returns **`success`** for a completed payment. It is already in the reconciler's `PAID` list.
 - No failed or pending status word has been stored yet, so the failure/pending vocabulary (U2) is still unknown.
 - **6 transactions are stuck in `processing` with no provider status.** These are exactly the cases `reconcile-payments` exists for; some may be payments that succeeded without us hearing back. Next step: list them (age, whether `umunota_reference` is set, order status, payload key names only) and check each one in the UmunotaPay dashboard (History) before the reconciler is enabled.
+- **The 6 `processing` rows, listed [S9]:** all created 2026-09-11 12:15 to 2026-09-12 09:36, i.e. **before the orders system existed** (orders table `20260915073805`, `normal_order_id` `20260915094500`). None is linked to an order (`order_status` null), `webhook_payload` is NULL (no provider answer ever stored), and all have both `umunota_reference` and `merchant_reference`. Three were created within one minute (12:15:11–12:16:02 on 09-11), which looks like testing.
+  - **The reconciler will never touch them**: it only selects orders in `payment_processing`.
+  - **Open:** check the 6 references in the UmunotaPay dashboard (History, 11–12 Sept). No money → mark them `failed` with a one-off, reviewed SQL. Money received → a student paid in the pre-orders flow; review by hand.
 - Note: these stored values come from the **collect** response (`POST /api/v1/payments`) and webhooks, not from the status endpoint; the status endpoint probably uses the same words, but that is not confirmed (U1).
 
 ---
