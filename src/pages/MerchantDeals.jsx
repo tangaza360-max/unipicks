@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import VerifyCode from './VerifyCode.jsx'
 import ConfirmModal from '../components/ConfirmModal.jsx'
-import { Search, Sparkles, X, Pencil, UtensilsCrossed, CheckCircle2 } from 'lucide-react'
+import { Search, Sparkles, X, Pencil, UtensilsCrossed, CheckCircle2, ShoppingCart } from 'lucide-react'
 
 export default function MerchantDeals() {
   // --- State for deals and form ---
@@ -35,6 +35,7 @@ export default function MerchantDeals() {
   const [success, setSuccess] = useState('')
 
   const [myDeals, setMyDeals] = useState([])
+  const [groupActivity, setGroupActivity] = useState({})
   const [loadingDeals, setLoadingDeals] = useState(true)
 
   const [editingId, setEditingId] = useState(null)
@@ -113,6 +114,7 @@ export default function MerchantDeals() {
     }
 
     loadDeals()
+    loadGroupActivity()
 
     async function getUserId() {
       const { data: userData } = await supabase.auth.getUser()
@@ -134,6 +136,7 @@ export default function MerchantDeals() {
           },
           () => {
             loadDeals()
+            loadGroupActivity()
           }
         )
         .subscribe()
@@ -189,8 +192,28 @@ export default function MerchantDeals() {
     return 'bg-purple-600 text-white'
   }
 
+  async function loadGroupActivity() {
+    const { data, error: activityError } = await supabase.rpc('get_merchant_group_activity')
+
+    if (activityError) {
+      console.error('Failed to load merchant group activity:', activityError)
+      setGroupActivity({})
+      return
+    }
+
+    setGroupActivity((data || []).reduce((activityByDeal, activity) => {
+      activityByDeal[activity.deal_id] = {
+        open_group_count: activity.open_group_count,
+        total_members: activity.total_members,
+        total_quantity: activity.total_quantity,
+      }
+      return activityByDeal
+    }, {}))
+  }
+
   async function reloadDeals() {
     setLoadingDeals(true)
+    loadGroupActivity()
     const { data: userData } = await supabase.auth.getUser()
     const userId = userData.user?.id
 
@@ -684,6 +707,25 @@ export default function MerchantDeals() {
                       <span className="line-through text-muted-foreground">{Number(deal.price).toLocaleString()} RWF</span>
                     )}
                   </div>
+
+                  {dealOfferType === 'group_buy' && Number(groupActivity[deal.id]?.open_group_count) > 0 && (
+                    <p className="flex items-center gap-1.5 pt-1 text-xs text-muted-foreground">
+                      <ShoppingCart size={14} />
+                      <span>
+                        {groupActivity[deal.id].open_group_count} open group{Number(groupActivity[deal.id].open_group_count) === 1 ? '' : 's'}
+                        {' · '}{groupActivity[deal.id].total_members} joined
+                        {' · '}{groupActivity[deal.id].total_quantity} item{Number(groupActivity[deal.id].total_quantity) === 1 ? '' : 's'}
+                      </span>
+                    </p>
+                  )}
+
+                  {dealOfferType === 'group_buy' &&
+                    Number(groupActivity[deal.id]?.open_group_count) === 0 &&
+                    deal.min_participants != null && (
+                      <p className="flex items-center gap-1.5 pt-1 text-xs italic text-muted-foreground/70">
+                        <ShoppingCart size={14} /> Waiting for the first group
+                      </p>
+                    )}
 
                   <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
                     <div>
