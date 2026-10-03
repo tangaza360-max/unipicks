@@ -1,16 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Users, QrCode } from 'lucide-react'
+import { Check, Copy, ShoppingCart, Users } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
-
-function makeJoinCode() {
-  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789' // no confusing 0/O/1/I/L
-  let code = ''
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)]
-  }
-  return code
-}
 
 function finalPriceOf(deal) {
   if (!deal || deal.price == null) return null
@@ -19,169 +10,174 @@ function finalPriceOf(deal) {
 }
 
 export default function GroupOrders() {
-  const [deals, setDeals] = useState([])
   const [searchParams] = useSearchParams()
   const initialJoinCode = searchParams.get('join_code') || ''
-  const [tab, setTab] = useState(initialJoinCode ? 'join' : 'start') // 'start' | 'join'
-  const [myOrders, setMyOrders] = useState([])
+  const navigate = useNavigate()
+  const [joinFormOpen, setJoinFormOpen] = useState(Boolean(initialJoinCode))
+  const [hostedOrders, setHostedOrders] = useState([])
+  const [joinedOrders, setJoinedOrders] = useState([])
   const [loadingOrders, setLoadingOrders] = useState(true)
 
   useEffect(() => {
-    loadDeals()
     loadMyOrders()
   }, [])
-
-  async function loadDeals() {
-    const { data, error } = await supabase
-      .from('deals')
-      .select('*')
-      .eq('offer_type', 'group_buy')
-      .eq('active', true)
-      .order('created_at', { ascending: false })
-    if (error) console.error('[GroupOrders] loadDeals error:', error)
-    setDeals(data ?? [])
-  }
 
   async function loadMyOrders() {
     setLoadingOrders(true)
     const { data: userData } = await supabase.auth.getUser()
-    if (!userData.user) return
-
-    const { data: orders } = await supabase
-      .from('group_orders')
-      .select('*, deals(title, business_name, price, discount_percent)')
-      .eq('created_by', userData.user.id)
-      .neq('status', 'cancelled')   // ← HIDE CANCELLED ORDERS
-      .order('created_at', { ascending: false })
-
-    if (!orders) {
-      setMyOrders([])
+    if (!userData.user) {
+      setHostedOrders([])
+      setJoinedOrders([])
       setLoadingOrders(false)
       return
     }
 
-    const withMembers = await Promise.all(
-      orders.map(async (order) => {
-        const { data: members } = await supabase
-          .from('group_order_members')
-          .select('*')
-          .eq('group_order_id', order.id)
-          .order('joined_at', { ascending: true })
-        return { ...order, members: members ?? [] }
-      }),
-    )
+    const userId = userData.user.id
+    const [hostingResult, joinedResult] = await Promise.all([
+      supabase
+        .from('group_orders')
+        .select('*, deals(id, title, business_name, price, discount_percent, image_url, min_participants)')
+        .eq('created_by', userId)
+        .neq('status', 'cancelled')
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('group_order_members')
+        .select('id, group_order_id, student_id, student_name, quantity, payment_status, joined_at, group_orders!inner(id, deal_id, created_by, host_name, join_code, status, created_at, deals(id, title, business_name, price, discount_percent, image_url, min_participants))')
+        .eq('student_id', userId)
+        .order('joined_at', { ascending: false }),
+    ])
 
-    setMyOrders(withMembers)
+    if (hostingResult.error) console.error('[GroupOrders] load hosted groups error:', hostingResult.error)
+    if (joinedResult.error) console.error('[GroupOrders] load joined groups error:', joinedResult.error)
+
+    const hosts = (hostingResult.data || []).filter((order) => order.status !== 'cancelled')
+    const joinedMemberships = (joinedResult.data || []).filter((membership) =>
+      membership.group_orders &&
+      membership.group_orders.created_by !== userId &&
+      membership.group_orders.status !== 'cancelled'
+    )
+    const joinedById = new Map()
+    for (const membership of joinedMemberships) {
+      const order = membership.group_orders
+      if (!joinedById.has(order.id)) joinedById.set(order.id, order)
+    }
+    const groupIds = [...new Set([
+      ...hosts.map((order) => order.id),
+      ...[...joinedById.keys()],
+    ])]
+    let membersByGroup = {}
+
+    if (groupIds.length > 0) {
+      const { data: members, error: membersError } = await supabase
+        .from('group_order_members')
+        .select('*')
+        .in('group_order_id', groupIds)
+        .order('joined_at', { ascending: true })
+
+      if (membersError) {
+        console.error('[GroupOrders] load group members error:', membersError)
+      } else {
+        membersByGroup = (members || []).reduce((groups, member) => {
+          if (!groups[member.group_order_id]) groups[member.group_order_id] = []
+          groups[member.group_order_id].push(member)
+          return groups
+        }, {})
+      }
+    }
+
+    setHostedOrders(hosts.map((order) => ({
+      ...order,
+      members: membersByGroup[order.id] || [],
+    })))
+    setJoinedOrders([...joinedById.values()].map((order) => ({
+      ...order,
+      members: membersByGroup[order.id] || [],
+    })))
     setLoadingOrders(false)
   }
 
   return (
-    <div className="border border-border rounded-lg p-5 space-y-5 bg-card shadow-sm">
-      <h2 className="flex items-center gap-2 font-display text-xl font-semibold"><Users size={19} className="text-accent" /> Group orders</h2>
-
-      <div className="flex gap-2 text-sm">
+    <div className="space-y-5">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
+          <ShoppingCart size={20} className="text-accent" /> My Groups
+        </h2>
         <button
-          onClick={() => setTab('start')}
-          className={`px-3 py-1.5 rounded-lg border ${
-            tab === 'start' ? 'border-accent text-accent' : 'border-border text-muted-foreground'
-          }`}
-        >
-          Start one
-        </button>
-        <button
-          onClick={() => setTab('join')}
-          className={`px-3 py-1.5 rounded-lg border ${
-            tab === 'join' ? 'border-accent text-accent' : 'border-border text-muted-foreground'
-          }`}
+          type="button"
+          onClick={() => setJoinFormOpen(true)}
+          className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition hover:border-accent hover:text-accent"
         >
           Join with a code
         </button>
-      </div>
+      </header>
 
-      {tab === 'start' ? <StartOrder deals={deals} onCreated={loadMyOrders} /> : <JoinOrder initialCode={initialJoinCode} />}
+      {joinFormOpen && (
+        <div className="rounded-lg border border-border bg-card p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Join a group order</h3>
+            <button
+              type="button"
+              onClick={() => setJoinFormOpen(false)}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Cancel
+            </button>
+          </div>
+          <JoinOrder initialCode={initialJoinCode} onJoined={loadMyOrders} />
+        </div>
+      )}
 
-      <div className="pt-2 border-t border-border space-y-3">
-        <h3 className="text-sm font-semibold text-muted-foreground">Orders you're hosting</h3>
-        {loadingOrders ? (
-          <p className="text-muted-foreground text-sm">Loading…</p>
-        ) : myOrders.length === 0 ? (
-          <p className="text-muted-foreground text-sm">None yet.</p>
-        ) : (
-          myOrders.map((order) => (
-            <HostedOrderCard key={order.id} order={order} onChanged={loadMyOrders} />
-          ))
-        )}
-      </div>
+      {loadingOrders ? (
+        <div className="grid gap-5 lg:grid-cols-2">
+          {[0, 1, 2].map((item) => (
+            <div key={item} className="h-48 animate-pulse rounded-lg border border-border bg-muted/60" />
+          ))}
+        </div>
+      ) : hostedOrders.length === 0 && joinedOrders.length === 0 ? (
+        <div className="flex min-h-64 flex-col items-center justify-center rounded-lg border border-dashed border-border px-5 py-10 text-center">
+          <ShoppingCart size={28} className="text-muted-foreground" />
+          <h3 className="mt-3 font-display text-lg font-semibold">You haven't joined any groups yet</h3>
+          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+            Browse deals to start or join a group order and save with friends.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard/deals')}
+            className="mt-4 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-background-foreground transition hover:bg-accent-dim"
+          >
+            Browse deals
+          </button>
+        </div>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <section className="space-y-3">
+            <h3 className="font-display text-base font-semibold">Groups you're hosting</h3>
+            {hostedOrders.length === 0 ? (
+              <p className="text-sm text-muted-foreground">None right now.</p>
+            ) : (
+              hostedOrders.map((order) => (
+                <HostedOrderCard key={order.id} order={order} onChanged={loadMyOrders} />
+              ))
+            )}
+          </section>
+
+          <section className="space-y-3">
+            <h3 className="font-display text-base font-semibold">Groups you've joined</h3>
+            {joinedOrders.length === 0 ? (
+              <p className="text-sm text-muted-foreground">None right now.</p>
+            ) : (
+              joinedOrders.map((order) => (
+                <JoinedOrderCard key={order.id} order={order} />
+              ))
+            )}
+          </section>
+        </div>
+      )}
     </div>
   )
 }
 
-function StartOrder({ deals, onCreated }) {
-  const [dealId, setDealId] = useState(deals[0]?.id ?? '')
-  const [creating, setCreating] = useState(false)
-  const [created, setCreated] = useState(null)
-
-  async function handleStart() {
-    if (!dealId) return
-    setCreating(true)
-
-    const code = makeJoinCode()
-
-    const { data, error } = await supabase
-      .rpc('create_group_order_with_host', {
-        p_deal_id: dealId,
-        p_join_code: code,
-      })
-
-    setCreating(false)
-
-    if (!error) {
-      setCreated(data)
-      onCreated()
-    }
-  }
-
-  if (created) {
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${created.join_code}`
-    return (
-      <div className="bg-muted rounded-lg border border-border p-5 text-center space-y-3">
-        <p className="text-muted-foreground text-sm">Share this with your friends</p>
-        <div className="mx-auto flex w-fit rounded-lg border border-border bg-card p-2 shadow-sm"><img src={qrUrl} alt="QR code" className="rounded-lg" /></div>
-        <p className="font-display text-3xl font-bold text-accent tracking-widest">
-          {created.join_code}
-        </p>
-        <button onClick={() => setCreated(null)} className="text-xs text-muted-foreground hover:text-foreground">
-          Start another
-        </button>
-      </div>
-    )
-  }
-
-  if (deals.length === 0) {
-    return <p className="text-muted-foreground text-sm">No group buy deals available right now.</p>
-  }
-
-  return (
-    <div className="space-y-3">
-      <select className="field-input" value={dealId} onChange={(e) => setDealId(e.target.value)}>
-        {deals.map((d) => (
-          <option key={d.id} value={d.id}>
-            {d.business_name} — {d.title}
-          </option>
-        ))}
-      </select>
-      <button
-        onClick={handleStart}
-        disabled={creating}
-        className="w-full bg-primary hover:bg-accent-dim text-primary-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
-      >
-        {creating ? 'Starting…' : 'Start group order'}
-      </button>
-    </div>
-  )
-}
-
-function JoinOrder({ initialCode = '' }) {
+function JoinOrder({ initialCode = '', onJoined }) {
   const [code, setCode] = useState(initialCode)
   const [quantity, setQuantity] = useState(1)
   const [found, setFound] = useState(null)
@@ -237,6 +233,7 @@ function JoinOrder({ initialCode = '' }) {
       return
     }
     setJoined(true)
+    onJoined?.()
   }
 
   if (joined) {
@@ -315,8 +312,21 @@ function HostedOrderCard({ order, onChanged }) {
   const navigate = useNavigate()
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [copied, setCopied] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const unitPrice = finalPriceOf(order.deals)
-  const total = unitPrice != null ? order.members.reduce((sum, m) => sum + m.quantity * unitPrice, 0) : null
+  const total = unitPrice != null ? order.members.reduce((sum, m) => sum + Number(m.quantity || 0) * unitPrice, 0) : null
+
+  async function handleCopyInvite() {
+    try {
+      await navigator.clipboard.writeText(order.join_code)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1800)
+    } catch (copyError) {
+      console.error('Failed to copy group invite code:', copyError)
+      setSubmitError('Could not copy the invite code.')
+    }
+  }
 
   async function handleCancel() {
     await supabase.from('group_orders').update({ status: 'cancelled' }).eq('id', order.id)
@@ -353,69 +363,175 @@ function HostedOrderCard({ order, onChanged }) {
   }
 
   return (
-    <div className="bg-muted rounded-lg p-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium">
-          {order.deals?.title} · {order.deals?.business_name}
-        </p>
-        <span className="text-xs text-muted-foreground font-mono">{order.join_code}</span>
-      </div>
-
-      {order.status === 'closed' && (
-        <p className="text-xs text-muted-foreground italic">Closed — no longer accepting joiners.</p>
-      )}
-
-      {order.members.length === 0 ? (
-        <p className="text-muted-foreground text-xs">No one has joined yet.</p>
-      ) : (
-        <div className="text-xs text-muted-foreground space-y-1">
-          {order.members.map((m) => (
-            <div key={m.id} className="flex justify-between">
-              <span>
-                {m.student_name} × {m.quantity}
-              </span>
-              {unitPrice != null && <span>{m.quantity * unitPrice} RWF</span>}
-            </div>
-          ))}
-          {total != null && (
-            <div className="flex justify-between pt-1 mt-1 border-t border-border font-semibold text-foreground">
-              <span>Total</span>
-              <span>{total} RWF</span>
-            </div>
+    <GroupOrderCard
+      order={order}
+      hostLabel="You're hosting"
+      actions={(
+        <>
+          {order.status === 'open' ? (
+            <>
+              <button
+                type="button"
+                onClick={handleCopyInvite}
+                className="flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition hover:border-accent hover:text-accent"
+              >
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+                {copied ? 'Copied' : 'Copy invite code'}
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmitGroupOrder}
+                disabled={submitting || total == null || total <= 0}
+                className="flex-1 rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-background-foreground transition hover:bg-accent-dim disabled:opacity-50"
+              >
+                {submitting ? 'Preparing…' : 'View & Pay'}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setExpanded((current) => !current)}
+              className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition hover:border-accent hover:text-accent"
+            >
+              {expanded ? 'Hide details' : 'View'}
+            </button>
           )}
-        </div>
+        </>
       )}
-
+      expanded={expanded}
+      error={submitError}
+    >
       {order.status === 'open' && (
-        <div className="flex gap-2 mt-1">
+        <div className="flex gap-2">
           <button
+            type="button"
             onClick={handleClose}
-            className="text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg px-3 py-1"
+            className="text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg px-3 py-1.5"
           >
             Mark as ordered / close
           </button>
           <button
+            type="button"
             onClick={handleCancel}
-            className="text-xs text-red-400/70 hover:text-red-400 border border-red-400/30 rounded-lg px-3 py-1"
+            className="text-xs text-red-400/70 hover:text-red-400 border border-red-400/30 rounded-lg px-3 py-1.5"
           >
             Cancel order
           </button>
         </div>
       )}
+    </GroupOrderCard>
+  )
+}
 
-      {total != null && total > 0 && (
-        <>
-          {submitError && <p className="text-sm text-red-400">{submitError}</p>}
-          <button
-            type="button"
-            onClick={handleSubmitGroupOrder}
-            disabled={submitting}
-            className="w-full bg-primary text-primary-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
-          >
-            {submitting ? 'Preparing…' : `Pay Now · ${total.toLocaleString()} RWF`}
-          </button>
-        </>
+function JoinedOrderCard({ order }) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <GroupOrderCard
+      order={order}
+      hostLabel={`${order.host_name || 'A student'}'s group`}
+      expanded={expanded}
+      actions={(
+        <button
+          type="button"
+          onClick={() => setExpanded((current) => !current)}
+          className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition hover:border-accent hover:text-accent"
+        >
+          {expanded ? 'Hide details' : 'View'}
+        </button>
       )}
-    </div>
+    />
+  )
+}
+
+function GroupOrderCard({ order, hostLabel, actions, expanded, error, children }) {
+  const deal = order.deals
+  const members = order.members || []
+  const memberCount = members.length
+  const totalQuantity = members.reduce((sum, member) => sum + Number(member.quantity || 0), 0)
+  const unitPrice = finalPriceOf(deal)
+  const total = unitPrice == null
+    ? null
+    : members.reduce((sum, member) => sum + Number(member.quantity || 0) * unitPrice, 0)
+  const minimum = Number(deal?.min_participants)
+  const progress = minimum > 0 && memberCount > 0
+    ? Math.min(100, (memberCount / minimum) * 100)
+    : 0
+
+  return (
+    <article className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <div className="flex gap-3 p-3">
+        {deal?.image_url ? (
+          <img
+            src={deal.image_url}
+            alt=""
+            className="h-20 w-20 shrink-0 rounded-lg object-cover"
+          />
+        ) : (
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
+            <ShoppingCart size={24} />
+          </div>
+        )}
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">
+                {deal?.title || 'Group order'} · {deal?.business_name || 'Business'}
+              </p>
+              <p className="text-xs text-muted-foreground">{hostLabel}</p>
+            </div>
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+              order.status === 'open'
+                ? 'bg-green-500/15 text-green-700'
+                : 'bg-muted text-muted-foreground'
+            }`}>
+              {order.status === 'open' ? 'Open' : 'Closed'}
+            </span>
+          </div>
+          {order.join_code && hostLabel === "You're hosting" && (
+            <p className="font-mono text-[11px] text-muted-foreground">Code: {order.join_code}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-2 px-3 pb-3">
+        {memberCount > 0 && (
+          <>
+            <p className="text-xs text-muted-foreground">
+              {minimum > 0
+                ? `${memberCount} of ${minimum} joined`
+                : `${memberCount} member${memberCount === 1 ? '' : 's'}`}
+            </p>
+            {minimum > 0 && (
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-accent" style={{ width: `${progress}%` }} />
+              </div>
+            )}
+          </>
+        )}
+
+        {totalQuantity > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {totalQuantity} item{totalQuantity === 1 ? '' : 's'}
+            {total != null && ` · ${total.toLocaleString()} RWF`}
+          </p>
+        )}
+
+        {expanded && members.length > 0 && (
+          <div className="space-y-1 border-t border-border pt-2 text-xs text-muted-foreground">
+            {members.map((member) => (
+              <div key={member.id} className="flex justify-between gap-2">
+                <span className="truncate">{member.student_name || 'Student'} × {member.quantity}</span>
+                {unitPrice != null && <span>{(Number(member.quantity || 0) * unitPrice).toLocaleString()} RWF</span>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {error && <p className="text-xs text-destructive">{error}</p>}
+        {actions && <div className="flex flex-wrap items-center gap-2 pt-1">{actions}</div>}
+        {children && <div className="flex flex-wrap gap-2">{children}</div>}
+      </div>
+    </article>
   )
 }
