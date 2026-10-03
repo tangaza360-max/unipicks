@@ -2,7 +2,7 @@
 
 ## Student feedback form (v1)
 
-A 12-question, 2-minute Google Form for Kepler College students: validate demand, find friction, rank features, and recruit beta testers and testimonials.
+An 11-question, 2-minute Google Form for Kepler College students (Kigali campus), written in a calm student voice that presents Unipicks as a student companion: validate demand, find friction, rank features, and recruit beta testers and testimonials.
 
 | File | Purpose |
 |---|---|

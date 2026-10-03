@@ -1,103 +1,106 @@
 FORM TITLE
-Unipicks: Student Food Deals (2-minute survey)
+Unipicks: help us build your student companion
 
 FORM DESCRIPTION
-Hi! 👋 We're building Unipicks, an app that gets Kepler students deals from local food spots near campus. Order, group up with friends, and pay with MoMo. Your answers (12 quick questions, about 2 minutes) decide what we build first. Answers are anonymous unless you choose to leave your email. Murakoze! 💚
+Hello. I'm a Kepler student, and like you, I know the struggle: the money runs out before the month does, lunch near campus is expensive, and you never know where the good, affordable places are.
+
+That's why we're building Unipicks, a student companion for life around Kigali campus. It brings together student-only deals from food places near campus, lets you order ahead and pay with MoMo or Airtel Money, and lets you team up with friends on group orders to unlock better prices. You skip the queue and pick up with a code.
+
+This survey has 11 short questions and takes about 2 minutes. Your answers decide what we build first. It's anonymous unless you choose to leave your email at the end.
+
+Murakoze, thank you.
 
 SETTINGS: Collect emails OFF · Limit to 1 response OFF · Progress bar ON
+THEME (palette icon): Header image none · Colour #95BF47 · Background light grey · Font style Basic
+
 CONFIRMATION MESSAGE
-Murakoze! Thanks for helping shape Unipicks. If you left your email for the beta, we'll be in touch soon. 🍟
+Murakoze. Thank you for helping us build something that truly works for Kepler students. If you left your email for the beta, we'll be in touch soon.
 
 ============================================================
 
---- SECTION 1: About you ---  (Add section; first section uses the form header)
+--- SECTION 1: About you ---  (first section uses the form header)
 
-Q1. What year of study are you in?
+Q1. First, which year are you in?
 Type: Multiple choice · Required
   ○ Year 1
   ○ Year 2
   ○ Year 3
   ○ Year 4
-  ○ Not at Kepler yet (starting soon)
+  ○ Joining Kepler soon
   ○ Graduated / alumni
 
-Q2. Which campus are you on?
-Type: Multiple choice · Required
-  ○ Kigali (Kinyinya)
-  + Add "Other"
-
-Q3. How do you usually pay for food and snacks?
+Q2. How do you usually pay for food and snacks?
 Type: Checkboxes · Required
-Description: Select all that apply.
+Description: Pick all that apply.
   ☐ MTN MoMo
   ☐ Airtel Money
   ☐ Cash
   ☐ Bank card
   + Add "Other"
 
---- SECTION 2: Interest in Unipicks ---  (Add section)
-Section description: Unipicks shows you student-only deals from food spots near campus. You order in the app, the business confirms, you pay with mobile money and pick up with a code. You can also start a group order with friends to unlock group prices.
+--- SECTION 2: Unipicks, your student companion ---  (Add section)
+Section description: Here's the idea. Every food place near campus can post deals that only Kepler students get. You open the app, find a deal you like, and order it. The place confirms, you pay with mobile money, and you get a pickup code, so no waiting in line. Going with friends? Start a group order, everyone adds what they want, and the group gets a better price. You can also message the food place directly and connect with friends on campus.
 
-Q4. How likely are you to use Unipicks?
+Q3. Honestly, how likely are you to use Unipicks?
 Type: Linear scale · Required
-  Scale 1–5 · 1 = Not at all likely · 5 = Very likely
+  Scale 1–5 · 1 = Not likely at all · 5 = I'd use it a lot
 
-Q5. What's the biggest problem Unipicks could solve for you?
+Q4. What's your biggest struggle with food around campus?
 Type: Paragraph · Optional
-Description: e.g. lunch is too expensive, I don't know the good spots, long queues, ordering for a group is messy…
+Description: For example: lunch costs too much, I don't know the good places, the queues are long, ordering for a group is a mess…
 
---- SECTION 3: Feature priorities ---  (Add section)
+--- SECTION 3: What matters most to you ---  (Add section)
 
-Q6. Rank these features from most to least useful to you.
+Q5. Which features would help you most? Put them in order.
 Type: Multiple choice grid · Required
-Description: Give each feature a different rank: 1st = most useful.
-  Rows: Student deals & discounts | Group orders with friends | Chat with the business | Stories from businesses & friends | Search (find food, places, people)
+Description: Give each feature a different rank. 1st = the one you'd use the most.
+  Rows: Student deals and discounts | Group orders with friends | Chatting with the food place | Stories from food places and friends | Search for food, places and friends
   Columns: 1st | 2nd | 3rd | 4th | 5th
   ⋮ Require a response in each row: ON · Limit to one response per column: ON
 
-Q7. What might stop you from using Unipicks?
+Q6. What could stop you from using Unipicks?
 Type: Checkboxes · Optional
-Description: Select all that apply.
+Description: Be honest, it helps us. Pick all that apply.
   ☐ I don't trust paying through an app
-  ☐ Discounts might be too small
-  ☐ Few of the places I like would be on it
-  ☐ Waiting for the business to confirm my order
+  ☐ The discounts might be too small
+  ☐ My favourite places might not be on it
+  ☐ Waiting for the place to confirm my order
   ☐ I prefer paying cash
-  ☐ Mobile data cost / my phone storage
+  ☐ Mobile data or phone storage
   ☐ I don't want another app
   + Add "Other"
   ⋮ Shuffle option order: ON
 
---- SECTION 4: Willingness to pay & participate ---  (Add section)
+--- SECTION 4: Prices and early access ---  (Add section)
 
-Q8. For a good student lunch deal, what price feels right to you?
+Q7. For a good student lunch deal, what price feels right?
 Type: Multiple choice · Required
   ○ Under 1,000 RWF
   ○ 1,000–1,500 RWF
   ○ 1,500–2,000 RWF
   ○ 2,000–3,000 RWF
-  ○ More than 3,000 RWF if the quality is great
+  ○ More than 3,000 RWF if the food is really good
 
-Q9. Would you like to be a Unipicks beta tester?
+Q8. Want to try Unipicks before everyone else?
 Type: Multiple choice · Required
-Description: Beta testers try Unipicks first, help us fix problems, and get early access to deals.
-  ○ Yes, sign me up!
+Description: Beta testers use the app first, tell us what's not working, and get the first deals.
+  ○ Yes, count me in
   ○ Maybe, tell me more
   ○ No thanks
 
---- SECTION 5: Open feedback & follow-up ---  (Add section)
+--- SECTION 5: Your ideas ---  (Add section)
 
-Q10. If you could change one thing about buying food around campus, what would it be?
+Q9. If you could change one thing about buying food around campus, what would it be?
 Type: Paragraph · Optional
 
-Q11. Your email (optional, only if you'd like us to contact you)
+Q10. Your email (optional)
 Type: Short answer · Optional
-Description: Leave this blank to stay anonymous. We'll only use it to contact you about Unipicks testing and never share it.
+Description: Only if you want us to contact you, for example about the beta. Leave it blank to stay anonymous. We'll never share it.
   ⋮ Response validation: Text → Email address
 
-Q12. What can we do with your answers?
+Q11. Is it okay if we…
 Type: Checkboxes · Optional
-Description: Optional. Select all that apply.
-  ☐ Contact me about the beta (using the email above)
-  ☐ Invite me to a 15-minute chat about Unipicks
-  ☐ Quote my answers in Unipicks posts using my first name only
+Description: Optional. Pick all that apply.
+  ☐ Contact you about the beta (using the email above)
+  ☐ Invite you to a 15-minute chat about Unipicks
+  ☐ Quote your answers in Unipicks posts (first name only)

@@ -2,21 +2,23 @@
 
 Ready-to-send email for the Kepler College general student email list (English only, v1). Replace `[form link]` with the form's public link (`forms.gle/…`).
 
-**Subject:** 2 minutes to help build a student food deals app 🍔
+**Subject:** Help build Unipicks, a student companion for Kepler (2-minute survey)
 
 > Hello everyone,
 >
-> I'm Olivier, a Kepler student. I'm building **Unipicks**, an app that helps Kepler students get discounts from food places near campus. You can order, group up with friends to get a better price, and pay with MoMo.
+> I'm Olivier, a Kepler student. Like many of you, I know the struggle: the money runs out before the month does, lunch near campus is expensive, and it is hard to find good, affordable places.
 >
-> Before we launch, I would love your opinion. The survey takes **2 minutes** (12 short questions), and your answers will decide what we build first.
+> That is why I'm building **Unipicks**, a student companion for life around Kigali campus. It brings together student-only deals from food places near campus. You can order ahead, pay with MoMo or Airtel Money, team up with friends on a group order for a better price, and pick up with a code instead of waiting in line.
 >
-> 👉 **[form link]**
+> Before we launch, I would value your opinion. The survey has 11 short questions and takes about 2 minutes. Your answers will decide what we build first.
 >
-> You can also join the **beta test** at the end of the survey, to try the app before everyone else.
+> **[form link]**
 >
-> Your answers are private and used only to improve Unipicks. Your email is optional.
+> At the end, you can also join the beta and try Unipicks before everyone else.
 >
-> Thank you very much! Murakoze! 💚
+> Your answers are anonymous and used only to improve Unipicks. Leaving your email is optional.
+>
+> Thank you, murakoze.
 >
 > Olivier Chris Tuyishime
 > Kepler College student, founder of Unipicks
@@ -29,6 +31,6 @@ Ready-to-send email for the Kepler College general student email list (English o
 
 ## Reminder (3 days later)
 
-**Subject:** Last call: 2-minute Unipicks survey 🍔
+**Subject:** Reminder: 2-minute Unipicks survey
 
-> Hi everyone, thank you to all who already answered! If you haven't yet, the survey is still open for a few days. It takes 2 minutes: **[form link]**. Murakoze! 💚
+> Hello everyone, thank you to all who have already answered. If you have not yet, the survey is open for a few more days and takes about 2 minutes: **[form link]**. Murakoze.
