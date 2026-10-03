@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { merchantStanding } from '../_shared/merchant-standing.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -155,6 +156,21 @@ Deno.serve(async (req) => {
         { error: 'You are not allowed to update this order' },
         403,
       )
+    }
+
+    // Banned or deactivated merchants can't take on new orders. Declining is
+    // still allowed so pending orders are released to the student.
+    if (action === 'accept') {
+      const standing = await merchantStanding(supabaseAdmin, user.id, user)
+      if (standing === 'banned' || standing === 'deleted') {
+        return jsonResponse({ error: 'Your account is suspended. Contact support.' }, 403)
+      }
+      if (standing !== 'ok') {
+        return jsonResponse(
+          { error: "Your business account isn't approved, so you can't accept orders. You can still decline them." },
+          403,
+        )
+      }
     }
 
     if (order.status !== 'pending_confirmation') {

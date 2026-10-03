@@ -123,6 +123,12 @@ check "student message includes status and note" "$(q "select message from publi
 check "student link opens Order History" "$(q "select distinct link_path from public.user_notifications where type='dispute_status_changed' and user_id='$A'")" "/dashboard/profile?view=orders"
 check "actor is the resolving admin" "$(q "select distinct actor_id from public.user_notifications where type='dispute_status_changed'")" "$AD1"
 check "admins not notified of their own resolution" "$(q "select count(*) from public.user_notifications where type='dispute_status_changed' and user_id in ('$AD1','$AD2')")" "0"
+
+echo "  dashboard bell can read them (fix 5: merchants and admins)"
+check "merchant reads its own dispute alerts" "$(as_user $MER "select count(*) from public.user_notifications where user_id='$MER';")" "3"
+check "admin reads its own dispute alerts" "$(as_user $AD1 "select count(*) from public.user_notifications where user_id='$AD1';")" "1"
+check "merchant can't read the admin's rows" "$(as_user $MER "select count(*) from public.user_notifications where user_id='$AD1';")" "0"
+check "merchant marks its alerts read" "$(as_user $MER "update public.user_notifications set is_read = true where user_id='$MER' and is_read = false returning 1;" >/dev/null; q "select count(*) from public.user_notifications where user_id='$MER' and not is_read")" "0"
 check "student can mark own dispute notifications read" "$(as_user $A "update public.user_notifications set is_read = true where user_id='$A' and type like 'dispute_%' returning 'ok';" )" "ok"
 
 echo " no noise"

@@ -73,14 +73,9 @@ export default function RegisterMerchant() {
       return
     }
 
-    // Merchants start unapproved — create their approval record so an
-    // admin can review and approve them before they're fully live.
-    if (signUpData.user) {
-      await supabase.from('merchant_profiles').insert({
-        id: signUpData.user.id,
-        business_name: form.businessName.trim(),
-      })
-    }
+    // The unapproved merchant profile is created by the database at signup
+    // (assign_initial_user_role), so it also works when email confirmation
+    // means there is no session yet.
 
     if (signUpData.session) {
       navigate('/dashboard/deals', { replace: true })

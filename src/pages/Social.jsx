@@ -8,11 +8,13 @@ import {
   UserCheck,
   MessageCircle,
   Ban,
+  Flag,
   Check,
   X,
 } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import SocialActivity from '../components/SocialActivity.jsx'
+import ReportDialog from '../components/ReportDialog.jsx'
 
 const tabs = [
   { id: 'for-you', label: 'For You' },
@@ -33,6 +35,7 @@ export default function Social() {
   const [relationshipLoading, setRelationshipLoading] = useState(false)
   const [relationshipActionLoading, setRelationshipActionLoading] = useState(false)
   const [relationshipError, setRelationshipError] = useState('')
+  const [showReport, setShowReport] = useState(false)
   const [relationshipMessage, setRelationshipMessage] = useState('')
 
   useEffect(() => {
@@ -461,7 +464,26 @@ export default function Social() {
                   </button>
                 </>
                 )}
+              {relationship !== 'blocked-me' && relationship !== 'self' && (
+                <button
+                  type="button"
+                  onClick={() => setShowReport(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-red-400 hover:bg-muted"
+                >
+                  <Flag size={16} />
+                  Report
+                </button>
+              )}
             </div>
+
+            {showReport && (
+              <ReportDialog
+                reportedId={selectedStudent.user_id}
+                reportedName={selectedStudent.display_name || selectedStudent.username}
+                context="profile"
+                onClose={() => setShowReport(false)}
+              />
+            )}
 
             {relationshipError && (
               <p className="mt-3 text-center text-sm text-destructive">

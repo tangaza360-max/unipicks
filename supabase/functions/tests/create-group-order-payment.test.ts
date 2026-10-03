@@ -15,7 +15,11 @@ const DEAL = 'deal-1'
 
 function seed({ members, minParticipants }: { members: number; minParticipants: number | null }) {
   resetDb()
-  db.users[HOST] = { id: HOST, email: 'host@keplercollege.ac.rw', user_metadata: { full_name: 'Host', phone: '0780000000' } }
+  db.users[HOST] = {
+    id: HOST, email: 'host@keplercollege.ac.rw', user_metadata: { full_name: 'Host', phone: '0780000000' },
+    app_metadata: { university: 'Kepler College' },
+  }
+  db.tables.user_roles = [{ user_id: HOST, role: 'student' }]
   db.users['merchant-1'] = { id: 'merchant-1', user_metadata: { phone: '0790000000' } }
   db.tokens['host-token'] = HOST
   db.tables.group_orders = [{ id: GROUP, deal_id: DEAL, created_by: HOST, host_name: 'Host', join_code: 'K7Q2', status: 'open' }]
@@ -26,6 +30,7 @@ function seed({ members, minParticipants }: { members: number; minParticipants: 
   db.tables.group_order_members = Array.from({ length: members }, (_, i) => ({
     id: `m${i}`, group_order_id: GROUP, student_id: i === 0 ? HOST : `student-${i}`, student_name: `S${i}`, quantity: 1,
   }))
+  db.tables.merchant_profiles = [{ id: 'merchant-1', approved: true }]
   db.tables.orders = []
   db.tables.notifications = []
 }

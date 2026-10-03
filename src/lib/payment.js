@@ -21,9 +21,16 @@ export async function initiatePayment({ orderId, phone }) {
         responseBody = ''
       }
 
-      throw new Error(
-        `Payment request failed (${error.context.status}): ${responseBody || error.message}`,
-      )
+      // Show the function's own message ("The 5-minute payment window has
+      // expired.", …) rather than raw JSON.
+      let message = ''
+      try {
+        message = JSON.parse(responseBody)?.error || ''
+      } catch {
+        message = ''
+      }
+
+      throw new Error(message || `Payment request failed (${error.context.status}). Please try again.`)
     }
 
     throw error

@@ -1,0 +1,274 @@
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabaseClient.js'
+
+// Admin → Reports (fix 8; social audit D5). Reports from students and
+// businesses, oldest open first. Target: first response within 24 hours.
+
+const STATUS_LABELS = {
+  pending: 'New',
+  reviewing: 'Reviewing',
+  resolved: 'Resolved',
+  dismissed: 'Dismissed',
+}
+
+const CONTEXT_LABELS = { chat: 'from a chat', profile: 'from a profile', business: 'about a business' }
+
+const FILTERS = [
+  ['open', 'Open'],
+  ['resolved', 'Resolved'],
+  ['dismissed', 'Dismissed'],
+  ['all', 'All'],
+]
+
+const SLA_MS = 24 * 60 * 60 * 1000
+
+function age(iso) {
+  const ms = Date.now() - new Date(iso).getTime()
+  const hours = Math.floor(ms / 3_600_000)
+  if (hours < 1) return 'less than 1 hour ago'
+  if (hours < 48) return `${hours} hour${hours === 1 ? '' : 's'} ago`
+  return `${Math.floor(hours / 24)} days ago`
+}
+
+export default function AdminReports() {
+  const [reports, setReports] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [filter, setFilter] = useState('open')
+  const [target, setTarget] = useState(null) // { report, status }
+  const [note, setNote] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    loadReports()
+  }, [])
+
+  async function loadReports() {
+    setLoading(true)
+    setError('')
+    const { data, error: fetchError } = await supabase.rpc('get_admin_reports')
+    if (fetchError) setError(fetchError.message)
+    else setReports(data || [])
+    setLoading(false)
+  }
+
+  const visible = reports.filter((r) => {
+    if (filter === 'open') return r.status === 'pending' || r.status === 'reviewing'
+    if (filter === 'all') return true
+    return r.status === filter
+  })
+
+  async function review(report, status, reviewNote = null) {
+    setSubmitting(true)
+    const { error: rpcError } = await supabase.rpc('review_report', {
+      p_report_id: report.id,
+      p_status: status,
+      p_note: reviewNote,
+    })
+    setSubmitting(false)
+    if (rpcError) {
+      setError(rpcError.message)
+      return false
+    }
+    await loadReports()
+    return true
+  }
+
+  async function banReported(report) {
+    if (!window.confirm(`Ban ${report.reported_name || 'this user'}? They will be locked out of messaging, ordering and selling.`)) return
+    setSubmitting(true)
+    const { error: banError } = await supabase.rpc('admin_ban_user', { target_user_id: report.reported_id })
+    if (!banError) {
+      await supabase.rpc('log_admin_action', {
+        action: 'ban_user',
+        target_type: report.reported_role === 'merchant' ? 'merchant' : 'student',
+        target_id: report.reported_id,
+        target_name: report.reported_name,
+        details: { report_id: report.id },
+      })
+    }
+    setSubmitting(false)
+    if (banError) {
+      setError(banError.message)
+      return
+    }
+    await loadReports()
+  }
+
+  async function submitDecision() {
+    if (!target) return
+    const ok = await review(target.report, target.status, note)
+    if (ok) {
+      setTarget(null)
+      setNote('')
+    }
+  }
+
+  if (loading) {
+    return <p className="text-muted-foreground text-sm">Loading reports…</p>
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h2 className="font-display text-lg font-semibold">Reports</h2>
+          <p className="text-xs text-muted-foreground">Respond to every new report within 24 hours.</p>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          {FILTERS.map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setFilter(value)}
+              className={`text-xs rounded-full px-3 py-1.5 border transition ${
+                filter === value ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+
+      {visible.length === 0 ? (
+        <p className="text-muted-foreground text-sm">No reports here.</p>
+      ) : (
+        <div className="space-y-3">
+          {visible.map((report) => {
+            const open = report.status === 'pending' || report.status === 'reviewing'
+            const overdue = open && Date.now() - new Date(report.created_at).getTime() > SLA_MS
+            return (
+              <div
+                key={report.id}
+                className={`rounded-xl border bg-card p-4 space-y-3 ${overdue ? 'border-red-400/60' : 'border-border'}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm">
+                      {report.category}: {report.reported_name || 'Unknown'}
+                      <span className="text-muted-foreground font-normal"> ({report.reported_role || 'user'})</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Reported by {report.reporter_name || 'Unknown'} ({report.reporter_role || 'user'})
+                      {report.context ? `, ${CONTEXT_LABELS[report.context] || report.context}` : ''} · {age(report.created_at)}
+                    </p>
+                    {overdue && (
+                      <p className="text-xs font-medium text-red-400 mt-1">Over 24 hours without a decision</p>
+                    )}
+                    {report.reported_banned && (
+                      <p className="text-xs text-muted-foreground mt-1">This account is banned.</p>
+                    )}
+                    {report.reported_deleted && (
+                      <p className="text-xs text-muted-foreground mt-1">This account has been deleted.</p>
+                    )}
+                  </div>
+                  <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                    {STATUS_LABELS[report.status] || report.status}
+                  </span>
+                </div>
+
+                {report.description && (
+                  <div className="rounded-lg border border-border bg-muted/30 px-3 py-2">
+                    <p className="text-xs text-muted-foreground">Details</p>
+                    <p className="text-sm whitespace-pre-wrap break-words">{report.description}</p>
+                  </div>
+                )}
+
+                {report.admin_note && (
+                  <p className="text-xs text-muted-foreground">Admin note: “{report.admin_note}”</p>
+                )}
+
+                {open && (
+                  <div className="flex flex-wrap gap-2">
+                    {report.status === 'pending' && (
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        onClick={() => review(report, 'reviewing')}
+                        className="text-xs border border-border text-muted-foreground hover:text-foreground rounded-lg px-3 py-2 transition disabled:opacity-50"
+                      >
+                        Start review
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      disabled={submitting}
+                      onClick={() => { setTarget({ report, status: 'resolved' }); setNote('') }}
+                      className="text-xs border border-border text-muted-foreground hover:text-foreground rounded-lg px-3 py-2 transition disabled:opacity-50"
+                    >
+                      Resolve
+                    </button>
+                    <button
+                      type="button"
+                      disabled={submitting}
+                      onClick={() => { setTarget({ report, status: 'dismissed' }); setNote('') }}
+                      className="text-xs border border-border text-muted-foreground hover:text-foreground rounded-lg px-3 py-2 transition disabled:opacity-50"
+                    >
+                      Dismiss
+                    </button>
+                    {!report.reported_banned && !report.reported_deleted && (
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        onClick={() => banReported(report)}
+                        className="text-xs border border-red-400/40 text-red-400 hover:text-red-300 rounded-lg px-3 py-2 transition disabled:opacity-50"
+                      >
+                        Ban reported account
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {target && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="report-decision-title" className="w-full max-w-md rounded-2xl bg-card border border-border p-5 shadow-2xl space-y-4">
+            <div>
+              <h3 id="report-decision-title" className="font-display text-lg font-semibold">
+                {target.status === 'resolved' ? 'Resolve report' : 'Dismiss report'}
+              </h3>
+              <p className="text-muted-foreground text-sm mt-1">
+                {target.report.category}: {target.report.reported_name || 'Unknown'}
+              </p>
+            </div>
+            <div>
+              <label htmlFor="report-note" className="field-label">Note (optional, for the admin team)</label>
+              <textarea
+                id="report-note"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="field-input min-h-[90px] resize-y"
+                maxLength={500}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setTarget(null)}
+                disabled={submitting}
+                className="text-sm text-muted-foreground hover:text-foreground border border-border rounded-lg px-4 py-2.5 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitDecision}
+                disabled={submitting}
+                className="bg-primary text-primary-foreground font-semibold rounded-lg px-4 py-2.5 text-sm transition disabled:opacity-50"
+              >
+                {submitting ? 'Saving…' : target.status === 'resolved' ? 'Resolve' : 'Dismiss'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

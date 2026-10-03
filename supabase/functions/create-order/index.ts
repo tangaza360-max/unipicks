@@ -1,5 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
+import { verifiedStudentError } from '../_shared/verified-student.ts'
+import { MERCHANT_UNAVAILABLE_ERROR, merchantStanding } from '../_shared/merchant-standing.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -130,6 +132,14 @@ serve(async (req) => {
       )
     }
 
+    const notVerified = await verifiedStudentError(supabaseAdmin, user)
+    if (notVerified) {
+      return new Response(
+        JSON.stringify({ error: notVerified }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
     const body = await req.json()
     const { deal_id, quantity = 1 } = body
 
@@ -196,6 +206,14 @@ serve(async (req) => {
 
     if (merchantUserError) {
       console.error('Failed to load merchant account:', merchantUserError)
+    }
+
+    // Banned, deactivated or deleted merchants can't receive orders.
+    if ((await merchantStanding(supabaseAdmin, deal.merchant_id, merchantUser ?? null)) !== 'ok') {
+      return new Response(
+        JSON.stringify({ error: MERCHANT_UNAVAILABLE_ERROR }),
+        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
     }
 
     const merchantPhone = merchantUser?.user_metadata?.phone ?? null
