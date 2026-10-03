@@ -18,6 +18,7 @@ Goal: the values needed to turn on `supabase/functions/reconcile-payments` (`REC
 | S8 | Founder's production query result (status words only), `Supabase Snippet Transaction Status Comparison.csv` | 2026-10-03 | `success`/`paid` ×17, null/`processing` ×6 |
 | S9 | Founder's production query result (the 6 processing rows: ids, dates, reference presence, order status, payload key names) | 2026-10-03 | Pre-orders era, no order, no provider payload |
 | S10 | Founder's production query result: `umunota_reference`, amount, date of the 6 processing rows | 2026-10-03 | `UMP-…` references, 27,200 RWF total |
+| S11 | `umunotapay-payment-history-20260911-20260912.pdf` exported by the founder from the UmunotaPay dashboard | 2026-10-03 | 7 payments, all `Success`, RWF 31,200 |
 | S7 | Our own code: `supabase/functions/process-payment/index.ts` (collect call), production `transactions.webhook_payload` key list given by the founder | 2026-10-03 | How we already call UmunotaPay |
 
 The OpenAPI file was not added to the repo (it is UmunotaPay's document).
@@ -104,6 +105,8 @@ It shows the status words UmunotaPay has really returned so far. It will not sho
 - **The 6 `processing` rows, listed [S9]:** all created 2026-09-11 12:15 to 2026-09-12 09:36, i.e. **before the orders system existed** (orders table `20260915073805`, `normal_order_id` `20260915094500`). None is linked to an order (`order_status` null), `webhook_payload` is NULL (no provider answer ever stored), and all have both `umunota_reference` and `merchant_reference`. Three were created within one minute (12:15:11–12:16:02 on 09-11), which looks like testing.
   - **The reconciler will never touch them**: it only selects orders in `payment_processing`.
   - References and amounts [S10]: `UMP-E11D2B6D050F` 4000, `UMP-9B75D1FF6D5E` 4800, `UMP-11A0A1C8680B` 4800, `UMP-7D88DBCA754F` 4800, `UMP-84ADF296CA72` 4800, `UMP-5DD3A34A0E02` 4000 (RWF; total 27,200).
+  - **UmunotaPay payment history 2026-09-11 → 09-12 [S11]: all 6 are `Success` at UmunotaPay** (same amounts, times = ours + 2 h, i.e. Rwanda time), while our `transactions.status` is still `processing`. So our records are wrong for 27,200 RWF. The history also lists a 7th success, `UMP-E6788FE3E5B2` (4,000 RWF, 09-12 11:50), not in our `processing` list. All 7 were paid from the same phone (`250****0294`); descriptions are `Unipicks order #<uuid>`.
+  - **Open before any fix:** (a) is `250****0294` the founder's own test phone? (b) was this history from the testing or the live dashboard (if testing, production was using test keys)? (c) what the `order #<uuid>` ids point to (orders / redemptions / group_orders). No data change until these are answered.
   - UmunotaPay's reference format is `UMP-` + 12 hex characters; we store it in `umunota_reference` for every payment. This supports inference 3.1 (it is the value for `{reference}` in the status URL), still to confirm with support (U3).
   - **Open:** check the 6 references in the UmunotaPay dashboard (History, 11–12 Sept). No money → mark them `failed` with a one-off, reviewed SQL. Money received → a student paid in the pre-orders flow; review by hand.
 - Note: these stored values come from the **collect** response (`POST /api/v1/payments`) and webhooks, not from the status endpoint; the status endpoint probably uses the same words, but that is not confirmed (U1).
