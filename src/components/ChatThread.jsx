@@ -42,6 +42,7 @@ export default function ChatThread({
   const [senderProfiles, setSenderProfiles] = useState({})
   const [otherUserRole, setOtherUserRole] = useState(null)
   const [input, setInput] = useState('')
+  const [sendError, setSendError] = useState('')
   const [loading, setLoading] = useState(true)
   const bottomRef = useRef(null)
   const hasScrolledOnce = useRef(false)
@@ -207,13 +208,26 @@ export default function ChatThread({
     const text = input.trim()
     if (!text) return
     setInput('')
+    setSendError('')
 
     const payload = isGroup
       ? { sender_id: currentUserId, message: text, group_order_id: groupOrderId }
       : { sender_id: currentUserId, receiver_id: otherUserId, message: text }
 
     const { error } = await supabase.from('chat_messages').insert(payload)
-    if (error) console.error('Failed to send message:', error.message)
+    if (error) {
+      console.error('Failed to send message:', error.message)
+      // Keep the text so it isn't lost. RLS refusals mean the chat rules
+      // (friends / accepted request / ordered from this business) don't allow it.
+      setInput(text)
+      setSendError(
+        error.code === '42501' || /row-level security/i.test(error.message)
+          ? "You can't message this person yet. Send a friend or message request first."
+          : error.message.includes('suspended')
+            ? error.message
+            : 'Message not sent. Please try again.',
+      )
+    }
   }
 
   const headerName = isGroup
@@ -319,6 +333,10 @@ export default function ChatThread({
           This account has been deleted. You can still read this conversation.
         </p>
       ) : (
+      <>
+      {sendError && (
+        <p role="alert" className="px-3 pt-2 text-xs text-red-400">{sendError}</p>
+      )}
       <form
         onSubmit={handleSend}
         className="p-3 border-t border-border flex items-center gap-2"
@@ -336,6 +354,7 @@ export default function ChatThread({
           Send
         </button>
       </form>
+      </>
       )}
     </div>
   )
