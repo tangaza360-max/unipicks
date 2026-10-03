@@ -10,6 +10,27 @@
 
 ---
 
+## Status update — fixes applied after the audit (2026-10-03)
+
+With the founder's explicit approval, three findings were fixed in separate commits on this branch. **None of them is deployed yet.**
+
+| Finding | Commit | What changed | Verification |
+|---|---|---|---|
+| §3 Students could create their own pickup codes | `efbc86c` | Migration `20261003145500_revoke_student_redemption_insert.sql` drops the student INSERT policy and revokes INSERT from `anon`/`authenticated`. `VerifyCode.jsx` rejects codes whose parent order isn't `paid`/`redeemed`. | Local Postgres 16: student and anon INSERT fail with *permission denied*; service-role INSERT and merchant UPDATE still work. |
+| §3 Webhook not verified | `e05c266` | `payment-webhook` returns **503** when the secret is unset. It verifies HMAC-SHA256 of the raw body, or the legacy shared-secret header, in constant time; has an optional `UMUNOTA_WEBHOOK_ALLOWED_IPS` allowlist; and logs each rejection with a structured reason. | 8 Deno tests and `deno check`. |
+| §1/§2 Wrong price for 4 offer types; expired deals orderable | `88158ea` | `create-order` prices by `offer_type` (fixed_amount, bogo, fixed_price; rejects tiered and free_shipping) and rejects expired deals. `OrderConfirmation.jsx` mirrors the same logic. | 29 Deno parity tests (server and UI agree), `deno check`, `npm run build`. |
+
+**Still open from §1/§2:** `create-group-order-payment` still applies the group discount below `min_participants` and still doesn't check expiry. Availability windows aren't enforced, and the feed still lists expired deals.
+
+**To deploy (founder):**
+1. `supabase db push` (applies the redemptions migration).
+2. **Set `UMUNOTA_WEBHOOK_SECRET` first**: `supabase secrets set UMUNOTA_WEBHOOK_SECRET=...`. Without it, the webhook now rejects every request with 503, by design.
+3. `supabase functions deploy payment-webhook create-order`.
+4. Deploy the frontend.
+5. Confirm with UmunotaPay which signature scheme they use (HMAC of the body, or a shared secret), then delete the unused path in `verifyWebhookSignature()`.
+
+---
+
 ## Summary
 
 Unipicks has a **well-designed order state machine**, real server-side deadlines, decline reasons, a dispute record, and solid group-order access control. The UI is mobile-first with good alt-text coverage and 44px nav targets.
@@ -293,11 +314,18 @@ Also recommended (documentation hygiene): **update or archive `docs/group-orders
 
 ---
 
-## Open questions for the founder
+## Founder decisions (answers to the original open questions)
 
-1. **Settlement:** Does student money go into a Unipicks UmunotaPay account (so Unipicks pays merchants later) or straight to each merchant's MoMo Pay code? This decides refunds, fees and licensing.
-2. **BOGO semantics:** For "Buy 1 Get 1" with quantity 1, does the student pay for 1 and receive 2? The server needs to know so it can show "you'll receive N items".
-3. **`free_shipping` / delivery:** There's no delivery flow yet. Should this offer type be hidden until delivery exists?
-4. **Group discount condition:** Should the `group_buy` discount apply only once `min_participants` is reached, or always (as now)?
-5. **Supabase region:** Which region is the production project in? This is needed for the cross-border section of the privacy policy.
-6. **Production drift:** Can you run `select policyname, cmd from pg_policies where tablename in ('redemptions','ratings');` in the SQL Editor and share the output, so items 1 and §8 can be confirmed against production?
+1. **Settlement → merchant-directed payouts (target architecture).** The student pays and the money goes directly to the merchant's MoMo Pay code. Today `process-payment` never reads `merchant_profiles.momo_pay_code`; this is a **bug** against that target.
+   **Recommended fix:**
+   - Make `momo_pay_code` required (and format-validated) before a merchant can be approved.
+   - Have `process-payment` load it and pass it to UmunotaPay as the payee or collection account, using whatever field their API offers for split or direct-to-merchant collection.
+   - Block payment with a clear message if the merchant has no code.
+   - Store the payee code on the `transactions` row for reconciliation.
+
+   Refunds then become merchant-originated reversals: the admin dispute action records the refund, and the merchant (or UmunotaPay's reversal API) sends the money back. Confirm with UmunotaPay and BNR whether direct-to-merchant collection changes Unipicks' licensing position.
+2. **BOGO:** the student pays for `buy_quantity` items and receives `buy_quantity + get_quantity`. **Implemented** in `88158ea`.
+3. **Free delivery:** hide until a delivery feature exists. **Recommended: (a) reject at deal creation.** Remove `free_shipping` from the merchant offer-type dropdown, and add a DB check constraint or trigger that rejects new `free_shipping` deals so merchants find out immediately. Order-time rejection is already in place as a backstop (`88158ea`).
+4. **Group-buy discount:** applies only once `min_participants` is reached; below that, students pay the original price. **Recommended (not yet implemented):** in `create-group-order-payment`, use `price` (no discount) when `members.length < min_participants`, return the applied price in the response, and show "N more needed to unlock the group price" in `GroupOrders.jsx`. The server must decide this, not the UI.
+5. **Supabase region: eu-west-3 (Paris).** Student personal data is therefore stored **outside Rwanda**. The privacy policy must say so, name the hosting provider and region, and state the legal basis for the transfer. Under Law N° 058/2021, storing personal data outside Rwanda requires authorisation from the supervisory authority (NCSA). Apply for it as part of controller registration. Suggested policy text: *"Unipicks stores your data with Supabase, Inc. on servers located in the European Union (Paris, France, region eu-west-3). We transfer data outside Rwanda under [authorisation reference] from the National Cyber Security Authority, with contractual and technical safeguards including encryption in transit and at rest and access controls."*
+6. **Production policy check:** the founder will run the `pg_policies` query separately. Until then, the audit assumes the finding is correct.
