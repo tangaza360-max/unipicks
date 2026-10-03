@@ -10,13 +10,26 @@ export const db: {
   tokens: Record<string, string>
   // Make the next N inserts into a table fail, to test error handling.
   failInserts: Record<string, number>
-} = { tables: {}, users: {}, tokens: {}, failInserts: {} }
+  // email -> password, for auth.signInWithPassword
+  passwords: Record<string, string>
+  // name -> handler, for rpc(); calls are recorded
+  rpcs: Record<string, (args: Row) => { data: Row; error: Row }>
+  rpcCalls: { name: string; args: Row }[]
+  // bucket -> object paths, for storage.list/remove
+  storage: Record<string, string[]>
+  signIns: string[]
+} = { tables: {}, users: {}, tokens: {}, failInserts: {}, passwords: {}, rpcs: {}, rpcCalls: [], storage: {}, signIns: [] }
 
 export function resetDb() {
   db.tables = {}
   db.users = {}
   db.tokens = {}
   db.failInserts = {}
+  db.passwords = {}
+  db.rpcs = {}
+  db.rpcCalls = []
+  db.storage = {}
+  db.signIns = []
 }
 
 class Query {
@@ -98,10 +111,36 @@ class Query {
   }
 }
 
-export function createClient(_url: string, _key: string) {
+export function createClient(_url: string, _key: string, _options?: Row) {
   return {
     from: (table: string) => new Query(table),
+    rpc: (name: string, args: Row) => {
+      db.rpcCalls.push({ name, args })
+      const handler = db.rpcs[name]
+      return Promise.resolve(handler ? handler(args) : { data: null, error: { message: `no rpc ${name}` } })
+    },
+    storage: {
+      from: (bucket: string) => ({
+        // Lists direct children of a folder, like Supabase (files have an id).
+        list: (prefix: string, _options?: Row): Promise<{ data: Row[]; error: Row }> => {
+          const names = (db.storage[bucket] ?? [])
+            .filter((p) => p.startsWith(`${prefix}/`) && !p.slice(prefix.length + 1).includes('/'))
+            .map((p) => ({ name: p.slice(prefix.length + 1), id: crypto.randomUUID() }))
+          return Promise.resolve({ data: names, error: null })
+        },
+        remove: (paths: string[]): Promise<{ data: Row; error: Row }> => {
+          db.storage[bucket] = (db.storage[bucket] ?? []).filter((p) => !paths.includes(p))
+          return Promise.resolve({ data: paths, error: null })
+        },
+      }),
+    },
     auth: {
+      signInWithPassword: ({ email, password }: { email: string; password: string }) => {
+        db.signIns.push(email)
+        const ok = db.passwords[email] !== undefined && db.passwords[email] === password
+        return Promise.resolve(ok ? { data: {}, error: null } : { data: {}, error: { message: 'Invalid login credentials' } })
+      },
+      signOut: () => Promise.resolve({ error: null }),
       getUser: (token: string) => {
         const user = db.users[db.tokens[token]]
         return Promise.resolve(
