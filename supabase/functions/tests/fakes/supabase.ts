@@ -68,6 +68,11 @@ class Query {
     this.filters.push([col, (v) => v === value])
     return this
   }
+  lt(col: string, value: string | number) {
+    this.usedColumns.push(col)
+    this.filters.push([col, (v) => v != null && (v as string | number) < value])
+    return this
+  }
   in(col: string, values: unknown[]) {
     this.usedColumns.push(col)
     this.filters.push([col, (v) => values.includes(v)])
