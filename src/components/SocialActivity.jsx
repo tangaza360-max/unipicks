@@ -77,7 +77,7 @@ export default function SocialActivity() {
 
   async function markNotificationRead(notificationId) {
     const { error: updateError } = await supabase
-      .from('social_notifications')
+      .from('user_notifications')
       .update({ is_read: true })
       .eq('id', notificationId)
 
@@ -102,7 +102,7 @@ export default function SocialActivity() {
     setActionId('mark-all')
 
     const { error: updateError } = await supabase
-      .from('social_notifications')
+      .from('user_notifications')
       .update({ is_read: true })
       .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
       .eq('is_read', false)
