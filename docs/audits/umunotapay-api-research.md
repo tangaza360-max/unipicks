@@ -15,6 +15,7 @@ Goal: the values needed to turn on `supabase/functions/reconcile-payments` (`REC
 | S4 | Screenshot, Developers → Integrations (top of page) | 2026-10-03 | Base URL, OpenAPI download, rails, Setup / Payouts / Collect / Checkout tabs |
 | S5 | Screenshot, Developers → Integrations → "Authentication & request signing" | 2026-10-03 | Headers and signature message |
 | S6 | OpenAPI file downloaded from S4 ("Download OpenAPI"): `UmunotaPay Gateway API`, version `1.0.0`, OpenAPI 3.0.3, 279 KB | 2026-10-03 | All endpoints; no response schemas for the merchant API |
+| S8 | Founder's production query result (status words only), `Supabase Snippet Transaction Status Comparison.csv` | 2026-10-03 | `success`/`paid` ×17, null/`processing` ×6 |
 | S7 | Our own code: `supabase/functions/process-payment/index.ts` (collect call), production `transactions.webhook_payload` key list given by the founder | 2026-10-03 | How we already call UmunotaPay |
 
 The OpenAPI file was not added to the repo (it is UmunotaPay's document).
@@ -87,6 +88,18 @@ select webhook_payload->>'status' as provider_status, status as our_status, coun
 ```
 
 It shows the status words UmunotaPay has really returned so far. It will not show values that have not happened yet (for example a timeout), so U2 still needs their answer.
+
+**Result (production, run by the founder, 2026-10-03) [S8]:**
+
+| `webhook_payload->>'status'` | `transactions.status` | count |
+|---|---|---|
+| `success` | `paid` | 17 |
+| *(null)* | `processing` | 6 |
+
+- Confirmed in our data: UmunotaPay returns **`success`** for a completed payment. It is already in the reconciler's `PAID` list.
+- No failed or pending status word has been stored yet, so the failure/pending vocabulary (U2) is still unknown.
+- **6 transactions are stuck in `processing` with no provider status.** These are exactly the cases `reconcile-payments` exists for; some may be payments that succeeded without us hearing back. Next step: list them (age, whether `umunota_reference` is set, order status, payload key names only) and check each one in the UmunotaPay dashboard (History) before the reconciler is enabled.
+- Note: these stored values come from the **collect** response (`POST /api/v1/payments`) and webhooks, not from the status endpoint; the status endpoint probably uses the same words, but that is not confirmed (U1).
 
 ---
 
