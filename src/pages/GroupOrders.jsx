@@ -19,25 +19,28 @@ function finalPriceOf(deal) {
 }
 
 export default function GroupOrders() {
-const [deals, setDeals] = useState([])
-const [searchParams] = useSearchParams()
-const initialJoinCode = searchParams.get('join_code') || ''
-const [tab, setTab] = useState(initialJoinCode ? 'join' : 'start') // 'start' | 'join'
+  const [deals, setDeals] = useState([])
+  const [searchParams] = useSearchParams()
+  const initialJoinCode = searchParams.get('join_code') || ''
+  const [tab, setTab] = useState(initialJoinCode ? 'join' : 'start') // 'start' | 'join'
   const [myOrders, setMyOrders] = useState([])
   const [loadingOrders, setLoadingOrders] = useState(true)
-useEffect(() => {
-loadDeals()
-loadMyOrders()
-}, [])
-async function loadDeals() {
-const { data } = await supabase
-.from('deals')
-.select('*')
-.order('created_at', { ascending: false })
-```
-setDeals(data ?? [])
-```
-}
+
+  useEffect(() => {
+    loadDeals()
+    loadMyOrders()
+  }, [])
+
+  async function loadDeals() {
+    const { data, error } = await supabase
+      .from('deals')
+      .select('*')
+      .eq('offer_type', 'group_buy')
+      .eq('active', true)
+      .order('created_at', { ascending: false })
+    if (error) console.error('[GroupOrders] loadDeals error:', error)
+    setDeals(data ?? [])
+  }
 
   async function loadMyOrders() {
     setLoadingOrders(true)
@@ -155,7 +158,7 @@ function StartOrder({ deals, onCreated }) {
   }
 
   if (deals.length === 0) {
-    return <p className="text-muted-foreground text-sm">No deals available to order right now.</p>
+    return <p className="text-muted-foreground text-sm">No group buy deals available right now.</p>
   }
 
   return (
