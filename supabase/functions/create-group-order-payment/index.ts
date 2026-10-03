@@ -70,7 +70,7 @@ serve(async (req) => {
     // Load the group order
     const { data: groupOrder, error: groupError } = await supabaseAdmin
       .from('group_orders')
-      .select('id, deal_id, created_by, host_name, join_code, status')
+      .select('id, deal_id, created_by, host_name, join_code, status, expires_at')
       .eq('id', group_order_id)
       .single()
 
@@ -95,12 +95,22 @@ serve(async (req) => {
       )
     }
 
-    // Prevent duplicate submissions
-    const { data: existingOrder } = await supabaseAdmin
+    if (groupOrder.expires_at && new Date(groupOrder.expires_at) <= new Date()) {
+      return new Response(
+        JSON.stringify({ error: 'This group closed after 24 hours. Start a new group to order.' }),
+        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    // Prevent duplicate submissions. Orders that died (declined, expired)
+    // don't count: the group was reopened so the host can submit again.
+    const { data: liveOrders } = await supabaseAdmin
       .from('orders')
-      .select('id')
+      .select('id, status')
       .eq('group_order_id', groupOrder.id)
-      .maybeSingle()
+    const existingOrder = (liveOrders ?? []).find(
+      (o: { status: string }) => !['declined', 'confirmation_expired', 'payment_expired', 'cancelled'].includes(o.status),
+    )
 
     if (existingOrder) {
       return new Response(
@@ -149,6 +159,13 @@ serve(async (req) => {
     if (!deal.active) {
       return new Response(
         JSON.stringify({ error: 'This deal is no longer active' }),
+        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    if (deal.expires_at && new Date(deal.expires_at) <= new Date()) {
+      return new Response(
+        JSON.stringify({ error: 'This deal has ended' }),
         { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }

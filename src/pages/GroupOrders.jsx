@@ -3,6 +3,15 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Check, Copy, ShoppingCart, Users } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 
+// Groups stay open for 24 hours (fix 7); show how long is left.
+function closesIn(expiresAt) {
+  const ms = new Date(expiresAt).getTime() - Date.now()
+  if (ms <= 0) return 'Closing now'
+  const hours = Math.floor(ms / 3_600_000)
+  const minutes = Math.floor((ms % 3_600_000) / 60_000)
+  return hours > 0 ? `Closes in ${hours}h ${minutes}m` : `Closes in ${minutes}m`
+}
+
 function finalPriceOf(deal) {
   if (!deal || deal.price == null) return null
   if (deal.discount_percent == null) return deal.price
@@ -42,7 +51,7 @@ export default function GroupOrders() {
         .order('created_at', { ascending: false }),
       supabase
         .from('group_order_members')
-        .select('id, group_order_id, student_id, student_name, quantity, payment_status, joined_at, group_orders!inner(id, deal_id, created_by, host_name, join_code, status, created_at, deals(id, title, business_name, price, discount_percent, image_url, min_participants))')
+        .select('id, group_order_id, student_id, student_name, quantity, payment_status, joined_at, group_orders!inner(id, deal_id, created_by, host_name, join_code, status, created_at, expires_at, deals(id, title, business_name, price, discount_percent, image_url, min_participants))')
         .eq('student_id', userId)
         .order('joined_at', { ascending: false }),
     ])
@@ -490,6 +499,9 @@ function GroupOrderCard({ order, hostLabel, actions, expanded, error, children }
                 {deal?.title || 'Group order'} · {deal?.business_name || 'Business'}
               </p>
               <p className="text-xs text-muted-foreground">{hostLabel}</p>
+              {order.status === 'open' && order.expires_at && (
+                <p className="text-xs text-muted-foreground">{closesIn(order.expires_at)}</p>
+              )}
             </div>
             <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
               order.status === 'open'

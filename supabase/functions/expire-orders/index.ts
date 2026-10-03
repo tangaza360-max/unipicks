@@ -8,6 +8,8 @@
 //      (the merchant never answered).
 //   2. confirmed past payment_deadline -> payment_expired
 //      (the student never paid; payment_deadline is set when the merchant accepts).
+//   3. group_orders still open past expires_at (24 hours) -> cancelled; the
+//      notify_group_expired trigger tells the members.
 //
 // Each rule is one conditional UPDATE (status + deadline in the WHERE clause), so
 // an order that moves on between runs, e.g. accepted or paid a moment before,
@@ -88,15 +90,25 @@ serve(async (req) => {
 
     const [pendingIds, confirmedIds] = [await expire(RULES[0]), await expire(RULES[1])]
 
+    const { data: closedGroups, error: groupError } = await supabaseAdmin
+      .from('group_orders')
+      .update({ status: 'cancelled' })
+      .eq('status', 'open')
+      .lt('expires_at', nowIso)
+      .select('id')
+    if (groupError) throw new Error(`group_orders open -> cancelled: ${groupError.message}`)
+    const groupIds = (closedGroups ?? []).map((g: { id: string }) => g.id)
+
     console.log(
-      `[expire-orders] expired ${pendingIds.length} pending_confirmation, ${confirmedIds.length} confirmed`,
-      { confirmation_expired: pendingIds, payment_expired: confirmedIds },
+      `[expire-orders] expired ${pendingIds.length} pending_confirmation, ${confirmedIds.length} confirmed, ${groupIds.length} groups`,
+      { confirmation_expired: pendingIds, payment_expired: confirmedIds, groups_closed: groupIds },
     )
 
     return json({
       success: true,
       expired_pending: pendingIds.length,
       expired_confirmed: confirmedIds.length,
+      expired_groups: groupIds.length,
       // Kept for existing callers: total across both rules.
       expired_count: pendingIds.length + confirmedIds.length,
     })

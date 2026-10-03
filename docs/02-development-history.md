@@ -366,3 +366,16 @@ A late payment is accepted (unlike the 5-minute window in `process-payment` / `p
 **Status parsing:** the first string among `status`, `data.status`, `payment_status`, `data.payment_status`; paid = paid/success/successful/succeeded/completed/complete/approved; failed = failed/failure/cancelled/canceled/declined/rejected/expired/timeout/timed_out; pending = pending/processing/initiated/accepted/queued/in_progress/submitted. Anything else is treated as an error, never guessed.
 
 **Open:** UmunotaPay's status-query endpoint, its signing rule for GET, its status values and its own payment timeout (confirms the 24h abandonment rule). Cron job: `POST https://<project-ref>.supabase.co/functions/v1/reconcile-payments`, every 5 minutes, header `x-cron-secret`.
+
+---
+
+## 2026-10-03 — Follow-up queued (post-launch): friend groups
+
+**Idea (founder):** when the same students order together more than 3 times, treat them as a saved **friend group**, so one of them can start a new group order for the same people in one tap.
+
+**Status:** not built. Decided as a **post-launch** feature, after the group-order lifecycle fix (24-hour groups, reopen when the order is declined or expires, member notifications; migration `20261003310000`).
+
+**Notes for when it's picked up:**
+- Data already exists: `group_order_members` per `group_orders`, with `orders.status` showing which groups actually completed. "Ordered together" should count completed orders only (paid / redeemed), not abandoned groups.
+- Needs consent: members should be able to leave a saved group, and blocks (`blocked_students`) must break it.
+- Likely shape: a `friend_groups` + `friend_group_members` pair, suggested after the 3rd completed co-order, plus "Start a group with …" on Home.
