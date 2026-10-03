@@ -11,48 +11,39 @@ export default function VerifyCode() {
     setChecking(true)
     setResult(null)
 
-    const { data, error } = await supabase
+    // redeem_pickup_code checks ownership, the paid order and reuse, then marks
+    // both the redemption and its parent order as redeemed in one transaction.
+    const { data, error } = await supabase.rpc('redeem_pickup_code', {
+      p_code: codeInput.trim().toUpperCase(),
+    })
+
+    if (error) {
+      setChecking(false)
+      const message = error.message || 'Could not verify this code. Please try again.'
+      setResult({
+        ok: false,
+        message: message === 'This code is not linked to a paid order'
+          ? `${message}. Do not hand over the item.`
+          : message,
+      })
+      return
+    }
+
+    const redemptionId = Array.isArray(data) ? data[0]?.redemption_id : data?.redemption_id
+
+    // Read-only lookup for the confirmation message.
+    const { data: details } = await supabase
       .from('redemptions')
-      .select('id, status, student_name, deal_id, deals(title), orders(status)')
-      .eq('code', codeInput.trim())
+      .select('student_name, deals(title)')
+      .eq('id', redemptionId)
       .maybeSingle()
 
-    if (error || !data) {
-      setChecking(false)
-      setResult({ ok: false, message: 'No deal found with that code.' })
-      return
-    }
-
-    if (data.status === 'redeemed') {
-      setChecking(false)
-      setResult({ ok: false, message: 'This code was already used.' })
-      return
-    }
-
-    // A pickup code is only valid when it belongs to an order that was
-    // actually paid. Codes with no parent order (or an unpaid one) are rejected.
-    const orderStatus = data.orders?.status
-    if (orderStatus !== 'paid' && orderStatus !== 'redeemed') {
-      setChecking(false)
-      setResult({ ok: false, message: 'This code is not linked to a paid order. Do not hand over the item.' })
-      return
-    }
-
-    const { error: updateError } = await supabase
-      .from('redemptions')
-      .update({ status: 'redeemed', redeemed_at: new Date().toISOString() })
-      .eq('id', data.id)
-
     setChecking(false)
-
-    if (updateError) {
-      setResult({ ok: false, message: updateError.message })
-      return
-    }
-
     setResult({
       ok: true,
-      message: `Confirmed — ${data.student_name} ordered "${data.deals?.title}".`,
+      message: details
+        ? `Confirmed — ${details.student_name} ordered "${details.deals?.title}".`
+        : 'Confirmed — code redeemed.',
     })
     setCodeInput('')
   }

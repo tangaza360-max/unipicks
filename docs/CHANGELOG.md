@@ -9,6 +9,7 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-03
 
+- 17:00 — `fix(orders)`: redeem_pickup_code RPC redeems the code and moves the parent order paid → redeemed in one transaction; VerifyCode calls it; merchant UPDATE on redemptions removed — `supabase/migrations/20261003170000_add_redeem_pickup_code_rpc.sql`, `src/pages/VerifyCode.jsx`, `supabase/tests/redeem_pickup_code.test.sh`
 - 16:05 — `fix(group-orders)`: create-group-order-payment rejects groups below the deal's min_participants (409, "needs N more member(s)"); Deno tests with in-memory Supabase fake — `supabase/functions/create-group-order-payment/index.ts`, `supabase/functions/tests/`
 - 15:30 — `fix(orders)`: price orders by offer_type (fixed_amount, bogo, fixed_price; reject tiered/free_shipping), reject expired deals; order summary mirrors server pricing — `supabase/functions/create-order/index.ts`, `src/pages/OrderConfirmation.jsx`
 - 15:10 — `fix(security)`: payment-webhook fails closed without secret (503), verifies HMAC-SHA256 of raw body or shared secret in constant time, optional IP allowlist, structured rejection logs — `supabase/functions/payment-webhook/index.ts`
