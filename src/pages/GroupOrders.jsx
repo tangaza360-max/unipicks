@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Users, QrCode } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 
@@ -20,7 +20,9 @@ function finalPriceOf(deal) {
 
 export default function GroupOrders() {
 const [deals, setDeals] = useState([])
-const [tab, setTab] = useState('start') // 'start' | 'join'
+const [searchParams] = useSearchParams()
+const initialJoinCode = searchParams.get('join_code') || ''
+const [tab, setTab] = useState(initialJoinCode ? 'join' : 'start') // 'start' | 'join'
   const [myOrders, setMyOrders] = useState([])
   const [loadingOrders, setLoadingOrders] = useState(true)
 useEffect(() => {
@@ -93,7 +95,7 @@ setDeals(data ?? [])
         </button>
       </div>
 
-      {tab === 'start' ? <StartOrder deals={deals} onCreated={loadMyOrders} /> : <JoinOrder />}
+      {tab === 'start' ? <StartOrder deals={deals} onCreated={loadMyOrders} /> : <JoinOrder initialCode={initialJoinCode} />}
 
       <div className="pt-2 border-t border-border space-y-3">
         <h3 className="text-sm font-semibold text-muted-foreground">Orders you're hosting</h3>
@@ -176,8 +178,8 @@ function StartOrder({ deals, onCreated }) {
   )
 }
 
-function JoinOrder() {
-  const [code, setCode] = useState('')
+function JoinOrder({ initialCode = '' }) {
+  const [code, setCode] = useState(initialCode)
   const [quantity, setQuantity] = useState(1)
   const [found, setFound] = useState(null)
   const [error, setError] = useState('')

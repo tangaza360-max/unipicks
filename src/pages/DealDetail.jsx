@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Star, Store } from 'lucide-react'
+import { ArrowLeft, Star, Store, Users } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 
 function finalPriceOf(deal) {
@@ -9,16 +9,31 @@ function finalPriceOf(deal) {
   return Math.round(deal.price * (1 - deal.discount_percent / 100))
 }
 
+function formatRelativeTime(isoString) {
+  const diff = Date.now() - new Date(isoString).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins} minute${mins === 1 ? '' : 's'} ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`
+  const days = Math.floor(hours / 24)
+  return `${days} day${days === 1 ? '' : 's'} ago`
+}
+
 export default function DealDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [deal, setDeal] = useState(null)
+  const [openGroups, setOpenGroups] = useState([])
+  const [loadingGroups, setLoadingGroups] = useState(false)
   const [ratingStats, setRatingStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     let cancelled = false
+    setOpenGroups([])
+    setLoadingGroups(true)
 
     async function loadDeal() {
       setLoading(true)
@@ -35,17 +50,44 @@ export default function DealDetail() {
 
       if (dealError) {
         setError(dealError.message)
+        setLoadingGroups(false)
         setLoading(false)
         return
       }
 
       if (!data) {
         setError('This deal is no longer available.')
+        setLoadingGroups(false)
         setLoading(false)
         return
       }
 
       setDeal(data)
+
+      async function loadOpenGroups() {
+        try {
+          const { data: groups, error: groupsError } = await supabase.rpc(
+            'get_open_groups_for_deal',
+            { p_deal_id: data.id }
+          )
+
+          if (cancelled) return
+          if (groupsError) {
+            console.error('Failed to load open groups for deal:', groupsError)
+            setOpenGroups([])
+          } else {
+            setOpenGroups(groups || [])
+          }
+        } catch (groupsError) {
+          if (cancelled) return
+          console.error('Failed to load open groups for deal:', groupsError)
+          setOpenGroups([])
+        } finally {
+          if (!cancelled) setLoadingGroups(false)
+        }
+      }
+
+      loadOpenGroups()
 
       const { data: ratingData, error: ratingError } = await supabase.rpc(
         'get_deal_rating_stats',
@@ -188,6 +230,45 @@ export default function DealDetail() {
                 </p>
               )}
             </div>
+
+            {(loadingGroups || openGroups.length > 0) && (
+              <section className="rounded-lg border border-border bg-card">
+                <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+                  <Users size={17} className="text-accent" />
+                  <h2 className="font-semibold">Open groups for this deal</h2>
+                </div>
+                {loadingGroups ? (
+                  <p className="px-4 py-3 text-sm text-muted-foreground">
+                    Checking for open groups…
+                  </p>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {openGroups.map((group) => (
+                      <div
+                        key={group.id}
+                        className="flex items-center justify-between gap-3 px-4 py-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">
+                            {group.host_name || 'A student'} · {group.member_count} member{Number(group.member_count) === 1 ? '' : 's'} · {group.total_quantity} item{Number(group.total_quantity) === 1 ? '' : 's'}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Started {formatRelativeTime(group.created_at)}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/dashboard/orders?join_code=${group.join_code}`)}
+                          className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-background-foreground transition hover:bg-accent-dim"
+                        >
+                          Join
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
 
             <div className="border-t border-border pt-4">
               <h2 className="font-semibold">Terms</h2>
