@@ -334,6 +334,40 @@ Standards: ISO 32111 §7.3.3 (order confirmation), IS 19598 ("efficient delivery
 - **Min-participant enforcement** — payment currently proceeds regardless of member count vs. `min_participants`.
 - **Purple nav badge on Orders icon** — planned (Phase 3), not yet shipped.
 
+---
+
+## 2026-10-03 — Payment reconciliation (`reconcile-payments`, disabled until configured)
+
+**Why:** an asynchronous MoMo payment is only recorded when UmunotaPay's webhook reaches `payment-webhook`. If that never happens (endpoint down, 500 past the provider's retry window), the student has paid but the order stays `payment_processing`.
+
+**What:** `supabase/functions/reconcile-payments/index.ts`, called by cron every 5 minutes. No new order status: the "accepted, waiting for result" state is the existing `payment_processing` order + `processing` transaction (decision: reuse it rather than add `payment_pending_confirmation`).
+
+Per run, up to 20 orders (oldest first) in `payment_processing`, not updated for 5+ minutes, with a `processing` transaction:
+
+| Provider says | Transaction | Order | Side effects |
+|---|---|---|---|
+| paid | `paid` | `paid` | redemption ensured, pickup code chat message (shared helper), merchant `payment_received` notification |
+| failed | `failed` | `confirmed` (student can retry, as in process-payment) | student `user_notifications` row `payment_failed` |
+| pending, < 24h | unchanged | unchanged | none |
+| pending, ≥ 24h | `failed` | `payment_expired` | none (abandoned) |
+| HTTP error / not JSON / unknown status | unchanged | unchanged | counted `errored`, next run retries |
+
+Writes are guarded by the current status, so racing `payment-webhook` or a second run never repeats an action. Response: `{ success, checked, confirmed, failed, still_pending, abandoned, errored }`. Logs: one summary line plus `order=… tx=… provider_status=… action=…` per order; no phone, name or email.
+
+A late payment is accepted (unlike the 5-minute window in `process-payment` / `payment-webhook`): by the time reconciliation runs the window has always passed, and the student's money has been taken.
+
+**Env (read on every call; no redeploy needed to change them):**
+- `RECONCILE_ENABLED` — must be `true` to run. Anything else returns `{ skipped: true, reason: "reconcile disabled" }`.
+- `UMUNOTA_STATUS_ENDPOINT` — URL with `{ref}`, replaced by `umunota_reference` (or `merchant_reference` when that is null).
+- `UMUNOTA_STATUS_METHOD` — `GET` (default) or `POST` (sends `{}`).
+- `UMUNOTA_STATUS_AUTH_STYLE` — `hmac` (default; `X-API-Key` + `X-Timestamp`/`X-Nonce`/`X-Signature`, signed like process-payment's collect call over `METHOD\npath\nbody\ntimestamp\nnonce` with `UMUNOTA_WEBHOOK_SECRET`), `apikey` or `bearer`.
+- Existing: `UMUNOTA_API_KEY`, `UMUNOTA_WEBHOOK_SECRET`, `CRON_SECRET`.
+
+**Status parsing:** the first string among `status`, `data.status`, `payment_status`, `data.payment_status`; paid = paid/success/successful/succeeded/completed/complete/approved; failed = failed/failure/cancelled/canceled/declined/rejected/expired/timeout/timed_out; pending = pending/processing/initiated/accepted/queued/in_progress/submitted. Anything else is treated as an error, never guessed.
+
+**Open:** UmunotaPay's status-query endpoint, its signing rule for GET, its status values and its own payment timeout (confirms the 24h abandonment rule). Cron job: `POST https://<project-ref>.supabase.co/functions/v1/reconcile-payments`, every 5 minutes, header `x-cron-secret`.
+
 ### 2026-10-03 — Historical order cleanup
 
 5 orders from 2026-09-15 (created before migration `20260915100000_add_payment_deadline_to_orders.sql`) had `status = 'confirmed'` with `payment_deadline = NULL`. They were moved to `payment_expired` via a one-time SQL update setting `payment_deadline = confirmation_deadline + interval '5 minutes'`.
+

@@ -21,7 +21,9 @@ export const db: {
   // table -> its real column list. When set, selecting, filtering or writing
   // any other column fails with 42703, like PostgREST on the real schema.
   columns: Record<string, string[]>
-} = { tables: {}, users: {}, tokens: {}, failInserts: {}, passwords: {}, rpcs: {}, rpcCalls: [], storage: {}, signIns: [], columns: {} }
+  // Every from(table) call, in order.
+  queryLog: string[]
+} = { tables: {}, users: {}, tokens: {}, failInserts: {}, passwords: {}, rpcs: {}, rpcCalls: [], storage: {}, signIns: [], columns: {}, queryLog: [] }
 
 export function resetDb() {
   db.tables = {}
@@ -34,6 +36,7 @@ export function resetDb() {
   db.storage = {}
   db.signIns = []
   db.columns = {}
+  db.queryLog = []
 }
 
 class Query {
@@ -42,8 +45,11 @@ class Query {
   private op: 'select' | 'insert' | 'update' = 'select'
   private payload: Row | null = null
   private usedColumns: string[] = []
+  private sortBy: [string, boolean] | null = null
 
-  constructor(private table: string) {}
+  constructor(private table: string) {
+    db.queryLog.push(table)
+  }
 
   select(cols?: string) {
     if (cols && cols.trim() !== '*') {
@@ -78,6 +84,11 @@ class Query {
     this.filters.push([col, (v) => values.includes(v)])
     return this
   }
+  order(col: string, options?: { ascending?: boolean }) {
+    this.usedColumns.push(col)
+    this.sortBy = [col, options?.ascending !== false]
+    return this
+  }
   limit(n: number) {
     this.max = n
     return this
@@ -102,6 +113,10 @@ class Query {
       return [row]
     }
     const matched = this.rows().filter((r) => this.filters.every(([c, test]) => test(r[c])))
+    if (this.sortBy) {
+      const [col, asc] = this.sortBy
+      matched.sort((a, b) => (a[col] < b[col] ? -1 : a[col] > b[col] ? 1 : 0) * (asc ? 1 : -1))
+    }
     if (this.op === 'update') matched.forEach((r) => Object.assign(r, this.payload))
     return this.max == null ? matched : matched.slice(0, this.max)
   }
