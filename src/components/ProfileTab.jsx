@@ -12,10 +12,12 @@ import {
   LogOut,
   UserRound,
   ShieldCheck,
+  Trash2,
 } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { useTheme } from '../context/ThemeContext.jsx'
 import OrdersTab from './OrdersTab.jsx'
+import DeleteAccountDialog from './DeleteAccountDialog.jsx'
 
 // University and student ID are set server-side from the verified email
 // domain (auth app_metadata, which the client cannot write). user_metadata
@@ -72,6 +74,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
   }, [])
 
   const [showOrderHistory, setShowOrderHistory] = useState(false)
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false)
   const location = useLocation()
 
   // Dispute notifications link to /dashboard/profile?view=orders.
@@ -1029,17 +1032,18 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
            </p>
          </div>
 
-         {[
-           ['Delete/deactivate account', 'Account deactivation and deletion options are coming soon.'],
-         ].map(([label, description]) => (
-           <div
-             key={label}
-             className="border-t border-border pt-3"
-           >
-             <p className="text-sm">{label}</p>
-             <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-           </div>
-         ))}
+         <button
+           onClick={() => setShowDeleteAccount(true)}
+           className="w-full min-h-11 text-left border-t border-border pt-3 flex items-start gap-2 text-red-400 hover:text-red-300 transition"
+         >
+           <Trash2 size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+           <span>
+             <span className="block text-sm font-medium">Delete account</span>
+             <span className="block text-xs text-muted-foreground mt-0.5">
+               Permanently delete your account and personal data.
+             </span>
+           </span>
+         </button>
        </div>
 
        {/* About */}
@@ -1079,6 +1083,10 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
       >
         <LogOut size={16} /> Log out
       </button>
+
+      {showDeleteAccount && (
+        <DeleteAccountDialog role={role} onClose={() => setShowDeleteAccount(false)} />
+      )}
     </div>
   )
 }
