@@ -4,10 +4,19 @@ import { supabase } from '../lib/supabaseClient.js'
 import { createOrder } from '../lib/orders.js'
 import GroupOrders from './GroupOrders.jsx'
 import StoryViewer from '../components/StoryViewer.jsx'
-import { Store, Search, X, Star, Smartphone, CheckCircle2 } from 'lucide-react'
+import { Store, Search, X, Star, Smartphone, CheckCircle2, ShoppingCart } from 'lucide-react'
 
 function makeCode() {
   return String(Math.floor(1000 + Math.random() * 9000))
+}
+
+function makeJoinCode() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+  let code = ''
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)]
+  }
+  return code
 }
 
 function finalPriceOf(deal) {
@@ -580,6 +589,8 @@ const getDiscoveryScore = (deal) => {
 function DealCard({ deal, ratingStats }) {
   const navigate = useNavigate()
   const [ordering, setOrdering] = useState(false)
+  const [startingGroup, setStartingGroup] = useState(false)
+  const [groupStartError, setGroupStartError] = useState('')
   const [error, setError] = useState('')
   const [transactionId, setTransactionId] = useState(null)
   const [paymentStatus, setPaymentStatus] = useState(null)
@@ -667,6 +678,25 @@ function DealCard({ deal, ratingStats }) {
     navigate(`/deal/${deal.id}`)
   }
 
+  async function handleStartGroupOrder() {
+    if (startingGroup) return
+    setStartingGroup(true)
+    setGroupStartError('')
+    try {
+      const code = makeJoinCode()
+      const { error: createError } = await supabase.rpc('create_group_order_with_host', {
+        p_deal_id: deal.id,
+        p_join_code: code,
+      })
+      if (createError) throw new Error(createError.message || 'Could not start group order')
+      navigate('/dashboard/orders')
+    } catch (err) {
+      console.error('Failed to start group order:', err)
+      setGroupStartError(err.message || 'Unable to start group order')
+      setStartingGroup(false)
+    }
+  }
+
   return (
     <div className="border border-border rounded-lg overflow-hidden bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md">
       <div className="relative h-40 w-full">
@@ -741,15 +771,27 @@ function DealCard({ deal, ratingStats }) {
             </p>
           </div>
         ) : (
-          <button
-            onClick={handleOrder}
-            disabled={ordering}
-            className="mt-3 w-full bg-primary hover:bg-accent-dim text-primary-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
-          >
-            {ordering ? 'Processing...' : 'Order now'}
-          </button>
+          deal.offer_type === 'group_buy' ? (
+            <button
+              onClick={handleStartGroupOrder}
+              disabled={startingGroup}
+              className="mt-3 w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg py-2.5 transition disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              <ShoppingCart size={16} />
+              {startingGroup ? 'Starting…' : 'Start group order'}
+            </button>
+          ) : (
+            <button
+              onClick={handleOrder}
+              disabled={ordering}
+              className="mt-3 w-full bg-primary hover:bg-accent-dim text-primary-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
+            >
+              {ordering ? 'Processing...' : 'Order now'}
+            </button>
+          )
         )}
 
+        {groupStartError && <p className="text-sm text-destructive mt-2">{groupStartError}</p>}
         {error && <p className="text-sm text-destructive mt-2">{error}</p>}
       </div>
     </div>
