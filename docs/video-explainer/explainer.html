@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Unipicks Explainer</title>
+<!--
+  Unipicks 30-second explainer. Rendered frame-by-frame by render.mjs.
+  Every animation is a paused CSS animation; window.seek(ms) sets the exact
+  frame. Open in a browser with ?w=1080&h=1920 (vertical) or ?w=1920&h=1080
+  (16:9). Add &play=1 to preview in real time.
+-->
+<style>
+  @font-face { font-family: 'Space Grotesk'; font-weight: 500; src: url(fonts/space-grotesk-latin-500-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Space Grotesk'; font-weight: 600; src: url(fonts/space-grotesk-latin-600-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Space Grotesk'; font-weight: 700; src: url(fonts/space-grotesk-latin-700-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Inter'; font-weight: 400; src: url(fonts/inter-latin-400-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Inter'; font-weight: 500; src: url(fonts/inter-latin-500-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Inter'; font-weight: 600; src: url(fonts/inter-latin-600-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Inter'; font-weight: 700; src: url(fonts/inter-latin-700-normal.woff2) format('woff2'); }
+
+  :root {
+    --bg: #191713;
+    --surface: #24211c;
+    --surface-2: #2e2a24;
+    --line: #3a352d;
+    --text: #f3f0ea;
+    --muted: #b4ac9f;
+    --lime: #95bf47;
+    --lime-deep: #5e8a2e;
+    --lime-ink: #1a1408;
+    --coral: #ff6b5b;
+    --amber: #f5b83d;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --u: 10.8px; /* 1% of the short side; set by script */
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); overflow: hidden; }
+  body {
+    width: var(--W); height: var(--H);
+    font-family: 'Inter', sans-serif; color: var(--text);
+    position: relative;
+  }
+  .display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em; }
+  .lime { color: var(--lime); }
+  .coral { color: var(--coral); }
+  .muted { color: var(--muted); }
+
+  /* Paused timeline: every animation is driven by seek(). */
+  *, *::before, *::after { animation-play-state: paused !important; }
+  body.play *, body.play *::before, body.play *::after { animation-play-state: running !important; }
+
+  /* ---------- background ---------- */
+  .glow {
+    position: absolute; border-radius: 50%; filter: blur(calc(var(--u) * 12));
+    opacity: .35; pointer-events: none;
+  }
+  .glow.a { width: calc(var(--u)*70); height: calc(var(--u)*70); background: var(--lime-deep); left: -20%; top: -10%;
+    animation: drift 30s linear 0s both; }
+  .glow.b { width: calc(var(--u)*60); height: calc(var(--u)*60); background: #6b3fa0; right: -15%; bottom: -10%; opacity: .22;
+    animation: drift2 30s linear 0s both; }
+  @keyframes drift { to { transform: translate(calc(var(--u)*25), calc(var(--u)*30)); } }
+  @keyframes drift2 { to { transform: translate(calc(var(--u)*-25), calc(var(--u)*-20)); } }
+
+  /* ---------- scene + element motion ---------- */
+  .scene { position: absolute; inset: 0; opacity: 0;
+    animation: sceneIn .45s var(--ease) var(--in) both, sceneOut .45s ease-in var(--out) forwards; }
+  @keyframes sceneIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes sceneOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.96); } }
+
+  .fu { animation: fadeUp .7s var(--ease) var(--d, 0s) both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(calc(var(--u)*4)); } to { opacity: 1; transform: none; } }
+  .pop { animation: pop .55s cubic-bezier(.34,1.56,.64,1) var(--d, 0s) both; }
+  @keyframes pop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+  .fi { animation: fadeIn .5s ease var(--d, 0s) both; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .slideUp { animation: slideUp .9s var(--ease) var(--d, 0s) both; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(calc(var(--u)*30)); } to { opacity: 1; transform: none; } }
+  .beat { opacity: 0; animation: sceneIn .3s ease var(--in) both, beatOut .3s ease var(--out) forwards; }
+  @keyframes beatOut { to { opacity: 0; } }
+
+  /* ---------- layout areas (portrait vs landscape) ---------- */
+  .copy { position: absolute; }
+  .visual { position: absolute; }
+  body.portrait .copy { left: calc(var(--u)*8); right: calc(var(--u)*8); top: calc(var(--u)*17); }
+  body.portrait .visual { left: 50%; width: calc(var(--u)*54); margin-left: calc(var(--u)*-27); top: calc(var(--u)*66); height: calc(var(--u)*100); }
+  body.landscape .copy { left: calc(var(--u)*11); width: calc(var(--u)*82); top: 50%; transform: translateY(-50%); }
+  body.landscape .visual { right: calc(var(--u)*24); width: calc(var(--u)*46); top: calc(var(--u)*7); height: calc(var(--u)*86); }
+  .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 calc(var(--u)*8); }
+
+  h1 { font-size: calc(var(--u)*10.5); line-height: 1.02; font-weight: 700; }
+  body.landscape h1 { font-size: calc(var(--u)*9); }
+  h2 { font-size: calc(var(--u)*7); line-height: 1.08; font-weight: 700; }
+  body.landscape h2 { font-size: calc(var(--u)*6.4); }
+  .sub { font-size: calc(var(--u)*4); line-height: 1.35; color: var(--muted); margin-top: calc(var(--u)*3); font-weight: 500; }
+  .kicker { display: inline-flex; align-items: center; gap: calc(var(--u)*1.5); font-size: calc(var(--u)*3.2); font-weight: 600;
+    color: var(--lime); text-transform: uppercase; letter-spacing: .08em; margin-bottom: calc(var(--u)*3); }
+
+  /* ---------- scene 1: price tags ---------- */
+  .tags { position: absolute; inset: 0; }
+  .tag { position: absolute; display: flex; align-items: center; gap: calc(var(--u)*2);
+    background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--u)*3);
+    padding: calc(var(--u)*2.4) calc(var(--u)*3.4); font-size: calc(var(--u)*3.6); font-weight: 600; white-space: nowrap;
+    box-shadow: 0 calc(var(--u)*2) calc(var(--u)*5) rgba(0,0,0,.4); }
+  .tag .e { font-size: calc(var(--u)*5); }
+  .tag .p { color: var(--coral); font-family: 'Space Grotesk'; }
+  .wallet { position: absolute; font-size: calc(var(--u)*16); animation: shake .6s ease-in-out var(--d) 3 both; }
+  @keyframes shake { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
+
+  /* ---------- phone ---------- */
+  .phone { position: absolute; inset: 0; border-radius: calc(var(--u)*7); background: #0d0c0a;
+    border: calc(var(--u)*1.1) solid #2c2924; box-shadow: 0 calc(var(--u)*4) calc(var(--u)*12) rgba(0,0,0,.6), 0 0 0 1px #3d382f;
+    overflow: hidden; font-size: calc(var(--u)*2.15); }
+  body.landscape .phone { font-size: calc(var(--u)*1.85); }
+  .notch { position: absolute; top: 1.2em; left: 50%; width: 30%; height: 1.6em; margin-left: -15%; background: #000; border-radius: 1em; z-index: 5; }
+  .screen { position: absolute; inset: 0; padding: 4.2em 1.4em 1.4em; background: var(--bg); overflow: hidden; }
+  .appbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.1em; }
+  .appbar .brand { display: flex; align-items: center; gap: .5em; font-family: 'Space Grotesk'; font-weight: 700; font-size: 1.5em; }
+  .appbar .brand svg { width: 1.3em; height: 1.3em; color: var(--lime); }
+  .chip { display: inline-block; padding: .35em .8em; border-radius: .6em; font-size: .85em; font-weight: 600; background: var(--surface-2); color: var(--muted); margin-right: .4em; }
+  .chip.on { background: var(--lime); color: var(--lime-ink); }
+  .search { background: var(--surface); border: 1px solid var(--line); border-radius: .8em; padding: .75em 1em; color: var(--muted); margin-bottom: .9em; font-size: 1em; }
+  .search .typed { color: var(--text); }
+  .search .caret { display: inline-block; width: .08em; height: 1em; background: var(--lime); vertical-align: -0.15em; margin-left: .05em; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 1em; overflow: hidden; margin-bottom: .9em; }
+  .card .img { height: 7.2em; display: flex; align-items: center; justify-content: center; position: relative; }
+  .card .img .e { font-size: 3.6em; }
+  .card .badge { position: absolute; top: .55em; right: .6em; font-family: 'Space Grotesk'; font-weight: 700; font-size: .85em; padding: .4em .7em; border-radius: .5em; }
+  .b-lime { background: var(--lime); color: var(--lime-ink); }
+  .b-blue { background: var(--blue); color: #fff; }
+  .b-purple { background: var(--purple); color: #fff; }
+  .card .body { padding: .75em .9em .9em; }
+  .card .biz { font-size: .78em; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  .card .title { font-weight: 700; font-size: 1.12em; margin-top: .15em; }
+  .card .price { margin-top: .35em; font-family: 'Space Grotesk'; font-weight: 700; font-size: 1.15em; }
+  .card .price s { color: var(--muted); font-weight: 500; font-size: .85em; margin-right: .4em; }
+  .card .stars { color: var(--amber); font-size: .85em; margin-top: .25em; }
+  .feed { animation: feedScroll 2.4s var(--ease) var(--d) both; }
+  @keyframes feedScroll { to { transform: translateY(-9em); } }
+
+  .btn { display: block; text-align: center; background: var(--lime); color: var(--lime-ink); font-weight: 700; border-radius: .8em; padding: .95em; font-size: 1.1em; position: relative; overflow: hidden; }
+  .ripple { position: absolute; left: 50%; top: 50%; width: 2em; height: 2em; margin: -1em; border-radius: 50%; background: rgba(255,255,255,.55);
+    animation: ripple .6s ease-out var(--d) both; opacity: 0; }
+  @keyframes ripple { 0% { opacity: .8; transform: scale(0); } 100% { opacity: 0; transform: scale(12); } }
+  .toast { background: #1f2a14; border: 1px solid var(--lime-deep); color: var(--text); border-radius: .9em; padding: .9em 1em; font-weight: 600; font-size: .98em; display: flex; gap: .6em; align-items: flex-start; }
+  .row { display: flex; justify-content: space-between; font-size: 1em; padding: .35em 0; }
+  .detail-img { height: 12em; border-radius: 1em; display: flex; align-items: center; justify-content: center; margin-bottom: .9em; }
+  .detail-img .e { font-size: 6em; }
+
+  .avatars { display: flex; justify-content: center; gap: .55em; margin: 1.2em 0 1.1em; }
+  .av { width: 3.4em; height: 3.4em; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1em; border: .18em solid var(--bg); }
+  .slot { width: 3.4em; height: 3.4em; border-radius: 50%; border: .14em dashed var(--line); }
+  .stack { position: relative; width: 3.4em; height: 3.4em; }
+  .stack > * { position: absolute; inset: 0; }
+  .bar { height: .8em; background: var(--surface-2); border-radius: 1em; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 40%; background: var(--purple); border-radius: 1em; animation: barFill 1.3s var(--ease) var(--d) both; }
+  @keyframes barFill { from { width: 40%; } to { width: 100%; } }
+  .unlock { margin-top: 1em; text-align: center; font-weight: 700; color: var(--lime); font-size: 1.15em; }
+
+  .momo { background: var(--surface); border: 1px solid var(--line); border-radius: 1.1em; padding: 1.2em; text-align: center; margin-top: 1.5em; }
+  .momo .amt { font-family: 'Space Grotesk'; font-weight: 700; font-size: 2.4em; margin: .25em 0 .1em; }
+  .paid { margin-top: 1em; text-align: center; }
+  .paid .tick { width: 3.4em; height: 3.4em; border-radius: 50%; background: var(--lime); color: var(--lime-ink); display: inline-flex; align-items: center; justify-content: center; font-size: 1.8em; font-weight: 800; }
+  .code { margin-top: 1em; text-align: center; background: var(--surface-2); border-radius: .9em; padding: .8em; }
+  .code b { font-family: 'Space Grotesk'; font-size: 2.2em; letter-spacing: .25em; color: var(--lime); }
+
+  /* feature step pills */
+  .steps { display: flex; flex-wrap: wrap; gap: calc(var(--u)*1.6); margin-top: calc(var(--u)*4); }
+  .step { font-size: calc(var(--u)*3); font-weight: 600; padding: calc(var(--u)*1.2) calc(var(--u)*2.4); border-radius: calc(var(--u)*5);
+    background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
+  .step.on { animation: stepOn .3s ease var(--in) both, stepOff .3s ease var(--out) forwards; }
+  @keyframes stepOn { from { background: var(--surface); color: var(--muted); } to { background: var(--lime); color: var(--lime-ink); border-color: var(--lime); } }
+  @keyframes stepOff { from { background: var(--lime); color: var(--lime-ink); border-color: var(--lime); } to { background: var(--surface); color: var(--muted); border-color: var(--line); } }
+  .featline { position: relative; height: calc(var(--u)*24); margin-top: calc(var(--u)*1); }
+  body.landscape .featline { height: calc(var(--u)*20); }
+  .featline > div { position: absolute; left: 0; right: 0; top: 0; }
+
+  /* chat */
+  .chat { display: flex; flex-direction: column; gap: .7em; padding-top: .4em; }
+  .msg { max-width: 82%; padding: .7em .9em; border-radius: 1em; font-size: 1.02em; line-height: 1.35; }
+  .msg .who { display: block; font-size: .78em; font-weight: 700; margin-bottom: .2em; }
+  .msg.in { background: var(--surface-2); align-self: flex-start; border-bottom-left-radius: .3em; }
+  .msg.out { background: var(--lime); color: var(--lime-ink); align-self: flex-end; border-bottom-right-radius: .3em; }
+  .msg.out .who { color: var(--lime-ink); opacity: .7; }
+  .deal-share { background: var(--surface); border: 1px solid var(--line); border-radius: .9em; padding: .6em .8em; margin-top: .4em; display: flex; gap: .6em; align-items: center; color: var(--text); }
+  .deal-share .e { font-size: 2em; }
+
+  .savings { margin-top: calc(var(--u)*3.5); background: linear-gradient(135deg, #2a3a17, #1d1a14); border: 1px solid var(--lime-deep);
+    border-radius: calc(var(--u)*4); padding: calc(var(--u)*2.6) calc(var(--u)*4.4); display: inline-block; }
+  .savings .lbl { font-size: calc(var(--u)*3.2); color: var(--muted); font-weight: 600; }
+  .savings .num { font-family: 'Space Grotesk'; font-weight: 700; font-size: calc(var(--u)*8.5); color: var(--lime); line-height: 1.05; margin-top: calc(var(--u)*1); }
+  .savings .num small { font-size: .4em; color: var(--text); margin-left: .3em; }
+
+  .confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .confetti span { position: absolute; top: -8%; font-size: calc(var(--u)*5); animation: fall var(--dur) linear var(--d) both; }
+  @keyframes fall { from { transform: translate(0, 0) rotate(0); opacity: 1; } to { transform: translate(var(--dx), calc(var(--H) * 1.2)) rotate(var(--rot)); opacity: 1; } }
+
+  /* CTA */
+  .logo-big { width: calc(var(--u)*24); height: calc(var(--u)*24); color: var(--lime); }
+  .logo-big path { stroke-dasharray: 260; stroke-dashoffset: 260; animation: draw 1s var(--ease) var(--d) both; }
+  .logo-big circle { animation: pop .5s cubic-bezier(.34,1.56,.64,1) calc(var(--d) + .7s) both; transform-origin: 108px 16px; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .wordmark { font-family: 'Space Grotesk'; font-weight: 700; font-size: calc(var(--u)*12); letter-spacing: -0.03em; margin-top: calc(var(--u)*2); }
+  .cta-lines { margin-top: calc(var(--u)*4); }
+  .cta-lines div { font-family: 'Space Grotesk'; font-weight: 700; font-size: calc(var(--u)*8.4); line-height: 1.12; }
+  body.landscape .cta-lines div { font-size: calc(var(--u)*7.4); }
+  .pill { display: inline-block; margin-top: calc(var(--u)*6); background: var(--lime); color: var(--lime-ink); font-weight: 700;
+    font-size: calc(var(--u)*4); padding: calc(var(--u)*2.6) calc(var(--u)*6); border-radius: calc(var(--u)*6); }
+  .small { margin-top: calc(var(--u)*3); font-size: calc(var(--u)*3.2); color: var(--muted); font-weight: 500; }
+  .verified { display: inline-flex; align-items: center; gap: calc(var(--u)*1.4); margin-top: calc(var(--u)*4); font-size: calc(var(--u)*3.4);
+    background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--u)*5); padding: calc(var(--u)*1.6) calc(var(--u)*3.2); font-weight: 600; }
+</style>
+</head>
+<body>
+  <div class="glow a"></div>
+  <div class="glow b"></div>
+
+  <!-- ===================== SCENE 1 · HOOK · 0–5s ===================== -->
+  <section class="scene" style="--in:0s; --out:4.6s">
+    <div class="copy">
+      <div class="kicker fu" style="--d:.1s">Real talk</div>
+      <h1 class="display"><span class="fu" style="--d:.25s; display:block">Student life</span><span class="fu coral" style="--d:.6s; display:block">is expensive.</span></h1>
+      <p class="sub fu" style="--d:3.4s">And the month is long. 😩</p>
+    </div>
+    <div class="visual">
+      <div class="tags">
+        <div class="tag pop" style="--d:1.2s; left:0%; top:6%"><span class="e">🍔</span>Lunch <span class="p">3,500 RWF</span></div>
+        <div class="tag pop" style="--d:1.7s; right:0%; top:24%"><span class="e">🚌</span>Transport <span class="p">1,000 RWF</span></div>
+        <div class="tag pop" style="--d:2.2s; left:4%; top:42%"><span class="e">📱</span>Data <span class="p">2,000 RWF</span></div>
+        <div class="tag pop" style="--d:2.7s; right:2%; top:60%"><span class="e">☕</span>Snacks <span class="p">1,500 RWF</span></div>
+        <div class="pop" style="--d:3.2s; position:absolute; left:36%; top:76%"><div class="wallet" style="--d:3.7s; position:static">👛</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SCENE 2 · SOLUTION · 5–12s ===================== -->
+  <section class="scene" style="--in:4.9s; --out:11.6s">
+    <div class="copy">
+      <div class="kicker fu" style="--d:5.1s">
+        <svg viewBox="0 0 130 130" fill="none" style="width:1.3em;height:1.3em"><path d="M32,28 L32,86 A34,34 0 0 0 100,86 L100,40" stroke="currentColor" stroke-width="16" stroke-linecap="round"/><circle cx="108" cy="16" r="10" fill="currentColor"/></svg>
+        Meet Unipicks
+      </div>
+      <h2 class="display"><span class="fu" style="--d:5.3s; display:block">Deals from</span><span class="fu lime" style="--d:5.6s; display:block">local spots</span><span class="fu" style="--d:5.9s; display:block">near campus.</span></h2>
+      <p class="sub fu" style="--d:6.6s">Made for students. Only for students.</p>
+      <div class="verified pop" style="--d:9.4s">🎓 Verified with your Kepler email</div>
+    </div>
+    <div class="visual slideUp" style="--d:6.9s">
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="appbar"><div class="brand"><svg viewBox="0 0 130 130" fill="none"><path d="M32,28 L32,86 A34,34 0 0 0 100,86 L100,40" stroke="currentColor" stroke-width="16" stroke-linecap="round"/><circle cx="108" cy="16" r="10" fill="currentColor"/></svg>Unipicks</div><span>💬</span></div>
+          <div style="margin-bottom:.9em"><span class="chip on">All</span><span class="chip">Lunch</span><span class="chip">Snacks</span><span class="chip">Drinks</span></div>
+          <div class="feed" style="--d:9.6s">
+            <div class="card fu" style="--d:7.5s"><div class="img" style="background:linear-gradient(135deg,#3b2a12,#5a3d16)"><span class="e">🍟</span><span class="badge b-lime">25% OFF</span></div>
+              <div class="body"><div class="biz">Campus Chips</div><div class="title">Chips + soda combo</div><div class="price"><s>2,000</s>1,500 RWF</div><div class="stars">★ 4.7 · 38 reviews</div></div></div>
+            <div class="card fu" style="--d:7.8s"><div class="img" style="background:linear-gradient(135deg,#123326,#1e4a36)"><span class="e">🌯</span><span class="badge b-blue">BUY 1 GET 1</span></div>
+              <div class="body"><div class="biz">Kinyinya Bites</div><div class="title">Rolex + fresh juice</div><div class="price">1,800 RWF</div><div class="stars">★ 4.5 · 21 reviews</div></div></div>
+            <div class="card fu" style="--d:8.1s"><div class="img" style="background:linear-gradient(135deg,#2c1a3d,#43285c)"><span class="e">🍛</span><span class="badge b-purple">GROUP BUY · 5 NEEDED</span></div>
+              <div class="body"><div class="biz">Mama Rose Kitchen</div><div class="title">Lunch plate for the squad</div><div class="price"><s>2,500</s>1,700 RWF</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SCENE 3 · FEATURES · 12–20s ===================== -->
+  <section class="scene" style="--in:11.9s; --out:19.6s">
+    <div class="copy">
+      <div class="kicker fu" style="--d:12s">How it works</div>
+      <div class="featline">
+        <div class="beat" style="--in:12.1s; --out:13.85s"><h2 class="display">Browse deals<br><span class="lime">near campus.</span></h2></div>
+        <div class="beat" style="--in:14.05s; --out:15.85s"><h2 class="display">Order in<br><span class="lime">two taps.</span></h2></div>
+        <div class="beat" style="--in:16.05s; --out:17.85s"><h2 class="display">Group up<br><span class="lime">with friends.</span></h2></div>
+        <div class="beat" style="--in:18.05s; --out:30s"><h2 class="display">Pay with<br><span class="lime">MoMo.</span></h2></div>
+      </div>
+      <div class="steps fi" style="--d:12.2s">
+        <span class="step on" style="--in:12.1s; --out:13.9s">1 Browse</span>
+        <span class="step on" style="--in:14.0s; --out:15.9s">2 Order</span>
+        <span class="step on" style="--in:16.0s; --out:17.9s">3 Group up</span>
+        <span class="step on" style="--in:18.0s; --out:30s">4 Pay</span>
+      </div>
+    </div>
+    <div class="visual">
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <!-- Browse -->
+          <div class="beat" style="--in:12s; --out:13.85s; position:absolute; inset:4.2em 1.4em 1.4em">
+            <div class="search">🔍 <span class="typed" data-type="chips" data-t0="12.4" data-cps="7"></span><span class="caret"></span></div>
+            <div style="margin-bottom:.9em"><span class="chip">All</span><span class="chip on">Lunch</span><span class="chip">Snacks</span></div>
+            <div class="card pop" style="--d:13s"><div class="img" style="background:linear-gradient(135deg,#3b2a12,#5a3d16)"><span class="e">🍟</span><span class="badge b-lime">25% OFF</span></div>
+              <div class="body"><div class="biz">Campus Chips · 4 min walk</div><div class="title">Chips + soda combo</div><div class="price"><s>2,000</s>1,500 RWF</div></div></div>
+          </div>
+          <!-- Order -->
+          <div class="beat" style="--in:14s; --out:15.85s; position:absolute; inset:4.2em 1.4em 1.4em">
+            <div class="detail-img" style="background:linear-gradient(135deg,#3b2a12,#5a3d16)"><span class="e">🍟</span></div>
+            <div class="biz muted" style="font-size:.8em;font-weight:600;letter-spacing:.06em">CAMPUS CHIPS</div>
+            <div style="font-weight:700;font-size:1.3em;margin:.2em 0 .6em">Chips + soda combo</div>
+            <div class="row"><span class="muted">Price</span><span><s class="muted">2,000</s> <b>1,500 RWF</b></span></div>
+            <div class="btn" style="margin-top:1em">Order now<span class="ripple" style="--d:14.7s"></span></div>
+            <div class="toast pop" style="--d:15.1s; margin-top:1em">✅ <span>Accepted by Campus Chips.<br><span class="muted" style="font-weight:500">Tap to pay.</span></span></div>
+          </div>
+          <!-- Group -->
+          <div class="beat" style="--in:16s; --out:17.85s; position:absolute; inset:4.2em 1.4em 1.4em">
+            <div style="font-weight:700;font-size:1.3em">Lunch plate for the squad</div>
+            <div class="muted" style="font-size:.9em;margin-top:.2em">Mama Rose Kitchen · Group code <b style="color:var(--text)">K7Q2</b></div>
+            <div class="avatars">
+              <div class="av" style="background:#f59e0b">A</div>
+              <div class="av" style="background:#3b82f6">K</div>
+              <div class="stack"><div class="slot"></div><div class="av pop" style="--d:16.5s;background:#ec4899">G</div></div>
+              <div class="stack"><div class="slot"></div><div class="av pop" style="--d:16.8s;background:#10b981">J</div></div>
+              <div class="stack"><div class="slot"></div><div class="av pop" style="--d:17.1s;background:#8b5cf6">M</div></div>
+            </div>
+            <div class="bar"><i style="--d:16.4s"></i></div>
+            <div class="row" style="margin-top:.4em"><span class="muted">Members</span><span><b data-count-from="2" data-count-to="5" data-t0="16.4" data-t1="17.2" data-fmt="plain">2</b>/5</span></div>
+            <div class="unlock pop" style="--d:17.3s">🎉 Group price unlocked<br><span style="color:var(--text);font-size:.9em">2,500 → 1,700 RWF each</span></div>
+          </div>
+          <!-- Pay -->
+          <div class="beat" style="--in:18s; --out:30s; position:absolute; inset:4.2em 1.4em 1.4em">
+            <div class="momo">
+              <div class="muted" style="font-size:.9em;font-weight:600">📱 Mobile money payment</div>
+              <div class="amt">1,500 RWF</div>
+              <div class="muted" style="font-size:.85em">Approve the prompt on your phone</div>
+            </div>
+            <div class="paid pop" style="--d:18.8s"><span class="tick">✓</span><div style="font-weight:700;margin-top:.5em;font-size:1.1em">Paid</div></div>
+            <div class="code fu" style="--d:19.15s"><div class="muted" style="font-size:.85em;font-weight:600">Show this pickup code</div><b>4821</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SCENE 4 · SOCIAL PROOF / JOY · 20–27s ===================== -->
+  <section class="scene" style="--in:19.9s; --out:26.6s">
+    <div class="copy">
+      <div class="kicker fu" style="--d:20.1s">Better together</div>
+      <h2 class="display"><span class="fu" style="--d:20.2s;display:block">Share a deal.</span><span class="fu lime" style="--d:20.5s;display:block">Save together.</span></h2>
+      <div class="savings pop" style="--d:22.6s">
+        <div class="lbl">You saved this week</div>
+        <div class="num"><span data-count-from="0" data-count-to="3200" data-t0="22.9" data-t1="24.4" data-fmt="money">0</span><small>RWF</small></div>
+      </div>
+    </div>
+    <div class="visual">
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="appbar"><div class="brand" style="font-size:1.2em">👥 Lunch squad</div><span class="muted" style="font-size:.9em">5 members</span></div>
+          <div class="chat">
+            <div class="msg in fu" style="--d:20.6s"><span class="who" style="color:#f59e0b">Aline</span>Found a lunch deal 🍛 join my group?
+              <div class="deal-share"><span class="e">🍛</span><span><b>Mama Rose Kitchen</b><br><span class="muted" style="font-size:.85em">Group buy · 1,700 RWF</span></span></div></div>
+            <div class="msg in fu" style="--d:21.4s"><span class="who" style="color:#3b82f6">Kevin</span>I'm in! 🙌</div>
+            <div class="msg out fu" style="--d:22.1s"><span class="who">You</span>Same! That's 5 of us 🎉</div>
+            <div class="msg in fu" style="--d:23.3s"><span class="who" style="color:#ec4899">Grace</span>Best lunch this week 😋</div>
+            <div class="msg in fu" style="--d:24.2s"><span class="who" style="color:#10b981">Jean</span>Tomorrow: chips deal? 🍟</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="confetti" id="confetti" data-d="24.5"></div>
+  </section>
+
+  <!-- ===================== SCENE 5 · CTA · 27–30s ===================== -->
+  <section class="scene" style="--in:26.8s; --out:31s">
+    <div class="center">
+      <svg class="logo-big" style="--d:26.9s" viewBox="0 0 130 130" fill="none"><path d="M32,28 L32,86 A34,34 0 0 0 100,86 L100,40" stroke="currentColor" stroke-width="16" stroke-linecap="round"/><circle cx="108" cy="16" r="10" fill="currentColor"/></svg>
+      <div class="cta-lines">
+        <div class="fu" style="--d:27.2s">Join Unipicks.</div>
+        <div class="fu" style="--d:27.55s">Save more.</div>
+        <div class="fu lime" style="--d:27.9s">Eat better.</div>
+      </div>
+      <div class="pill pop" style="--d:28.4s">Sign up with your Kepler email</div>
+      <div class="small fi" style="--d:28.8s">Link in bio</div>
+    </div>
+  </section>
+
+<script>
+  const params = new URLSearchParams(location.search)
+  const W = Number(params.get('w') || 1080)
+  const H = Number(params.get('h') || 1920)
+  const root = document.documentElement
+  root.style.setProperty('--W', W + 'px')
+  root.style.setProperty('--H', H + 'px')
+  root.style.setProperty('--u', (Math.min(W, H) / 100) + 'px')
+  document.body.classList.add(H > W ? 'portrait' : 'landscape')
+
+  // Deterministic confetti (seeded PRNG so every render is identical).
+  let seed = 7
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+  const confetti = document.getElementById('confetti')
+  const confettiStart = Number(confetti.dataset.d)
+  const pieces = ['🎉', '✨', '🍟', '🍛', '💚', '🌯', '⭐']
+  for (let i = 0; i < 26; i++) {
+    const s = document.createElement('span')
+    s.textContent = pieces[i % pieces.length]
+    s.style.left = (rand() * 100) + '%'
+    s.style.setProperty('--d', (confettiStart + rand() * 1.2).toFixed(2) + 's')
+    s.style.setProperty('--dur', (1.6 + rand() * 1.0).toFixed(2) + 's')
+    s.style.setProperty('--dx', ((rand() - 0.5) * 30).toFixed(1) + 'vw')
+    s.style.setProperty('--rot', ((rand() - 0.5) * 720).toFixed(0) + 'deg')
+    s.style.fontSize = 'calc(var(--u) * ' + (2.6 + rand() * 3).toFixed(1) + ')'
+    confetti.appendChild(s)
+  }
+
+  const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3)
+
+  // Set the whole page to time `ms`.
+  window.seek = (ms) => {
+    const t = ms / 1000
+    for (const a of document.getAnimations()) a.currentTime = ms
+    document.querySelectorAll('[data-type]').forEach((el) => {
+      const text = el.dataset.type
+      const n = Math.max(0, Math.floor((t - Number(el.dataset.t0)) * Number(el.dataset.cps)))
+      el.textContent = text.slice(0, Math.min(text.length, n))
+    })
+    document.querySelectorAll('[data-count-to]').forEach((el) => {
+      const from = Number(el.dataset.countFrom), to = Number(el.dataset.countTo)
+      const p = ease((t - Number(el.dataset.t0)) / (Number(el.dataset.t1) - Number(el.dataset.t0)))
+      const v = Math.round(from + (to - from) * p)
+      el.textContent = el.dataset.fmt === 'money' ? v.toLocaleString('en-US') : String(v)
+    })
+  }
+
+  window.ready = document.fonts.ready.then(() => { window.seek(0); return true })
+
+  // ?play=1 → real-time preview in a normal browser.
+  if (params.get('play')) {
+    const start = performance.now()
+    const tick = () => {
+      const ms = (performance.now() - start) % 30000
+      window.seek(ms)
+      requestAnimationFrame(tick)
+    }
+    window.ready.then(tick)
+  }
+</script>
+</body>
+</html>
