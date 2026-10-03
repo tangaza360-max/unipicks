@@ -9,6 +9,7 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-03
 
+- 18:40 — `fix(identity)`: university derived from the email domain and student ID frozen at signup, both in server-only app_metadata; admin list and student_profiles use the verified values; profile shows them read-only with a Verified badge — `supabase/migrations/20261003190000_server_owned_verified_identity.sql`, `src/components/ProfileTab.jsx`, `supabase/tests/verified_identity.test.sh`, `docs/audits/profile-audit.md`
 - 18:00 — `fix(payments)`: payment-webhook sends the pickup-code chat message on the async payment path (shared idempotent helper with process-payment; 500 + retry re-send on failure) — `supabase/functions/_shared/pickup-code-message.ts`, `supabase/functions/payment-webhook/index.ts`, `supabase/functions/process-payment/index.ts`, `supabase/functions/tests/`
 - 17:30 — `docs(audit)`: notifications audit (in-app/Web Push scope, all roles) and student profile audit with merchant appendix — `docs/audits/notifications-audit.md`, `docs/audits/profile-audit.md`, `docs/audits/README.md`
 - 17:00 — `fix(orders)`: redeem_pickup_code RPC redeems the code and moves the parent order paid → redeemed in one transaction; VerifyCode calls it; merchant UPDATE on redemptions removed — `supabase/migrations/20261003170000_add_redeem_pickup_code_rpc.sql`, `src/pages/VerifyCode.jsx`, `supabase/tests/redeem_pickup_code.test.sh`
