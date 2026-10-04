@@ -1,8 +1,9 @@
 import { Component } from 'react'
+import { reportCrash } from '../lib/monitoring.js'
 
 // Last safety net: if a page throws while rendering, show a calm message with
-// a way back instead of a blank white screen. The error goes to the browser
-// console only (no personal data is collected or sent anywhere).
+// a way back instead of a blank white screen. The error is logged to the
+// console and reported to Sentry when monitoring is on (see lib/monitoring.js).
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props)
@@ -15,6 +16,7 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error) {
     console.error('[app] page crashed:', error)
+    reportCrash(error)
   }
 
   render() {
