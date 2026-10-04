@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 21:30 — `docs(ui)`: phone-first UI/UX audit (read-only, no app changes): 27 screens at 390 px in dark mode, 8 in light mode, automatic checks and a code scan. 10 should-fix findings (wrong seller name "Your Business", "0% off" badges, raw status codes, business dashboard on phones, small buttons, low contrast, dead support address) and 13 consistency items, with a recommended order of work — `docs/ui-audit/README.md`, `docs/ui-audit/*.jpg`, `docs/CHANGELOG.md`
+
 - 20:55 — `fix(pwa)`: devices pick up a new `sw.js` without a manual reload. The app registers the service worker with `updateViaCache: 'none'` and asks the browser to check for a newer `sw.js` when it opens and each time it comes back on screen. Found on 2026-10-04: a laptop with a long-open tab still ran the 23/09 `sw.js` (no push handler), so phone alerts arrived but were never shown. Standard: W3C Service Workers (`ServiceWorkerRegistration.update()`, `updateViaCache`) — `src/lib/serviceWorker.js`, `src/main.jsx`, `docs/CHANGELOG.md`
 
 - 20:40 — `fix(notifications)`: businesses now get the "Payment received" phone alert when the payment is confirmed instantly by `process-payment` (most payments in production), not only through `payment-webhook`/`reconcile-payments`. Sent only by the call that actually marks the order paid, so each payment gives exactly one alert. Found in the 2026-10-04 production test (order paid at 20:11:46, no alert) — `supabase/functions/process-payment/index.ts`, `supabase/functions/tests/payment-received-alert.test.ts`, `docs/CHANGELOG.md`
