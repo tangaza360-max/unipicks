@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Star, Store, Users } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
+import { dealHoursLabel, hasDealHours, isDealOpenNow } from '../../supabase/functions/_shared/deal-availability.ts'
 
 function finalPriceOf(deal) {
   if (deal.price == null) return null
@@ -138,6 +139,10 @@ export default function DealDetail() {
   const hasDiscount =
     deal.discount_percent != null && deal.price != null
 
+  // Same rule the order functions enforce (Kigali time).
+  const openNow = isDealOpenNow(deal)
+  const hoursLabel = hasDealHours(deal) ? dealHoursLabel(deal) : null
+
   const expiresLabel = deal.expires_at
     ? new Date(deal.expires_at).toLocaleDateString(undefined, {
         month: 'short',
@@ -229,6 +234,11 @@ export default function DealDetail() {
                   Valid until {expiresLabel}
                 </p>
               )}
+              {hoursLabel && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Available {hoursLabel} (Kigali time)
+                </p>
+              )}
             </div>
 
             {(loadingGroups || openGroups.length > 0) && (
@@ -284,11 +294,17 @@ export default function DealDetail() {
               </button>
             </div>
 
+            {!openNow && (
+              <p role="status" className="text-sm text-muted-foreground text-center">
+                This deal can't be ordered right now. It's available {dealHoursLabel(deal)} (Kigali time).
+              </p>
+            )}
             <button
               onClick={() => navigate(`/deal/${deal.id}/confirm`)}
-              className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-accent-dim"
+              disabled={!openNow}
+              className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-accent-dim disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Continue to Order
+              {openNow ? 'Continue to Order' : 'Not available right now'}
             </button>
           </div>
         </div>

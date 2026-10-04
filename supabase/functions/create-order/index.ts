@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { verifiedStudentError } from '../_shared/verified-student.ts'
 import { MERCHANT_UNAVAILABLE_ERROR, merchantStanding } from '../_shared/merchant-standing.ts'
+import { dealClosedMessage, isDealOpenNow } from '../_shared/deal-availability.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -159,7 +160,7 @@ serve(async (req) => {
 
     const { data: deal, error: dealError } = await supabaseAdmin
       .from('deals')
-      .select('id, merchant_id, price, discount_percent, active, expires_at, offer_type, discount_value, final_price, buy_quantity')
+      .select('id, merchant_id, price, discount_percent, active, expires_at, offer_type, discount_value, final_price, buy_quantity, available_days, available_from, available_until')
       .eq('id', deal_id)
       .single()
 
@@ -180,6 +181,14 @@ serve(async (req) => {
     if (deal.expires_at && new Date(deal.expires_at) <= new Date()) {
       return new Response(
         JSON.stringify({ error: 'This deal has expired' }),
+        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    // The business's days and hours for this deal (Kigali time).
+    if (!isDealOpenNow(deal)) {
+      return new Response(
+        JSON.stringify({ error: dealClosedMessage(deal) }),
         { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
