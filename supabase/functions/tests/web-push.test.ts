@@ -251,7 +251,9 @@ Deno.test('event 1: new order → the business phone gets "New order" with the d
   assertEquals(alert.url, '/dashboard/orders')
   assertEquals(sent[0].headers.get('ttl'), '300')
   assertEquals((await alertsFor(STUDENT_PHONE)).length, 0)
-  assert(!NO_SECRETS.test(JSON.stringify(alert)), 'no name, phone or code in the alert')
+  // Only the text people see: the tag holds a random order id, whose
+  // 4-digit groups made this check fail at random.
+  assert(!NO_SECRETS.test(`${alert.title} ${alert.body}`), 'no name, phone or code in the alert')
 })
 
 Deno.test('event 1b: group order sent → "New group order" with deal, items and students', async () => {
