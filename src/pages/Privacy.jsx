@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { SUPPORT_EMAIL } from '../lib/support.js'
+import BackLink from '../components/BackLink.jsx'
 
 const sections = [
   ['Information we collect', 'We collect account details such as your name, email address, phone number, university, student ID, and business information when you register. We also collect orders, reviews, notifications, and technical information needed to keep Unipicks secure and reliable.'],
@@ -15,7 +16,7 @@ export default function Privacy() {
     <main className="min-h-screen bg-background px-4 py-10 text-foreground">
       <article className="mx-auto max-w-3xl space-y-8">
         <header className="space-y-3">
-          <Link to="/register" className="text-sm text-primary hover:underline">← Back to Unipicks</Link>
+          <BackLink to="/register" />
           <h1 className="font-display text-3xl font-semibold">Privacy Policy</h1>
           <p className="text-muted-foreground">Last updated: September 4, 2026</p>
         </header>

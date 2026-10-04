@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Store } from 'lucide-react'
+import { Store } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { createOrder } from '../lib/orders.js'
 import { formatMoney } from '../lib/format.js'
+import BackLink from '../components/BackLink.jsx'
 
 const roundMoney = (value) => Math.round(value * 100) / 100
 
@@ -176,13 +177,7 @@ export default function OrderConfirmation() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-5 md:py-8 space-y-5">
-        <button
-          onClick={() => navigate(`/deal/${id}`)}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition"
-        >
-          <ArrowLeft size={18} />
-          Back
-        </button>
+        <BackLink to={`/deal/${id}`} />
 
         <div>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">

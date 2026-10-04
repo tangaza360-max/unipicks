@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import Logo from '../components/Logo.jsx'
 import { formatMoney, formatDateTime } from '../lib/format.js'
+import BackLink from '../components/BackLink.jsx'
 
 // Payment confirmation for a paid order. Unipicks is a marketplace agent:
 // the food place is the seller, and Unipicks collects the payment on its
@@ -119,7 +120,7 @@ export default function Receipt() {
     <div className="min-h-screen px-4 py-8 print:py-0">
       <div className="max-w-md mx-auto space-y-4">
         <div className="flex items-center justify-between print:hidden">
-          <Link to="/dashboard/profile?view=orders" className="text-sm text-muted-foreground hover:text-foreground">← My orders</Link>
+          <BackLink to="/dashboard/profile?view=orders" />
           <button
             type="button"
             onClick={() => window.print()}

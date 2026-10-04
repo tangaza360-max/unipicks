@@ -1,5 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { SUPPORT_EMAIL } from '../lib/support.js'
+import BackLink from '../components/BackLink.jsx'
 
 // Public page (no login): how to delete a Unipicks account and what happens
 // to the data. Required by Apple App Store 5.1.1(v) and Google Play's account
@@ -32,7 +33,7 @@ export default function DeleteAccount() {
     return (
       <main className="min-h-screen bg-background px-4 py-10 text-foreground">
         <article className="mx-auto max-w-3xl space-y-6">
-          <Link to="/register" className="text-sm text-primary hover:underline">← Back to Unipicks</Link>
+          <BackLink to="/register" />
           <h1 className="font-display text-3xl font-semibold">Your account has been deleted</h1>
           <p role="status" className="rounded-xl border border-border bg-card p-4 text-sm">
             Your account has been deleted and you have been signed out on every device.
@@ -55,7 +56,7 @@ export default function DeleteAccount() {
     <main className="min-h-screen bg-background px-4 py-10 text-foreground">
       <article className="mx-auto max-w-3xl space-y-8">
         <header className="space-y-3">
-          <Link to="/register" className="text-sm text-primary hover:underline">← Back to Unipicks</Link>
+          <BackLink to="/register" />
           <h1 className="font-display text-3xl font-semibold">Delete your Unipicks account</h1>
           <p className="text-muted-foreground">Last updated: October 3, 2026</p>
         </header>

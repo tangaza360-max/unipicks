@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Star, Store, Users } from 'lucide-react'
+import { Star, Store, Users } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { dealHoursLabel, hasDealHours, isDealOpenNow } from '../../supabase/functions/_shared/deal-availability.ts'
 import { hasStudentPrice, offerBadge, struckOutPrice, studentPrice } from '../lib/dealPricing.js'
 import { formatMoney, formatDate } from '../lib/format.js'
+import BackLink from '../components/BackLink.jsx'
 
 function formatRelativeTime(isoString) {
   const diff = Date.now() - new Date(isoString).getTime()
@@ -147,13 +148,7 @@ export default function DealDetail() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto px-4 py-5 md:py-8 space-y-5">
-        <button
-          onClick={() => navigate('/dashboard/deals')}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition"
-        >
-          <ArrowLeft size={18} />
-          Back
-        </button>
+        <BackLink to="/dashboard/deals" />
 
         <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
           <div className="relative h-56 w-full sm:h-72">

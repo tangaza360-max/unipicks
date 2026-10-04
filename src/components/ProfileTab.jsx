@@ -20,6 +20,7 @@ import OrdersTab from './OrdersTab.jsx'
 import DeleteAccountDialog from './DeleteAccountDialog.jsx'
 import PhoneAlertsCard from './PhoneAlertsCard.jsx'
 import { forgetThisPhone } from '../lib/pushNotifications.js'
+import BackLink from './BackLink.jsx'
 
 // University and student ID are set server-side from the verified email
 // domain (auth app_metadata, which the client cannot write). user_metadata
@@ -417,12 +418,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
   if (showOrderHistory) {
     return (
       <div className="space-y-4">
-        <button
-          onClick={() => setShowOrderHistory(false)}
-          className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
-        >
-          ← Back to Profile
-        </button>
+        <BackLink onClick={() => setShowOrderHistory(false)} />
         <h2 className="font-display text-xl font-semibold">Order History</h2>
         <OrdersTab />
       </div>

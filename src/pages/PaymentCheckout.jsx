@@ -5,6 +5,7 @@ import { liveChannel } from '../lib/realtime.js'
 import MerchantPhone from '../components/MerchantPhone.jsx'
 import { initiatePayment } from '../lib/payment.js'
 import { formatMoney } from '../lib/format.js'
+import BackLink from '../components/BackLink.jsx'
 
 const phonePattern = /^(078|079|072|073)\d{7}$/
 
@@ -188,9 +189,7 @@ export default function PaymentCheckout() {
   return (
     <main className="min-h-screen bg-background px-4 py-10 text-foreground">
       <div className="mx-auto max-w-md space-y-6">
-        <Link to="/dashboard/deals" className="text-sm text-primary hover:underline">
-          ← Back to dashboard
-        </Link>
+        <BackLink to="/dashboard/deals" />
 
         <div>
           <h1 className="font-display text-2xl font-semibold">Your order</h1>

@@ -6,6 +6,7 @@ import { linkPhoneNumbers } from '../lib/linkPhoneNumbers.jsx'
 import { Flag } from 'lucide-react'
 import ReportDialog from './ReportDialog.jsx'
 import { formatDate, formatTime } from '../lib/format.js'
+import BackLink from './BackLink.jsx'
 
 
 function dayKey(iso) {
@@ -233,12 +234,7 @@ export default function ChatThread({
   return (
     <div className="flex flex-col h-[calc(100dvh-10rem)] md:h-[70vh] bg-card">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-        <button
-          onClick={onBack}
-          className="text-muted-foreground hover:text-foreground text-lg leading-none"
-        >
-          Back
-        </button>
+        <BackLink onClick={onBack} />
         <p className="font-display font-semibold text-sm">{headerName}</p>
         {headerRole && headerRole !== 'deleted' && (
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${

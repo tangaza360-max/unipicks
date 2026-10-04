@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import {
-  ArrowLeft,
   Bell,
   Search,
   Plus,
@@ -15,6 +14,7 @@ import {
 import { supabase } from '../lib/supabaseClient.js'
 import SocialActivity from '../components/SocialActivity.jsx'
 import ReportDialog from '../components/ReportDialog.jsx'
+import BackLink from '../components/BackLink.jsx'
 
 const tabs = [
   { id: 'for-you', label: 'For You' },
@@ -320,14 +320,7 @@ export default function Social() {
       <div className="max-w-4xl mx-auto space-y-6">
         <section className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
-            <button
-              type="button"
-              onClick={() => setSelectedStudent(null)}
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition"
-            >
-              <ArrowLeft size={18} />
-              <span>Back to Social</span>
-            </button>
+            <BackLink onClick={() => setSelectedStudent(null)} />
           </div>
 
           <div className="px-5 py-8">
@@ -553,14 +546,7 @@ export default function Social() {
 
           {showActivity ? (
             <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => setShowActivity(false)}
-                className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"
-              >
-                <ArrowLeft size={16} />
-                Back to Social
-              </button>
+              <BackLink onClick={() => setShowActivity(false)} />
 
               <SocialActivity />
             </div>
