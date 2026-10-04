@@ -505,7 +505,7 @@ function GroupOrderCard({ order, hostLabel, actions, expanded, error, children }
             </div>
             <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
               order.status === 'open'
-                ? 'bg-green-500/15 text-green-700'
+                ? 'bg-accent/15 text-accent'
                 : 'bg-muted text-muted-foreground'
             }`}>
               {order.status === 'open' ? 'Open' : 'Closed'}

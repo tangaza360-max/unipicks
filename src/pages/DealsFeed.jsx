@@ -34,9 +34,8 @@ function extractBudget(text) {
 const getOfferBadge = offerBadge
 
 function getOfferBadgeClass(type) {
-  if (type === 'percentage' || type === 'fixed_amount') return 'bg-accent text-background-foreground'
-  if (type === 'bogo' || type === 'fixed_price' || type === 'tiered') return 'bg-blue-600 text-white'
-  return 'bg-purple-600 text-white'
+  // One brand green for every offer (style guide §1: no purple or blue).
+  return 'bg-accent text-background-foreground'
 }
 
 export default function DealsFeed({ advisorOpen = false } = {}) {
@@ -768,7 +767,7 @@ function DealCard({ deal, ratingStats }) {
             <button
               onClick={handleStartGroupOrder}
               disabled={startingGroup || !priced}
-              className="mt-3 w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg py-2.5 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              className="mt-3 w-full bg-primary hover:bg-accent-dim text-primary-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <ShoppingCart size={16} />
               {startingGroup ? 'Starting…' : 'Start group order'}

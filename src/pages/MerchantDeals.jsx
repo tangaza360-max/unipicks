@@ -187,9 +187,8 @@ export default function MerchantDeals() {
   const getOfferBadge = offerBadge
 
   function getOfferBadgeClass(type) {
-    if (type === 'percentage' || type === 'fixed_amount') return 'bg-green-600 text-white'
-    if (type === 'bogo' || type === 'fixed_price' || type === 'tiered') return 'bg-blue-600 text-white'
-    return 'bg-purple-600 text-white'
+    // One brand green for every offer (style guide §1: no purple or blue).
+    return 'bg-accent text-background-foreground'
   }
 
   async function loadGroupActivity() {
@@ -685,7 +684,7 @@ export default function MerchantDeals() {
                     <span
                       className={`text-xs font-medium px-2 py-1 rounded-full ${
                         deal.active
-                          ? 'bg-green-500/20 text-green-700'
+                          ? 'bg-accent/15 text-accent'
                           : 'bg-yellow-500/20 text-yellow-700'
                       }`}
                     >
@@ -761,7 +760,7 @@ export default function MerchantDeals() {
                         className={`text-xs rounded-lg px-3 py-1.5 transition ${
                           deal.active
                             ? 'bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30'
-                            : 'bg-green-500/20 text-green-700 hover:bg-green-500/30'
+                            : 'bg-accent/15 text-accent hover:bg-accent/25'
                         }`}
                       >
                         {deal.active ? 'Pause' : 'Activate'}

@@ -6,7 +6,9 @@ export default {
     extend: {
       colors: {
         foreground: 'hsl(var(--color-foreground) / <alpha-value>)',
-        'background-foreground': 'hsl(var(--color-bg-body) / <alpha-value>)',
+        // Text on the brand green: always ink (style guide §1). It was the page
+        // background color, which turned white in light mode (2.1:1 contrast).
+        'background-foreground': 'hsl(var(--color-primary-foreground) / <alpha-value>)',
         muted: {
           DEFAULT: 'hsl(var(--color-bg-surface-alt) / <alpha-value>)',
           foreground: 'hsl(var(--color-muted-foreground) / <alpha-value>)',
@@ -43,6 +45,19 @@ export default {
         accent: {
           DEFAULT: 'hsl(var(--color-accent) / <alpha-value>)',
           dim: 'hsl(var(--color-primary-deep) / <alpha-value>)',
+        },
+      },
+      // Green TEXT uses --color-primary-text: the brand green in dark mode, a
+      // darker green in light mode (#547A29, 5.0:1 on white; the brand green is
+      // 2.1:1). Backgrounds and borders keep the brand green (style guide §1).
+      textColor: {
+        accent: {
+          DEFAULT: 'hsl(var(--color-primary-text) / <alpha-value>)',
+          dim: 'hsl(var(--color-primary-deep) / <alpha-value>)',
+        },
+        primary: {
+          DEFAULT: 'hsl(var(--color-primary-text) / <alpha-value>)',
+          foreground: 'hsl(var(--color-primary-foreground) / <alpha-value>)',
         },
       },
       fontFamily: {

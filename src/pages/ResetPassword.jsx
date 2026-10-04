@@ -120,7 +120,7 @@ export default function ResetPassword() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-accent hover:bg-accent-dim text-bg-body font-semibold rounded-lg py-3 transition disabled:opacity-50"
+            className="w-full bg-accent hover:bg-accent-dim text-background-foreground font-semibold rounded-lg py-3 transition disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save new password'}
           </button>

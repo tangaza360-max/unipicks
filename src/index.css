@@ -6,6 +6,7 @@
   --color-primary-deep: 92 41% 40%;
   --color-primary-soft: 83 49% 52% / 0.15;
   --color-primary-foreground: 33 53% 7%;
+  --color-primary-text: 83 49% 52%;
 
   /* Existing semantic tokens preserved for the current app. */
   --color-destructive: 0 72% 51%;
@@ -45,6 +46,7 @@
   --color-primary-deep: 92 41% 40%;
   --color-primary-soft: 83 49% 52% / 0.15;
   --color-primary-foreground: 33 53% 7%;
+  --color-primary-text: 83 49% 52%;
 
   --color-background: var(--color-bg-body);
   --color-foreground: var(--color-text-primary);
@@ -58,6 +60,7 @@
   --color-primary-deep: 92 41% 40%;
   --color-primary-soft: 83 49% 52% / 0.15;
   --color-primary-foreground: 33 53% 7%;
+  --color-primary-text: 88 50% 32%;
 
   --color-text-primary: 20 12% 16%;
   --color-text-secondary: 20 10% 40%;

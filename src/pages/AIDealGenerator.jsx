@@ -434,7 +434,7 @@ export default function AIDealGenerator({ onDealCreated }) {
             <button
               onClick={handleConfirmDeal}
               disabled={saving}
-              className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-2 bg-accent hover:bg-accent-dim text-background-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
             >
               {saving ? 'Posting...' : (<><CheckCircle2 size={16} /> Confirm and post deal</>)}
             </button>

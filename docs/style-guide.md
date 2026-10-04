@@ -1,4 +1,4 @@
-# Unipicks style guide (v1, for founder approval)
+# Unipicks style guide (v1, approved 2026-10-04)
 
 One page that every screen follows. It turns the founder's rule — **simple,
 minimal, elegant, professional, no shouting graphics** — into checkable rules.
@@ -149,9 +149,9 @@ No placeholder text that looks unfinished ("Group order (code ----)", empty "Sto
 - [ ] One main button; sentence case labels
 - [ ] Empty, loading and error states exist
 
-## 12. Decisions for the founder
+## 12. Founder decisions (2026-10-04, all approved)
 
-1. **Approve this guide** (or tell me what to change).
-2. **Group buy color:** green like other deals (recommended), or keep purple?
-3. **Business navigation on phones:** bottom bar (recommended) or keep the pill tabs?
-4. **Text green for light mode** `#547A29`: OK? (Needed: today's green fails contrast on white.)
+1. This guide is approved as v1.
+2. Group buy uses the brand green, like every other deal (no purple).
+3. Business navigation on phones: bottom bar (Orders, Deals, Stats, Profile, More); laptops keep the tabs.
+4. Text green for light mode: `#547A29`.

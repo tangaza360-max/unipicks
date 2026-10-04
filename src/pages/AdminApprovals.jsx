@@ -83,7 +83,7 @@ export default function AdminApprovals() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleApprove(profile)}
-                    className="text-sm bg-accent text-bg-body font-semibold rounded-lg px-3 py-1.5"
+                    className="text-sm bg-accent text-background-foreground font-semibold rounded-lg px-3 py-1.5"
                   >
                     Approve
                   </button>
