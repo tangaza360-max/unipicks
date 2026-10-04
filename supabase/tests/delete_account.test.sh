@@ -196,6 +196,8 @@ check "a merchant with an active order is blocked" "$(tomb $M null)" "You have a
 check "blocked attempts changed nothing" "$(q "select count(*) from auth.users where raw_app_meta_data ? 'deleted_at'")" "0"
 
 echo " self-service deletion of student S"
+q "insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values
+  ('$S','https://push.example/s','k','a'), ('$B','https://push.example/b','k','a')"
 CHATS_BEFORE=$(q "select count(*) from public.chat_messages")
 check "tombstone_user returns deleted" "$(tomb $S null)" "deleted"
 
@@ -208,6 +210,8 @@ for t in "student_profiles:user_id" "friend_requests:sender_id" "friendships:stu
 done
 check "S's views of others' stories deleted" "$(q "select count(*) from public.student_story_views where viewer_id='$S'")" "0"
 check "S's own block deleted; B's block on S kept" "$(q "select count(*) filter (where blocker_id='$S') || '/' || count(*) filter (where blocked_id='$S') from public.blocked_students")" "0/1"
+check "S's phone alert addresses (push_subscriptions) deleted" "$(q "select count(*) from public.push_subscriptions where user_id='$S'")" "0"
+check "another student's phone alert address kept" "$(q "select count(*) from public.push_subscriptions where user_id='$B'")" "1"
 check "S's inbox deleted" "$(q "select count(*) from public.user_notifications where user_id='$S'")" "0"
 check "others' social notifications naming S deleted" "$(q "select count(*) from public.user_notifications where user_id='$B' and type='friend_request_accepted'")" "0"
 check "others' non-social notifications kept, actor cleared" "$(q "select count(*) || '/' || count(actor_id) from public.user_notifications where user_id='$M' and type='dispute_raised'")" "1/0"

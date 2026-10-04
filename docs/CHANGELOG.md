@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 17:30 — `feat(db)`: phone notifications step 1: table `push_subscriptions` (one row per browser: push endpoint + encryption keys). Saved only through `save_push_subscription()` (signed-in users, input checks, max 10 phones per user, a phone moves to whoever turns alerts on last). Users can see and delete only their own rows. Rows are removed when the account is deleted. Nothing sends alerts yet. Standards: W3C Push API, RFC 8030/8291 (Web Push), OWASP API4:2023 (resource limits) — `supabase/migrations/20261004100000_add_push_subscriptions.sql`, `supabase/tests/push_subscriptions.test.sh`, `supabase/tests/delete_account.test.sh`, `docs/CHANGELOG.md`
+
 - 17:00 — `docs`: founder decision: business phone and MoMo pay code stay readable by anyone (policy "Anyone can view merchant profiles" kept); open item closed — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`
 
 - 16:45 — `docs`: founder decisions: Unipicks is a marketplace agent (seller = food place), receipts are payment confirmations, RDB registration planned, questions for a tax adviser; new open items — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`
