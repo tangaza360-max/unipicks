@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 23:55 — `docs(ui)`: style guide v1 for founder approval: 4 always-checked rules (contrast ≥ 4.5:1, tap targets ≥ 44 px, plain words, honest prices), one brand green with measured contrast (ink text on green 8.7:1; new text green `#547A29` for light mode, 5.0:1, because today's green on white is 2.1:1), type scale with a 12 px minimum, 3 button types, status colors by meaning, money/date formats, one back link, forms, empty/loading/error states, writing voice, a pre-ship checklist and 4 decisions. Preview image of dark and light mode. No app changes — `docs/style-guide.md`, `docs/style-guide-preview.png`, `docs/CHANGELOG.md`
+
 - 23:45 — `fix(orders)`: Order History no longer crashes when a group order the student joined can't be read (deleted or hidden): that row is skipped and the rest of the history shows. Found in the UI audit (robustness note) — `src/components/OrdersTab.jsx`, `docs/CHANGELOG.md`
 
 - 23:35 — `fix(support)`: one working support address. The delete-account page sent people to `support@unipicks.app` (the domain is not owned yet, so mail was lost), and Privacy and Terms pointed to a "support email listed in the platform settings" that does not exist. All three now show `unipicks.team@gmail.com` from one setting (`src/lib/support.js`); after a domain is bought, set `VITE_SUPPORT_EMAIL`. Standards: WCAG 2.2 3.2.6 (Consistent Help); Google Play account-deletion policy (a working way to ask for deletion without signing in) — `src/lib/support.js`, `src/pages/DeleteAccount.jsx`, `src/pages/Privacy.jsx`, `src/pages/Terms.jsx`, `.env.example`, `docs/CHANGELOG.md`
