@@ -184,9 +184,18 @@ export default function AIDealGenerator({ onDealCreated }) {
 
     try {
       const { data: userData } = await supabase.auth.getUser()
+      // The database sets the seller name from the business profile; this is
+      // only the fallback for a profile without a name.
+      const { data: profile } = await supabase
+        .from('merchant_profiles')
+        .select('business_name')
+        .eq('id', userData.user.id)
+        .maybeSingle()
+      const sellerName = profile?.business_name?.trim() || userData.user.user_metadata?.business_name?.trim()
+      if (!sellerName) throw new Error('Add your business name in Profile first.')
       const { error: insertError } = await supabase.from('deals').insert({
         merchant_id: userData.user.id,
-        business_name: 'Your Business',
+        business_name: sellerName,
         title: confirmationData.title,
         description: confirmationData.description,
         price: confirmationData.originalPrice,

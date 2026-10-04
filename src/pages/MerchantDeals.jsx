@@ -69,7 +69,15 @@ export default function MerchantDeals() {
       userId = userData.user?.id
 
       if (userData.user) {
-        setBusinessName(userData.user.user_metadata?.business_name ?? '')
+        // The seller name comes from the business profile (the database
+        // enforces this too); sign-up metadata is only a fallback.
+        const { data: profile } = await supabase
+          .from('merchant_profiles')
+          .select('business_name')
+          .eq('id', userData.user.id)
+          .maybeSingle()
+        if (cancelled) return
+        setBusinessName(profile?.business_name?.trim() || userData.user.user_metadata?.business_name || '')
       }
 
       const { data, error: fetchError } = await supabase
@@ -289,7 +297,7 @@ export default function MerchantDeals() {
     setSuccess('')
 
     if (!title.trim()) return setError('Give the deal a title.')
-    if (!businessName.trim()) return setError('Business name is missing.')
+    if (!businessName.trim()) return setError('Add your business name in Profile first.')
 
     setSaving(true)
 
@@ -524,7 +532,6 @@ export default function MerchantDeals() {
   function startEdit(deal) {
     setEditingId(deal.id)
     setIsEditing(true)
-    setBusinessName(deal.business_name || '')
     setTitle(deal.title || '')
     setDescription(deal.description || '')
     setOfferType(deal.offer_type || 'percentage')
@@ -813,12 +820,13 @@ export default function MerchantDeals() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="field-label">Business name</label>
-                  <input
-                    className="field-input"
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                  />
+                  <p className="field-label">Seller name</p>
+                  <p className="rounded-lg bg-muted/40 px-3 py-2.5 text-sm font-medium" aria-describedby="seller-name-help">
+                    {businessName || 'Not set'}
+                  </p>
+                  <p id="seller-name-help" className="text-muted-foreground text-xs mt-1">
+                    From your Profile. Change it there.
+                  </p>
                 </div>
                 <div>
                   <label className="field-label">Deal title</label>
