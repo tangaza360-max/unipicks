@@ -6,6 +6,7 @@ import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { verifiedStudentError } from '../_shared/verified-student.ts'
 import { MERCHANT_UNAVAILABLE_ERROR, merchantStanding } from '../_shared/merchant-standing.ts'
 import { dealClosedMessage, isDealOpenNow } from '../_shared/deal-availability.ts'
+import { TOO_MANY_WAITING_ORDERS_ERROR, hasTooManyWaitingOrders } from '../_shared/order-limits.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -221,6 +222,15 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: MERCHANT_UNAVAILABLE_ERROR }),
         { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    // Spam guard: at most 3 orders waiting per student (the group order is
+    // saved under the host).
+    if (await hasTooManyWaitingOrders(supabaseAdmin, user.id)) {
+      return new Response(
+        JSON.stringify({ error: TOO_MANY_WAITING_ORDERS_ERROR }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
 
