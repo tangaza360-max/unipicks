@@ -9,6 +9,7 @@ import RegisterMerchant from './pages/RegisterMerchant.jsx'
 import Login from './pages/Login.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
 import ResetPassword from './pages/ResetPassword.jsx'
+import Receipt from './pages/Receipt.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import AdminStudentView from './pages/AdminStudentView.jsx'
 import Privacy from './pages/Privacy.jsx'
@@ -59,6 +60,8 @@ function RouteTitle() {
               ? 'Forgot Password'
               : pathname === '/reset-password'
                 ? 'Reset Password'
+                : pathname.startsWith('/receipt/')
+                  ? 'Receipt'
             : pathname === '/payment'
               ? 'Payment'
               : pathname === '/privacy'
@@ -110,6 +113,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/receipt/:orderId" element={<Receipt />} />
           <Route path="/dashboard/*" element={<Dashboard />} />
           <Route path="/admin/student-view" element={<AdminStudentView />} />
           <Route path="/privacy" element={<Privacy />} />

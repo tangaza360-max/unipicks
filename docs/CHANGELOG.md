@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 16:30 — `feat(orders)`: receipts for paid orders. "View receipt" on paid/collected orders in Order History opens `/receipt/:orderId`: seller (business name, RDB No., address), item, quantity × price, total, paid date (Kigali time), payment method and UmunotaPay reference, status (Paid/Collected), "Print / Save as PDF". States that Unipicks is a marketplace agent that collected the payment on behalf of the seller and that it is not a tax (EBM) invoice. No pickup code on the receipt. Unipicks' own registration line appears once `VITE_UNIPICKS_REGISTRATION` is set. Standards: Rwanda Law N° 011/2026 on competition and consumer protection (online intermediaries identify the seller); OECD Recommendation on Consumer Protection in E-commerce (2016, transaction confirmation) — `src/pages/Receipt.jsx`, `src/components/OrdersTab.jsx`, `src/main.jsx`, `.env.example`, `docs/CHANGELOG.md`
+
 - 16:00 — `docs`: work log updated with the afternoon (branded emails installed, realtime fix for Sentry UNIPICKS-WEB-2, lighter notification bell, production checks, how to change auth settings safely) — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`
 
 - 15:30 — `perf(notifications)`: the notification bell asked the server for notifications every 30 seconds even when live updates worked (2 requests per 30 s per open tab). It now polls only while the live connection is down, and fetches once to catch up when it comes back. Verified with a fake realtime server: live working → 1 request in 95 s (old code: 4); live down → still every 30 s. Standards: ISO/IEC 25010 performance efficiency (resource utilisation) — `src/components/NotificationBell.jsx`, `docs/CHANGELOG.md`
