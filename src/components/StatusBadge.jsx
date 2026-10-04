@@ -35,23 +35,24 @@ const businessLabels = {
   cancelled: 'Cancelled',
 }
 
-const statusStyles = {
-  open: 'bg-green-100/20 text-green-400',
-  closed: 'bg-blue-100/20 text-blue-400',
-  cancelled: 'bg-red-100/20 text-red-400',
-  pending: 'bg-amber-100/20 text-amber-400',
-  ordered: 'bg-primary/20 text-primary',
-  // Normal order statuses
-  pending_confirmation: 'bg-amber-100/20 text-amber-400',
-  confirmed: 'bg-blue-100/20 text-blue-400',
-  payment_processing: 'bg-blue-100/20 text-blue-400',
-  paid: 'bg-green-100/20 text-green-400',
-  redeemed: 'bg-green-100/20 text-green-400',
-  completed: 'bg-green-100/20 text-green-400',
-  declined: 'bg-red-100/20 text-red-400',
-  confirmation_expired: 'bg-red-100/20 text-red-400',
-  payment_expired: 'bg-red-100/20 text-red-400',
-  refunded: 'bg-muted text-muted-foreground',
+// Color by meaning (style guide §5): someone must act = wait (amber),
+// in progress = neutral, done = good (green), ended badly = bad (red).
+const statusMeaning = {
+  pending: 'wait',
+  pending_confirmation: 'wait',
+  confirmed: 'wait',
+  open: 'neutral',
+  ordered: 'neutral',
+  closed: 'neutral',
+  payment_processing: 'neutral',
+  refunded: 'neutral',
+  paid: 'good',
+  redeemed: 'good',
+  completed: 'good',
+  declined: 'bad',
+  cancelled: 'bad',
+  confirmation_expired: 'bad',
+  payment_expired: 'bad',
 }
 
 export function statusLabel(status, audience = 'student') {
@@ -61,7 +62,7 @@ export function statusLabel(status, audience = 'student') {
 
 export default function StatusBadge({ status, audience = 'student' }) {
   return (
-    <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${statusStyles[status] || 'bg-muted text-muted-foreground'}`}>
+    <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap status-${statusMeaning[status] || 'neutral'}`}>
       {statusLabel(status, audience)}
     </span>
   )

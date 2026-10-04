@@ -159,3 +159,23 @@ body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+/* Status labels: color by meaning (style guide §5). Measured on the card
+   background: every pair is at least 4.5:1 in both themes (WCAG 1.4.3).
+   Dark is the default theme; light overrides below. */
+:root {
+  --status-wait-fg: #FBBF24; --status-wait-bg: rgba(251, 191, 36, 0.15);
+  --status-neutral-fg: #ABA59F; --status-neutral-bg: #33302E;
+  --status-good-fg: #93C149; --status-good-bg: rgba(147, 193, 73, 0.15);
+  --status-bad-fg: #FCA5A5; --status-bad-bg: rgba(248, 113, 113, 0.15);
+}
+[data-theme="light"] {
+  --status-wait-fg: #92400E; --status-wait-bg: #FEF3C7;
+  --status-neutral-fg: #5C534D; --status-neutral-bg: #ECE8E2;
+  --status-good-fg: #4A6B24; --status-good-bg: #ECF5DE;
+  --status-bad-fg: #B91C1C; --status-bad-bg: #FEE2E2;
+}
+.status-wait { color: var(--status-wait-fg); background-color: var(--status-wait-bg); }
+.status-neutral { color: var(--status-neutral-fg); background-color: var(--status-neutral-bg); }
+.status-good { color: var(--status-good-fg); background-color: var(--status-good-bg); }
+.status-bad { color: var(--status-bad-fg); background-color: var(--status-bad-bg); }
