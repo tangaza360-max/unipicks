@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { liveChannel } from '../lib/realtime.js'
 import { useTheme } from '../context/ThemeContext.jsx'
 import DealsFeed from './DealsFeed.jsx'
 import MerchantDeals from './MerchantDeals.jsx'
@@ -35,12 +36,15 @@ export default function Dashboard() {
   const [openDisputeCount, setOpenDisputeCount] = useState(0)
   const [openReportCount, setOpenReportCount] = useState(0)
   const [businessName, setBusinessName] = useState('')
+  // The signed-in user's id; live features below restart only when it changes.
+  const userIdRef = useRef(null)
   const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
     const fetchSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
+        userIdRef.current = session.user.id
         setUser(session.user)
       const { data: trustedRole } = await supabase.rpc('get_my_role')
       setRole(trustedRole)
@@ -55,13 +59,21 @@ export default function Dashboard() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
   async (event, session) => {
     if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      // Supabase repeats these for the same person (hourly token renewal,
+      // returning to the tab). Only a different person needs a new role.
+      const nextId = session?.user?.id ?? null
+      const sameUser = nextId !== null && nextId === userIdRef.current
+      userIdRef.current = nextId
       setUser(session?.user ?? null)
-      const { data: trustedRole } = session
-        ? await supabase.rpc('get_my_role')
-        : { data: null }
-      setRole(trustedRole)
+      if (!sameUser) {
+        const { data: trustedRole } = session
+          ? await supabase.rpc('get_my_role')
+          : { data: null }
+        setRole(trustedRole)
+      }
       setLoading(false)
     } else if (event === 'SIGNED_OUT') {
+      userIdRef.current = null
       setUser(null)
       setRole(null)
       setLoading(false)
@@ -74,6 +86,8 @@ return () => {
       subscription?.unsubscribe()
     }
   }, [navigate])
+
+  const userId = user?.id ?? null
 
   useEffect(() => {
     if (loading || !role) return
@@ -94,13 +108,13 @@ return () => {
   // Merchant header: the account belongs to the business, so show the
   // business name students see on deals and chats (merchant_profiles).
   useEffect(() => {
-    if (role !== 'merchant' || !user) return
+    if (role !== 'merchant' || !userId) return
     let active = true
 
     supabase
       .from('merchant_profiles')
       .select('business_name')
-      .eq('id', user.id)
+      .eq('id', userId)
       .maybeSingle()
       .then(({ data, error }) => {
         if (error) console.error('[merchant header] business name fetch failed:', error)
@@ -110,11 +124,11 @@ return () => {
     return () => {
       active = false
     }
-  }, [role, user])
+  }, [role, userId])
 
   // Merchant pending-order badge: count of orders awaiting the merchant's accept/decline.
   useEffect(() => {
-    if (role !== 'merchant' || !user) return
+    if (role !== 'merchant' || !userId) return
 
     let active = true
     let channel = null
@@ -123,7 +137,7 @@ return () => {
       const { count, error } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
-        .eq('merchant_id', user.id)
+        .eq('merchant_id', userId)
         .eq('status', 'pending_confirmation')
 
       if (error) {
@@ -132,21 +146,20 @@ return () => {
         setPendingOrderCount(count || 0)
       }
 
-      channel = supabase
-        .channel(`merchant-orders-count:${user.id}`)
+      channel = liveChannel(`merchant-orders-count:${userId}`)
         .on(
           'postgres_changes',
           {
             event: '*',
             schema: 'public',
             table: 'orders',
-            filter: `merchant_id=eq.${user.id}`,
+            filter: `merchant_id=eq.${userId}`,
           },
           async () => {
             const { count, error: refetchError } = await supabase
               .from('orders')
               .select('*', { count: 'exact', head: true })
-              .eq('merchant_id', user.id)
+              .eq('merchant_id', userId)
               .eq('status', 'pending_confirmation')
             if (!refetchError && active) setPendingOrderCount(count || 0)
           }
@@ -160,12 +173,12 @@ return () => {
       active = false
       if (channel) supabase.removeChannel(channel)
     }
-  }, [role, user])
+  }, [role, userId])
 
   // Merchant unread message badge: fetch on mount, update in real-time.
   // Only runs when the current user is a merchant.
   useEffect(() => {
-    if (role !== 'merchant' || !user) return
+    if (role !== 'merchant' || !userId) return
 
     let active = true
     let channel = null
@@ -174,7 +187,7 @@ return () => {
       const { count, error } = await supabase
         .from('chat_messages')
         .select('*', { count: 'exact', head: true })
-        .eq('receiver_id', user.id)
+        .eq('receiver_id', userId)
         .eq('is_read', false)
 
       if (error) {
@@ -183,21 +196,20 @@ return () => {
         setMerchantUnreadCount(count || 0)
       }
 
-      channel = supabase
-        .channel(`merchant-unread:${user.id}`)
+      channel = liveChannel(`merchant-unread:${userId}`)
         .on(
           'postgres_changes',
           {
             event: '*',
             schema: 'public',
             table: 'chat_messages',
-            filter: `receiver_id=eq.${user.id}`,
+            filter: `receiver_id=eq.${userId}`,
           },
           async () => {
             const { count, error: refetchError } = await supabase
               .from('chat_messages')
               .select('*', { count: 'exact', head: true })
-              .eq('receiver_id', user.id)
+              .eq('receiver_id', userId)
               .eq('is_read', false)
             if (!refetchError && active) setMerchantUnreadCount(count || 0)
           }
@@ -211,13 +223,13 @@ return () => {
       active = false
       if (channel) supabase.removeChannel(channel)
     }
-  }, [role, user])
+  }, [role, userId])
 
   // Admin reports badge (fix 8): reports not yet decided. Refreshed every
   // minute and whenever the admin opens a tab; new reports also reach the
   // admin bell via user_notifications.
   useEffect(() => {
-    if (role !== 'admin' || !user) return
+    if (role !== 'admin' || !userId) return
     let active = true
 
     async function refetchOpenReports() {
@@ -238,14 +250,14 @@ return () => {
       active = false
       clearInterval(timer)
     }
-  }, [role, user, dashboardTab])
+  }, [role, userId, dashboardTab])
 
   // Admin dispute badge: count of orders with an open dispute, live.
   // Realtime filters match the NEW row, so filtering on 'open' alone would miss
   // the open -> under_review/resolved/rejected transition and leave the count
   // stale. Listen to every dispute state, then re-count only 'open'.
   useEffect(() => {
-    if (role !== 'admin' || !user) return
+    if (role !== 'admin' || !userId) return
 
     let active = true
     let channel = null
@@ -265,8 +277,7 @@ return () => {
 
     refetchOpenDisputes()
 
-    channel = supabase
-      .channel(`admin-open-disputes:${user.id}`)
+    channel = liveChannel(`admin-open-disputes:${userId}`)
       .on(
         'postgres_changes',
         {
@@ -283,7 +294,7 @@ return () => {
       active = false
       if (channel) supabase.removeChannel(channel)
     }
-  }, [role, user])
+  }, [role, userId])
 
   async function handleLogout() {
     await supabase.auth.signOut()

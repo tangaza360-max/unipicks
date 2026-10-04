@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { liveChannel } from '../lib/realtime.js'
 import VerifyCode from './VerifyCode.jsx'
 import ConfirmModal from '../components/ConfirmModal.jsx'
 import { Search, Sparkles, X, Pencil, UtensilsCrossed, CheckCircle2, ShoppingCart } from 'lucide-react'
@@ -124,8 +125,7 @@ export default function MerchantDeals() {
     getUserId().then(userId => {
       if (!userId) return
 
-      const channel = supabase
-        .channel('merchant-deals')
+      const channel = liveChannel('merchant-deals')
         .on(
           'postgres_changes',
           {

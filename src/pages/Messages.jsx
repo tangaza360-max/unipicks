@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { liveChannel } from '../lib/realtime.js'
 import ChatThread from '../components/ChatThread.jsx'
 import { Store, Users } from 'lucide-react'
 
@@ -65,8 +66,7 @@ const [studentConversations, setStudentConversations] = useState([])
 
       if (cancelled) return
 
-      channel = supabase
-        .channel(`messages-inbox-${user.id}`)
+      channel = liveChannel(`messages-inbox-${user.id}`)
         .on(
           'postgres_changes',
           {

@@ -2,6 +2,7 @@ import StudentCamera from './StudentCamera.jsx'
 import { useEffect, useState, cloneElement } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { liveChannel } from '../lib/realtime.js'
 import GroupOrders from '../pages/GroupOrders.jsx'
 import Social from '../pages/Social.jsx'
 import SocialOnboarding from '../pages/SocialOnboarding.jsx'
@@ -84,8 +85,7 @@ export default function StudentLayout({ children, onLogout }) {
         if (!error && active) setUnreadCount(count || 0)
       }
 
-      channel = supabase
-        .channel(`unread:${user.id}`)
+      channel = liveChannel(`unread:${user.id}`)
         .on(
           'postgres_changes',
           {
@@ -145,8 +145,7 @@ export default function StudentLayout({ children, onLogout }) {
 
       await refetchNeedsAction()
 
-      channel = supabase
-        .channel(`needs-action:${user.id}`)
+      channel = liveChannel(`needs-action:${user.id}`)
         .on(
           'postgres_changes',
           {
@@ -196,8 +195,7 @@ export default function StudentLayout({ children, onLogout }) {
 
       await refetchDisputeUnread()
 
-      channel = supabase
-        .channel(`dispute-unread:${user.id}`)
+      channel = liveChannel(`dispute-unread:${user.id}`)
         .on(
           'postgres_changes',
           {

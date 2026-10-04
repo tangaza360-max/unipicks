@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { liveChannel } from '../lib/realtime.js'
 import MerchantPhone from '../components/MerchantPhone.jsx'
 import { initiatePayment } from '../lib/payment.js'
 
@@ -109,8 +110,7 @@ export default function PaymentCheckout() {
       if (!cancelled && data) setOrder(data)
     }
 
-    const channel = supabase
-      .channel(`checkout-order:${orderId}`)
+    const channel = liveChannel(`checkout-order:${orderId}`)
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${orderId}` },
