@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { Store, Trash2 } from 'lucide-react'
 import DeleteAccountDialog from '../components/DeleteAccountDialog.jsx'
 import PhoneAlertsCard from '../components/PhoneAlertsCard.jsx'
+import ConfirmModal from '../components/ConfirmModal.jsx'
 
 export default function MerchantProfile({ merchantId, onBusinessNameChange }) {
   const [loading, setLoading] = useState(true)
@@ -21,6 +22,8 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange }) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [showDeleteAccount, setShowDeleteAccount] = useState(false)
+  const [approved, setApproved] = useState(false)
+  const [confirmReapproval, setConfirmReapproval] = useState(false)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -45,6 +48,7 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange }) {
         }
         setProfile(profileData)
         setOriginalProfile(profileData)
+        setApproved(Boolean(data.approved))
       }
       setLoading(false)
     }
@@ -56,13 +60,28 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange }) {
     setProfile((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  async function handleSave(e) {
+  // Founder decision 2026-10-04 (option A): changing the name or RDB number
+  // sends an approved business back for approval (enforced in the database).
+  const identityChanged =
+    profile.business_name.trim() !== (originalProfile.business_name || '').trim() ||
+    profile.rdb_number.trim() !== (originalProfile.rdb_number || '').trim()
+
+  function handleSave(e) {
     e.preventDefault()
+    if (approved && identityChanged) {
+      setConfirmReapproval(true)
+      return
+    }
+    saveProfile()
+  }
+
+  async function saveProfile() {
+    setConfirmReapproval(false)
     setSaving(true)
     setError('')
     setSuccess('')
 
-    const { error: updateError } = await supabase
+    const { data: saved, error: updateError } = await supabase
       .from('merchant_profiles')
       .update({
         business_name: profile.business_name.trim(),
@@ -74,13 +93,26 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange }) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', merchantId)
+      .select('approved')
+      .single()
 
     setSaving(false)
 
     if (updateError) {
-      setError(updateError.message)
+      console.error('Profile save failed:', updateError)
+      setError(
+        updateError.message?.includes('Only Unipicks')
+          ? updateError.message
+          : 'We could not save your profile. Please check your details and try again.',
+      )
     } else {
-      setSuccess('Profile updated successfully!')
+      const sentBack = approved && saved?.approved === false
+      setApproved(Boolean(saved?.approved))
+      setSuccess(
+        sentBack
+          ? 'Saved. Your business is waiting for Unipicks to approve it again. Your deals are hidden until then.'
+          : 'Profile updated.',
+      )
       setOriginalProfile(profile)
       onBusinessNameChange?.(profile.business_name.trim())
       setIsEditing(false)
@@ -152,10 +184,15 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange }) {
   if (!isEditing) {
     return (
       <div className="space-y-4">
+        {!approved && (
+          <p role="status" className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
+            Waiting for Unipicks to approve your business. Your deals are hidden from students until then.
+          </p>
+        )}
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold">Business Profile</h2>
           <button
-            onClick={() => setIsEditing(true)}
+            onClick={() => { setSuccess(''); setError(''); setIsEditing(true) }}
             className="text-sm bg-accent hover:bg-accent-dim text-background-foreground font-medium rounded-lg px-4 py-2 transition"
           >
             Edit Profile
@@ -235,6 +272,11 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange }) {
       </div>
 
       <form onSubmit={handleSave} className="space-y-4 border border-border rounded-lg p-4">
+        {approved && (
+          <p className="text-xs text-muted-foreground">
+            Changing your business name or RDB number sends your business back to Unipicks for approval.
+          </p>
+        )}
         <div>
           <label className="field-label">Business Name</label>
           <input
@@ -350,6 +392,16 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange }) {
           </button>
         </div>
       </form>
+
+      <ConfirmModal
+        isOpen={confirmReapproval}
+        onClose={() => setConfirmReapproval(false)}
+        onConfirm={saveProfile}
+        title="Send your business for approval again?"
+        message="You changed your business name or RDB number. Unipicks will check it again. Until then your deals are hidden from students."
+        confirmText="Save and send"
+        confirmVariant="primary"
+      />
     </div>
   )
 }
