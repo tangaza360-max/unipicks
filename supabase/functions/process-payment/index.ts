@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { sendPickupCodeMessage as sendSharedPickupCodeMessage } from '../_shared/pickup-code-message.ts'
+import { alertMerchantPaymentReceived } from '../_shared/order-alerts.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -734,7 +735,7 @@ serve(async (req) => {
       existingTransaction.status ===
       'paid'
     ) {
-      await supabaseAdmin
+      const { data: newlyPaid } = await supabaseAdmin
         .from('orders')
         .update({
           status: 'paid',
@@ -752,6 +753,12 @@ serve(async (req) => {
             'payment_processing',
           ],
         )
+        .select('id')
+
+      // Phone alert only when this call is the one that marked it paid.
+      if (newlyPaid?.length) {
+        await alertMerchantPaymentReceived(supabaseAdmin, typedOrder)
+      }
 
       try {
         await sendPickupCodeMessage({
@@ -1212,6 +1219,8 @@ serve(async (req) => {
      * Mark the Order as paid.
      */
     const {
+      data:
+        newlyPaid,
       error:
         paidOrderError,
     } =
@@ -1230,6 +1239,7 @@ serve(async (req) => {
           'status',
           ['payment_processing', 'payment_expired'],
         )
+        .select('id')
 
     if (paidOrderError) {
       console.error(
@@ -1267,6 +1277,13 @@ serve(async (req) => {
         'Payment succeeded but pickup code message could not be sent:',
         messageError,
       )
+    }
+
+    // Tell the business on their phone (founder decision 2026-10-04). Only
+    // when this call marked the order paid: if payment-webhook got there
+    // first, it already sent the alert.
+    if (newlyPaid?.length) {
+      await alertMerchantPaymentReceived(supabaseAdmin, typedOrder)
     }
 
     return json({
