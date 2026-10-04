@@ -16,6 +16,7 @@ import PaymentCheckout from './pages/PaymentCheckout.jsx'
 import DealDetail from './pages/DealDetail.jsx'
 import OrderConfirmation from './pages/OrderConfirmation.jsx'
 import { readAuthLinkError } from './lib/authLinkError.js'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 
 function RouteTitle() {
   const { pathname } = useLocation()
@@ -91,6 +92,7 @@ if (authLinkError) {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThemeProvider>
+      <ErrorBoundary>
       <BrowserRouter>
         <RouteTitle />
         <Routes>
@@ -108,6 +110,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="*" element={<Navigate to="/register" replace />} />
         </Routes>
       </BrowserRouter>
+      </ErrorBoundary>
     </ThemeProvider>
   </React.StrictMode>,
 )
