@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 06:30 — `docs`: work log updated with the founder-confirmed production state (all 5 migrations applied, email confirmation on, test merchant profile created by the fix 1 trigger) and the Site URL incident — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`
+
 - 06:00 — `fix(auth)`: signup confirmation emails no longer depend on the Supabase dashboard Site URL (production sent users to `http://localhost:3000`). New `appUrl()` helper; student and merchant `signUp` pass `emailRedirectTo: appUrl('/dashboard')`. Audit: these are the only auth calls that produce a redirect (no password reset, magic link, OTP or email change exists yet; `ProfileTab` `updateUser` changes metadata only). Standard: Supabase docs, "Redirect URLs" (pass `emailRedirectTo` explicitly; it must match the allow list) — `src/lib/authRedirect.js`, `src/pages/Register.jsx`, `src/pages/RegisterMerchant.jsx`, `docs/CHANGELOG.md`
 
 - 05:30 — `docs(research)`: student email rewritten in short, simple English (short sentences, a list of what Unipicks does, the survey facts as a list) — `docs/user-research/email-invite.md`, `docs/CHANGELOG.md`
