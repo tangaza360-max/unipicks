@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { authLinkErrorMessage } from '../lib/authLinkError.js'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -8,6 +9,8 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [searchParams] = useSearchParams()
+  const linkNotice = authLinkErrorMessage(searchParams.get('link_error'))
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -35,6 +38,12 @@ export default function Login() {
           <h1 className="font-display text-3xl font-semibold">Welcome back</h1>
           <p className="text-muted-foreground text-sm">Log in to Unipicks</p>
         </div>
+
+        {linkNotice && (
+          <p role="alert" className="text-sm rounded-lg border border-border bg-card/60 px-4 py-3 text-foreground">
+            {linkNotice}
+          </p>
+        )}
 
         <form
           onSubmit={handleSubmit}

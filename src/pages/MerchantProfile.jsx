@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { Store, Trash2 } from 'lucide-react'
 import DeleteAccountDialog from '../components/DeleteAccountDialog.jsx'
 
-export default function MerchantProfile({ merchantId }) {
+export default function MerchantProfile({ merchantId, onBusinessNameChange }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -81,6 +81,7 @@ export default function MerchantProfile({ merchantId }) {
     } else {
       setSuccess('Profile updated successfully!')
       setOriginalProfile(profile)
+      onBusinessNameChange?.(profile.business_name.trim())
       setIsEditing(false)
     }
   }

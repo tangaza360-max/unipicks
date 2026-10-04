@@ -15,6 +15,7 @@ import DeleteAccount from './pages/DeleteAccount.jsx'
 import PaymentCheckout from './pages/PaymentCheckout.jsx'
 import DealDetail from './pages/DealDetail.jsx'
 import OrderConfirmation from './pages/OrderConfirmation.jsx'
+import { readAuthLinkError } from './lib/authLinkError.js'
 
 function RouteTitle() {
   const { pathname } = useLocation()
@@ -78,6 +79,13 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
       console.error('Service worker registration failed:', error)
     })
   })
+}
+
+// A failed email link lands here with the error in the URL; show it on the
+// login page instead of silently redirecting to signup.
+const authLinkError = readAuthLinkError()
+if (authLinkError) {
+  window.history.replaceState(null, '', `/login?link_error=${encodeURIComponent(authLinkError)}`)
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
