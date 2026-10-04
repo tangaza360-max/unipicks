@@ -7,6 +7,7 @@ import { createOrder } from '../lib/orders.js'
 import GroupOrders from './GroupOrders.jsx'
 import StoryViewer from '../components/StoryViewer.jsx'
 import { Store, Search, X, Star, Smartphone, CheckCircle2, ShoppingCart, Users, ChevronRight } from 'lucide-react'
+import { formatMoney, formatDayMonth } from '../lib/format.js'
 
 function makeCode() {
   return String(Math.floor(1000 + Math.random() * 9000))
@@ -498,7 +499,7 @@ const getDiscoveryScore = (deal) => {
               onClick={() => setBudget(null)}
               className="text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg px-3 py-1"
             >
-              Showing under {budget} RWF · clear
+              Showing under {formatMoney(budget)} · clear
             </button>
           )}
         </div>
@@ -588,10 +589,7 @@ function DealCard({ deal, ratingStats }) {
   const [merchantPhone, setMerchantPhone] = useState(null)
 
   const expiresLabel = deal.expires_at
-    ? new Date(deal.expires_at).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-      })
+    ? formatDayMonth(deal.expires_at)
     : null
 
   useEffect(() => {
@@ -716,9 +714,9 @@ function DealCard({ deal, ratingStats }) {
           {finalPrice != null ? (
             <span className="flex items-center gap-2">
               {originalPrice != null && (
-                <span className="line-through text-muted-foreground">{originalPrice.toLocaleString('en-US')} RWF</span>
+                <span className="line-through text-muted-foreground">{formatMoney(originalPrice)}</span>
               )}
-              <span className="text-primary font-bold text-sm">{finalPrice.toLocaleString('en-US')} RWF</span>
+              <span className="text-primary font-bold text-sm">{formatMoney(finalPrice)}</span>
             </span>
           ) : (
             <span className="text-muted-foreground">Price not set</span>
@@ -817,9 +815,9 @@ function Advisor({ deals, onBudget }) {
     if (affordable.length > 0) {
       const names = affordable
         .slice(0, 3)
-        .map((d) => `${d.title} (${d.finalPrice} RWF)`)
+        .map((d) => `${d.title} (${formatMoney(d.finalPrice)})`)
         .join(', ')
-      let reply = `With ${found} RWF you can get: ${names}. Check the Home tab — I've filtered the feed to match.`
+      let reply = `With ${formatMoney(found)} you can get: ${names}. Check the Home tab — I've filtered the feed to match.`
       if (closeCall.length > 0) {
         reply += ` A couple of things are just a bit over — team up with a friend to split one and it fits easily.`
       }
@@ -829,12 +827,12 @@ function Advisor({ deals, onBudget }) {
     if (closeCall.length > 0) {
       const names = closeCall
         .slice(0, 2)
-        .map((d) => `${d.title} (${d.finalPrice} RWF)`)
+        .map((d) => `${d.title} (${formatMoney(d.finalPrice)})`)
         .join(', ')
-      return `Nothing fits ${found} RWF alone right now, but ${names} would work if you split it with a friend.`
+      return `Nothing fits ${formatMoney(found)} alone right now, but ${names} would work if you split it with a friend.`
     }
 
-    return `Nothing fits ${found} RWF right now — check back as more deals get posted.`
+    return `Nothing fits ${formatMoney(found)} right now — check back as more deals get posted.`
   }
 
   function handleSend(e) {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import StatusBadge from '../components/StatusBadge.jsx'
+import { formatDate, formatWeekday } from '../lib/format.js'
 
 export default function AdminAnalytics() {
   const [loading, setLoading] = useState(true)
@@ -210,7 +211,7 @@ export default function AdminAnalytics() {
                     style={{ height: `${height}px` }}
                   />
                   <span className="text-[10px] text-muted-foreground">
-                    {new Date(day.date).toLocaleDateString(undefined, { weekday: 'short' })}
+                    {formatWeekday(day.date)}
                   </span>
                   <span className="text-[10px] text-muted-foreground">{day.count}</span>
                 </div>
@@ -258,7 +259,7 @@ export default function AdminAnalytics() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">
-                    {r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}
+                    {formatDate(r.created_at)}
                   </p>
                   <StatusBadge status={r.status || 'pending'} audience="business" />
                 </div>

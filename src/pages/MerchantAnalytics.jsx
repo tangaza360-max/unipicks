@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import StatusBadge from '../components/StatusBadge.jsx'
+import { formatDate, formatWeekday } from '../lib/format.js'
 
 export default function MerchantAnalytics() {
   const [loading, setLoading] = useState(true)
@@ -163,7 +164,7 @@ export default function MerchantAnalytics() {
                   style={{ height: `${Math.max(4, (day.count / Math.max(1, Math.max(...dailyData.map(d => d.count)))) * 80)}px` }}
                 />
                 <span className="text-[10px] text-muted-foreground">
-                  {new Date(day.date).toLocaleDateString(undefined, { weekday: 'short' })}
+                  {formatWeekday(day.date)}
                 </span>
                 <span className="text-[10px] text-muted-foreground">{day.count}</span>
               </div>
@@ -218,7 +219,7 @@ export default function MerchantAnalytics() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">
-                    {r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}
+                    {formatDate(r.created_at)}
                   </p>
                   <StatusBadge status={r.status || 'pending'} audience="business" />
                 </div>

@@ -4,6 +4,7 @@ import { ArrowLeft, Star, Store, Users } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { dealHoursLabel, hasDealHours, isDealOpenNow } from '../../supabase/functions/_shared/deal-availability.ts'
 import { hasStudentPrice, offerBadge, struckOutPrice, studentPrice } from '../lib/dealPricing.js'
+import { formatMoney, formatDate } from '../lib/format.js'
 
 function formatRelativeTime(isoString) {
   const diff = Date.now() - new Date(isoString).getTime()
@@ -140,11 +141,7 @@ export default function DealDetail() {
   const hoursLabel = hasDealHours(deal) ? dealHoursLabel(deal) : null
 
   const expiresLabel = deal.expires_at
-    ? new Date(deal.expires_at).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
+    ? formatDate(deal.expires_at)
     : null
 
   return (
@@ -215,12 +212,12 @@ export default function DealDetail() {
               <div className="flex flex-wrap items-end gap-3">
                 {originalPrice != null && (
                   <span className="text-sm text-muted-foreground line-through">
-                    {originalPrice.toLocaleString('en-US')} RWF
+                    {formatMoney(originalPrice)}
                   </span>
                 )}
                 {finalPrice != null ? (
                   <span className="text-2xl font-bold text-primary">
-                    {finalPrice.toLocaleString('en-US')} RWF
+                    {formatMoney(finalPrice)}
                   </span>
                 ) : (
                   <span className="text-sm text-muted-foreground">Price not set. This deal can't be ordered yet.</span>

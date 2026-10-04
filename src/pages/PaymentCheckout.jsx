@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { liveChannel } from '../lib/realtime.js'
 import MerchantPhone from '../components/MerchantPhone.jsx'
 import { initiatePayment } from '../lib/payment.js'
+import { formatMoney } from '../lib/format.js'
 
 const phonePattern = /^(078|079|072|073)\d{7}$/
 
@@ -209,12 +210,12 @@ export default function PaymentCheckout() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Unit price</span>
-                <span>{Number(order.unit_price).toLocaleString()} RWF</span>
+                <span>{formatMoney(order.unit_price)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Total</span>
                 <span className="font-display text-xl font-semibold">
-                  {Number(order.total_price).toLocaleString()} RWF
+                  {formatMoney(order.total_price)}
                 </span>
               </div>
             </div>

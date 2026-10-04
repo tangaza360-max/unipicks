@@ -5,6 +5,7 @@ import { liveChannel } from '../lib/realtime.js'
 import VerifyCode from './VerifyCode.jsx'
 import ConfirmModal from '../components/ConfirmModal.jsx'
 import { Search, Sparkles, X, Pencil, UtensilsCrossed, CheckCircle2, ShoppingCart } from 'lucide-react'
+import { formatMoney } from '../lib/format.js'
 
 export default function MerchantDeals() {
   // --- State for deals and form ---
@@ -318,7 +319,7 @@ export default function MerchantDeals() {
     }
     if (numericPrice !== null && numericPrice > maxPriceRwf) {
       setSaving(false)
-      setError(`Price cannot exceed ${maxPriceRwf.toLocaleString()} RWF.`)
+      setError(`Price cannot exceed ${formatMoney(maxPriceRwf)}.`)
       return
     }
 
@@ -349,7 +350,7 @@ export default function MerchantDeals() {
       }
       if (numericDiscountValue > maxPriceRwf) {
         setSaving(false)
-        setError(`${amountLabel[0].toUpperCase()}${amountLabel.slice(1)} cannot exceed ${maxPriceRwf.toLocaleString()} RWF.`)
+        setError(`${amountLabel[0].toUpperCase()}${amountLabel.slice(1)} cannot exceed ${formatMoney(maxPriceRwf)}.`)
         return
       }
     }
@@ -387,7 +388,7 @@ export default function MerchantDeals() {
       }
       if (tierRules.some((rule) => rule.price > maxPriceRwf)) {
         setSaving(false)
-        setError(`Tier prices cannot exceed ${maxPriceRwf.toLocaleString()} RWF.`)
+        setError(`Tier prices cannot exceed ${formatMoney(maxPriceRwf)}.`)
         return
       }
     }
@@ -702,15 +703,15 @@ export default function MerchantDeals() {
                       {dealOfferType === 'free_shipping'
                         ? 'Free delivery'
                         : finalPrice != null
-                          ? `${Number(finalPrice).toLocaleString()} RWF`
+                          ? `${formatMoney(finalPrice)}`
                           : dealOfferType === 'tiered'
                             ? 'Tiered pricing'
                             : deal.price != null
-                              ? `${Number(deal.price).toLocaleString()} RWF / item`
+                              ? `${formatMoney(deal.price)} / item`
                               : 'View offer'}
                     </span>
                     {deal.price != null && finalPrice != null && Number(finalPrice) < Number(deal.price) && (
-                      <span className="line-through text-muted-foreground">{Number(deal.price).toLocaleString()} RWF</span>
+                      <span className="line-through text-muted-foreground">{formatMoney(deal.price)}</span>
                     )}
                   </div>
 
@@ -1126,18 +1127,18 @@ export default function MerchantDeals() {
                 </div>
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-t border-border/70 pt-3">
                   {enteredPrice !== null && ['percentage', 'fixed_amount', 'fixed_price', 'group_buy'].includes(offerType) && finalPrice !== null && finalPrice < enteredPrice && (
-                    <span className="text-sm text-muted-foreground line-through">{enteredPrice.toLocaleString()} RWF</span>
+                    <span className="text-sm text-muted-foreground line-through">{formatMoney(enteredPrice)}</span>
                   )}
                   <span className="font-display text-xl font-bold text-primary">
                     {offerType === 'free_shipping'
                       ? 'Free delivery'
                       : finalPrice !== null
-                        ? `${finalPrice.toLocaleString()} RWF`
+                        ? `${formatMoney(finalPrice)}`
                         : offerType === 'bogo' && enteredPrice !== null
-                          ? `Pay ${(enteredPrice * (Number(buyQuantity) || 0)).toLocaleString()} RWF for ${Number(buyQuantity || 0) + Number(getQuantity || 0)} items`
+                          ? `Pay ${formatMoney(enteredPrice * (Number(buyQuantity) || 0))} for ${Number(buyQuantity || 0) + Number(getQuantity || 0)} items`
                           : offerType === 'tiered'
                             ? (parseTieredRules(tieredRules)[0]?.price
-                              ? `From ${parseTieredRules(tieredRules)[0].price.toLocaleString()} RWF`
+                              ? `From ${formatMoney(parseTieredRules(tieredRules)[0].price)}`
                               : 'See tier prices')
                             : 'Deal price'}
                   </span>
@@ -1249,7 +1250,7 @@ export default function MerchantDeals() {
                 <div className="space-y-1 text-sm">
                   <p><span className="text-muted-foreground">Title:</span> {aiGenerated.title}</p>
                   <p><span className="text-muted-foreground">Description:</span> {aiGenerated.description}</p>
-                  <p><span className="text-muted-foreground">Original Price:</span> {aiGenerated.price} RWF</p>
+                  <p><span className="text-muted-foreground">Original Price:</span> {formatMoney(aiGenerated.price)}</p>
                   <p><span className="text-muted-foreground">Discount:</span> {aiGenerated.discount_percent}%</p>
                 </div>
 

@@ -7,6 +7,7 @@ import StatusBadge from './StatusBadge.jsx'
 import RaiseDisputeModal from './RaiseDisputeModal.jsx'
 import MerchantPhone from './MerchantPhone.jsx'
 import { Package } from 'lucide-react'
+import { formatMoney, formatDate, formatTime } from '../lib/format.js'
 
 const DECLINE_REASON_LABELS = {
   unavailable: 'Item unavailable',
@@ -296,15 +297,8 @@ export default function OrdersTab() {
 function OrderCard({ order, type, quantity }) {
   const navigate = useNavigate()
   const deal = order.deals
-  const date = new Date(order.created_at).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-  const time = new Date(order.created_at).toLocaleTimeString(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const date = formatDate(order.created_at)
+  const time = formatTime(order.created_at)
 
   const finalPrice = deal ? studentPrice(deal) : null
   const discountPercent = deal ? realDiscountPercent(deal) : null
@@ -325,7 +319,7 @@ function OrderCard({ order, type, quantity }) {
           {finalPrice != null && (
             <p className="text-muted-foreground text-xs mt-1">
               {type === 'hosted' ? 'Total: ' : 'Your total: '}
-              {finalPrice.toLocaleString('en-US')} RWF
+              {formatMoney(finalPrice)}
               {discountPercent && ` (${discountPercent}% off)`}
             </p>
           )}
@@ -347,7 +341,7 @@ function OrderCard({ order, type, quantity }) {
           onClick={() => navigate(`/payment?amount=${payableAmount}&order_id=${order.id}&deal_id=${order.deal_id}&description=${encodeURIComponent(deal?.title || 'Group order')}`)}
           className="mt-3 w-full bg-primary text-primary-foreground font-semibold rounded-lg py-2.5 transition"
         >
-          Pay Now · {payableAmount.toLocaleString()} RWF
+          Pay Now · {formatMoney(payableAmount)}
         </button>
       )}
 
@@ -371,15 +365,8 @@ function NormalOrderCard({ order, onRaiseDispute }) {
   const navigate = useNavigate()
   const deal = order.deals
   const redemption = Array.isArray(order.redemptions) ? order.redemptions[0] : order.redemptions
-  const date = new Date(order.created_at).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-  const time = new Date(order.created_at).toLocaleTimeString(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const date = formatDate(order.created_at)
+  const time = formatTime(order.created_at)
 
   const status = order.status
   const isPaymentWindowOpen = order.payment_deadline
@@ -409,7 +396,7 @@ function NormalOrderCard({ order, onRaiseDispute }) {
             {date} at {time}
           </p>
           <p className="text-muted-foreground text-xs mt-1">
-            {order.quantity} × {Number(order.unit_price).toLocaleString()} RWF = {Number(order.total_price).toLocaleString()} RWF
+            {order.quantity} × {formatMoney(order.unit_price)} = {formatMoney(order.total_price)}
           </p>
         </div>
         <StatusBadge status={status} />
@@ -439,7 +426,7 @@ function NormalOrderCard({ order, onRaiseDispute }) {
           onClick={() => navigate(`/payment?order_id=${order.id}`)}
           className="mt-3 w-full bg-primary text-primary-foreground font-semibold rounded-lg py-2.5 transition"
         >
-          Pay Now · {Number(order.total_price).toLocaleString()} RWF
+          Pay Now · {formatMoney(order.total_price)}
         </button>
       )}
 

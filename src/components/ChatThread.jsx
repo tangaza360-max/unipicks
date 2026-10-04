@@ -5,14 +5,8 @@ import { liveChannel } from '../lib/realtime.js'
 import { linkPhoneNumbers } from '../lib/linkPhoneNumbers.jsx'
 import { Flag } from 'lucide-react'
 import ReportDialog from './ReportDialog.jsx'
+import { formatDate, formatTime } from '../lib/format.js'
 
-function formatTime(iso) {
-  if (!iso) return ''
-  return new Date(iso).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
 
 function dayKey(iso) {
   return new Date(iso).toDateString()
@@ -26,11 +20,7 @@ function formatDateSeparator(iso) {
   const same = (a, b) => a.toDateString() === b.toDateString()
   if (same(d, today)) return 'Today'
   if (same(d, yesterday)) return 'Yesterday'
-  return d.toLocaleDateString([], {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
+  return formatDate(d)
 }
 
 export default function ChatThread({

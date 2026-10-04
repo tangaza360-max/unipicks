@@ -2,6 +2,7 @@
 import { useState, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import { Sparkles, ClipboardCheck, RefreshCw, Upload, CheckCircle2 } from 'lucide-react'
+import { formatMoney } from '../lib/format.js'
 
 export default function AIDealGenerator({ onDealCreated }) {
   const [prompt, setPrompt] = useState('')
@@ -288,7 +289,7 @@ export default function AIDealGenerator({ onDealCreated }) {
 
         {finalPrice !== null && Number(originalPrice) > 0 && (
           <p className="text-sm text-muted-foreground">
-            Final price: <span className="text-primary font-bold">{finalPrice} RWF</span>
+            Final price: <span className="text-primary font-bold">{formatMoney(finalPrice)}</span>
           </p>
         )}
 
@@ -316,9 +317,9 @@ export default function AIDealGenerator({ onDealCreated }) {
           <div className="space-y-1 text-sm">
             <p><span className="text-muted-foreground">Title:</span> {generatedDeal.title}</p>
             <p><span className="text-muted-foreground">Description:</span> {generatedDeal.description}</p>
-            <p><span className="text-muted-foreground">Original Price:</span> {generatedDeal.price} RWF</p>
+            <p><span className="text-muted-foreground">Original Price:</span> {formatMoney(generatedDeal.price)}</p>
             <p><span className="text-muted-foreground">Discount:</span> {generatedDeal.discount_percent}%</p>
-            <p><span className="text-muted-foreground">Final Price:</span> <span className="text-primary font-bold">{finalPrice || generatedDeal.price} RWF</span></p>
+            <p><span className="text-muted-foreground">Final Price:</span> <span className="text-primary font-bold">{formatMoney(finalPrice || generatedDeal.price)}</span></p>
           </div>
 
           <div>
@@ -405,7 +406,7 @@ export default function AIDealGenerator({ onDealCreated }) {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Original Price</span>
-              <span className="font-medium">{confirmationData.originalPrice} RWF</span>
+              <span className="font-medium">{formatMoney(confirmationData.originalPrice)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Discount</span>
@@ -413,7 +414,7 @@ export default function AIDealGenerator({ onDealCreated }) {
             </div>
             <div className="flex justify-between border-t border-border pt-2 mt-1">
               <span className="text-muted-foreground font-semibold">Final Price</span>
-              <span className="font-bold text-primary text-lg">{confirmationData.finalPrice} RWF</span>
+              <span className="font-bold text-primary text-lg">{formatMoney(confirmationData.finalPrice)}</span>
             </div>
             <div className="flex justify-center mt-2">
               <img

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Check, Copy, ShoppingCart, Users } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
+import { formatMoney } from '../lib/format.js'
 
 // Groups stay open for 24 hours (fix 7); show how long is left.
 function closesIn(expiresAt) {
@@ -257,7 +258,7 @@ function JoinOrder({ initialCode = '', onJoined }) {
           Joining {found.host_name}'s order for{' '}
           <span className="font-semibold">{found.deals?.title}</span> at{' '}
           {found.deals?.business_name}
-          {unitPrice != null && <span> · {unitPrice} RWF each</span>}
+          {unitPrice != null && <span> · {formatMoney(unitPrice)} each</span>}
         </p>
 
         <div className="flex items-center gap-4">
@@ -282,7 +283,7 @@ function JoinOrder({ initialCode = '', onJoined }) {
         </div>
 
         {unitPrice != null && (
-          <p className="text-muted-foreground text-xs">Your total: {unitPrice * quantity} RWF</p>
+          <p className="text-muted-foreground text-xs">Your total: {formatMoney(unitPrice * quantity)}</p>
         )}
 
         {error && <p className="text-sm text-red-400">{error}</p>}
@@ -536,7 +537,7 @@ function GroupOrderCard({ order, hostLabel, actions, expanded, error, children }
         {totalQuantity > 0 && (
           <p className="text-xs text-muted-foreground">
             {totalQuantity} item{totalQuantity === 1 ? '' : 's'}
-            {total != null && ` · ${total.toLocaleString()} RWF`}
+            {total != null && ` · ${formatMoney(total)}`}
           </p>
         )}
 
@@ -545,7 +546,7 @@ function GroupOrderCard({ order, hostLabel, actions, expanded, error, children }
             {members.map((member) => (
               <div key={member.id} className="flex justify-between gap-2">
                 <span className="truncate">{member.student_name || 'Student'} × {member.quantity}</span>
-                {unitPrice != null && <span>{(Number(member.quantity || 0) * unitPrice).toLocaleString()} RWF</span>}
+                {unitPrice != null && <span>{formatMoney(Number(member.quantity || 0) * unitPrice)}</span>}
               </div>
             ))}
           </div>

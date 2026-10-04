@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import Logo from '../components/Logo.jsx'
+import { formatMoney, formatDateTime } from '../lib/format.js'
 
 // Payment confirmation for a paid order. Unipicks is a marketplace agent:
 // the food place is the seller, and Unipicks collects the payment on its
@@ -18,19 +19,11 @@ const RECEIPT_STATUSES = { paid: 'Paid', redeemed: 'Collected', completed: 'Coll
 const PAYMENT_METHODS = { momo: 'Mobile Money', mtn_momo: 'MTN MoMo', airtel: 'Airtel Money', airtel_money: 'Airtel Money' }
 
 function money(value, currency = 'RWF') {
-  return `${Number(value || 0).toLocaleString('en-US')} ${currency}`
+  return formatMoney(value || 0, currency)
 }
 
 function dateTime(iso) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleString('en-GB', {
-    timeZone: 'Africa/Kigali',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  return formatDateTime(iso)
 }
 
 function Row({ label, children }) {

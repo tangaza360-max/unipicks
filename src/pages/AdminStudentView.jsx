@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import { statusLabel } from '../components/StatusBadge.jsx'
 import { CheckCircle2, Clock, Eye } from 'lucide-react'
+import { formatDate } from '../lib/format.js'
 
 export default function AdminStudentView() {
   const [students, setStudents] = useState([])
@@ -261,7 +262,7 @@ export default function AdminStudentView() {
                     </span>
                     {redemption.redeemed_at && (
                       <span className="text-muted-foreground text-xs ml-2">
-                        {new Date(redemption.redeemed_at).toLocaleDateString()}
+                        {formatDate(redemption.redeemed_at)}
                       </span>
                     )}
                   </div>

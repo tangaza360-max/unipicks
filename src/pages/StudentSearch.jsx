@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Search, Store, Tag, UserPlus, Users } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import StudentAvatar from '../components/StudentAvatar.jsx'
+import { formatMoney } from '../lib/format.js'
 
 const tabs = [
   { id: 'people', label: 'People', noun: 'students' },
@@ -262,7 +263,7 @@ export default function StudentSearch() {
                   <span className="block truncate text-sm font-semibold">{deal.title}</span>
                   <span className="mt-0.5 block truncate text-xs text-muted-foreground">{deal.business_name}</span>
                   <span className="mt-1 block text-sm font-bold text-primary">
-                    {displayPrice != null ? `${Number(displayPrice).toLocaleString()} RWF` : 'View deal'}
+                    {displayPrice != null ? `${formatMoney(displayPrice)}` : 'View deal'}
                   </span>
                 </span>
                 <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">

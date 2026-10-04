@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Store } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { createOrder } from '../lib/orders.js'
+import { formatMoney } from '../lib/format.js'
 
 const roundMoney = (value) => Math.round(value * 100) / 100
 
@@ -254,7 +255,7 @@ export default function OrderConfirmation() {
             <div className="rounded-lg border border-border bg-muted/30 p-4">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{pricing.unitLabel || 'Price each'}</span>
-                <span>{unitPrice != null ? `${unitPrice.toLocaleString()} RWF` : '—'}</span>
+                <span>{unitPrice != null ? `${formatMoney(unitPrice)}` : '—'}</span>
               </div>
 
               {pricing.itemsReceived != null && (
@@ -267,7 +268,7 @@ export default function OrderConfirmation() {
               <div className="mt-2 flex justify-between text-base font-semibold">
                 <span>Total</span>
                 <span className="text-primary">
-                  {total != null ? `${total.toLocaleString()} RWF` : '—'}
+                  {total != null ? `${formatMoney(total)}` : '—'}
                 </span>
               </div>
             </div>

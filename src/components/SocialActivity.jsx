@@ -8,6 +8,7 @@ import {
   X,
 } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
+import { formatDate, formatDayMonth } from '../lib/format.js'
 
 const TABS = [
   { id: 'notifications', label: 'Notifications' },
@@ -186,10 +187,7 @@ export default function SocialActivity() {
 
     if (Number.isNaN(date.getTime())) return ''
 
-    return date.toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-    })
+    return formatDayMonth(date)
   }
 
   return (

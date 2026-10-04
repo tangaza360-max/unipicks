@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import StatusBadge from '../components/StatusBadge.jsx'
 import { liveChannel } from '../lib/realtime.js'
+import { formatMoney } from '../lib/format.js'
 
 const DISPUTE_STATUS_LABELS = {
   open: 'Open',
@@ -305,7 +306,7 @@ export default function MerchantOrders() {
 
               <div className="text-sm text-muted-foreground">
                 Total:{' '}
-                {Number(order.total_price).toLocaleString()} RWF
+                {formatMoney(order.total_price)}
               </div>
 
               {order.dispute_status && (

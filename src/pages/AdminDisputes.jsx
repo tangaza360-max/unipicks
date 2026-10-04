@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { formatMoney } from '../lib/format.js'
 
 const DISPUTE_STATUS_LABELS = {
   open: 'Open',
@@ -136,7 +137,7 @@ export default function AdminDisputes() {
                       : ''}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {order.quantity} × {Number(order.unit_price).toLocaleString()} RWF = {Number(order.total_price).toLocaleString()} RWF
+                    {order.quantity} × {formatMoney(order.unit_price)} = {formatMoney(order.total_price)}
                   </p>
                 </div>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100/20 text-amber-400 font-medium">
