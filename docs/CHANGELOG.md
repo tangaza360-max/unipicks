@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 16:45 — `docs`: founder decisions: Unipicks is a marketplace agent (seller = food place), receipts are payment confirmations, RDB registration planned, questions for a tax adviser; new open items — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`
+
 - 16:30 — `feat(orders)`: receipts for paid orders. "View receipt" on paid/collected orders in Order History opens `/receipt/:orderId`: seller (business name, RDB No., address), item, quantity × price, total, paid date (Kigali time), payment method and UmunotaPay reference, status (Paid/Collected), "Print / Save as PDF". States that Unipicks is a marketplace agent that collected the payment on behalf of the seller and that it is not a tax (EBM) invoice. No pickup code on the receipt. Unipicks' own registration line appears once `VITE_UNIPICKS_REGISTRATION` is set. Standards: Rwanda Law N° 011/2026 on competition and consumer protection (online intermediaries identify the seller); OECD Recommendation on Consumer Protection in E-commerce (2016, transaction confirmation) — `src/pages/Receipt.jsx`, `src/components/OrdersTab.jsx`, `src/main.jsx`, `.env.example`, `docs/CHANGELOG.md`
 
 - 16:00 — `docs`: work log updated with the afternoon (branded emails installed, realtime fix for Sentry UNIPICKS-WEB-2, lighter notification bell, production checks, how to change auth settings safely) — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`
