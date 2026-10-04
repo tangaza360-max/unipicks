@@ -4,6 +4,7 @@ import { verifiedStudentError } from '../_shared/verified-student.ts'
 import { MERCHANT_UNAVAILABLE_ERROR, merchantStanding } from '../_shared/merchant-standing.ts'
 import { dealClosedMessage, isDealOpenNow } from '../_shared/deal-availability.ts'
 import { TOO_MANY_WAITING_ORDERS_ERROR, hasTooManyWaitingOrders } from '../_shared/order-limits.ts'
+import { alertMerchantNewOrder } from '../_shared/order-alerts.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -280,6 +281,8 @@ serve(async (req) => {
   if (notificationError) {
     console.error('Failed to create order notification:', notificationError)
   }
+
+  await alertMerchantNewOrder(supabaseAdmin, { id: order.id, merchant_id: deal.merchant_id, deal_id: deal.id, quantity })
     return new Response(
       JSON.stringify({ order }),
       { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },

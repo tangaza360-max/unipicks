@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { merchantStanding } from '../_shared/merchant-standing.ts'
+import { alertStudentOrderAccepted, alertStudentOrderDeclined } from '../_shared/order-alerts.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -316,6 +317,12 @@ Deno.serve(async (req) => {
           messageError,
         )
       }
+    }
+
+    if (action === 'accept') {
+      await alertStudentOrderAccepted(supabaseAdmin, updatedOrder)
+    } else {
+      await alertStudentOrderDeclined(supabaseAdmin, updatedOrder)
     }
 
     return jsonResponse({

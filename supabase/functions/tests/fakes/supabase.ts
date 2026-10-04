@@ -42,7 +42,7 @@ export function resetDb() {
 class Query {
   private filters: [string, (v: unknown) => boolean][] = []
   private max: number | null = null
-  private op: 'select' | 'insert' | 'update' = 'select'
+  private op: 'select' | 'insert' | 'update' | 'delete' = 'select'
   private payload: Row | null = null
   private usedColumns: string[] = []
   private sortBy: [string, boolean] | null = null
@@ -67,6 +67,10 @@ class Query {
     this.op = 'update'
     this.payload = values
     this.usedColumns.push(...Object.keys(values ?? {}))
+    return this
+  }
+  delete() {
+    this.op = 'delete'
     return this
   }
   eq(col: string, value: unknown) {
@@ -118,6 +122,7 @@ class Query {
       matched.sort((a, b) => (a[col] < b[col] ? -1 : a[col] > b[col] ? 1 : 0) * (asc ? 1 : -1))
     }
     if (this.op === 'update') matched.forEach((r) => Object.assign(r, this.payload))
+    if (this.op === 'delete') db.tables[this.table] = this.rows().filter((r) => !matched.includes(r))
     return this.max == null ? matched : matched.slice(0, this.max)
   }
 

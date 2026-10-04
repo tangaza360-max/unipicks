@@ -34,6 +34,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { sendPickupCodeMessage } from '../_shared/pickup-code-message.ts'
+import { alertMerchantPaymentReceived } from '../_shared/order-alerts.ts'
 
 const BATCH_SIZE = 20
 const STALE_AFTER_MS = 5 * 60 * 1000
@@ -276,6 +277,7 @@ serve(async (req) => {
             read: false,
           })
           if (notifyError) console.error(`[reconcile-payments] order=${order.id} merchant notification failed: ${notifyError.message}`)
+          await alertMerchantPaymentReceived(supabaseAdmin, order)
 
           counts.confirmed += 1
           logAction('paid', 'confirmed')
