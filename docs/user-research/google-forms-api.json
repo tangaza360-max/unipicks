@@ -1,11 +1,11 @@
 {
-  "_comment": "Body for forms.batchUpdate. First call forms.create with {\"info\": {\"title\": \"Unipicks: Student Food Deals (2-minute survey)\", \"documentTitle\": \"Unipicks student survey\"}}. The API cannot set response validation: after running, open the editor and set Q6 \"Limit to one response per column\" and Q11 \"Response validation: Email\". Also set the confirmation message and progress bar in Settings. Remove this _comment key before sending.",
+  "_comment": "Body for forms.batchUpdate. First call forms.create with {\"info\": {\"title\": \"Unipicks: 1-minute student survey\", \"documentTitle\": \"Unipicks student survey\"}}. The API cannot set response validation: after running, set Q7 \"Response validation: Email\" in the editor. Also set the confirmation message in Settings and the theme (see brand/README.md). Remove this _comment key before sending.",
   "includeFormInResponse": false,
   "requests": [
     {
       "updateFormInfo": {
         "info": {
-          "description": "Hi! 👋 We're building Unipicks, an app that gets Kepler students deals from local food spots near campus. Order, group up with friends, and pay with MoMo. Your answers (12 quick questions, about 2 minutes) decide what we build first. Answers are anonymous unless you choose to leave your email. Murakoze! 💚"
+          "description": "Hi, I'm a Kepler student building Unipicks: student deals from food places near Kigali campus. You order ahead, pay with MoMo or Airtel Money, and pick up without waiting in line.\n\n7 quick questions, about 1 minute. Most are just one tap. No name needed. Murakoze."
         },
         "updateMask": "description"
       }
@@ -23,32 +23,15 @@
     {
       "createItem": {
         "item": {
-          "title": "What year of study are you in?",
+          "title": "Would you use Unipicks?",
           "questionItem": {
             "question": {
               "required": true,
-              "choiceQuestion": {
-                "type": "RADIO",
-                "options": [
-                  {
-                    "value": "Year 1"
-                  },
-                  {
-                    "value": "Year 2"
-                  },
-                  {
-                    "value": "Year 3"
-                  },
-                  {
-                    "value": "Year 4"
-                  },
-                  {
-                    "value": "Not at Kepler yet (starting soon)"
-                  },
-                  {
-                    "value": "Graduated / alumni"
-                  }
-                ]
+              "scaleQuestion": {
+                "low": 1,
+                "high": 5,
+                "lowLabel": "No",
+                "highLabel": "Yes, a lot"
               }
             }
           }
@@ -61,7 +44,8 @@
     {
       "createItem": {
         "item": {
-          "title": "Which campus are you on?",
+          "title": "Which would you use the most?",
+          "description": "Pick one.",
           "questionItem": {
             "question": {
               "required": true,
@@ -69,10 +53,16 @@
                 "type": "RADIO",
                 "options": [
                   {
-                    "value": "Kigali (Kinyinya)"
+                    "value": "Student deals and discounts"
                   },
                   {
-                    "isOther": true
+                    "value": "Order ahead and skip the queue"
+                  },
+                  {
+                    "value": "Group orders with friends for a better price"
+                  },
+                  {
+                    "value": "Chat with the food place"
                   }
                 ]
               }
@@ -87,8 +77,8 @@
     {
       "createItem": {
         "item": {
-          "title": "How do you usually pay for food and snacks?",
-          "description": "Select all that apply.",
+          "title": "How do you pay for food?",
+          "description": "Pick all that apply.",
           "questionItem": {
             "question": {
               "required": true,
@@ -106,9 +96,6 @@
                   },
                   {
                     "value": "Bank card"
-                  },
-                  {
-                    "isOther": true
                   }
                 ]
               }
@@ -123,9 +110,32 @@
     {
       "createItem": {
         "item": {
-          "title": "Interest in Unipicks",
-          "pageBreakItem": {},
-          "description": "Unipicks shows you student-only deals from food spots near campus. You order in the app, the business confirms, you pay with mobile money and pick up with a code. You can also start a group order with friends to unlock group prices."
+          "title": "What is a good price for a student lunch?",
+          "questionItem": {
+            "question": {
+              "required": true,
+              "choiceQuestion": {
+                "type": "RADIO",
+                "options": [
+                  {
+                    "value": "Under 1,000 RWF"
+                  },
+                  {
+                    "value": "1,000 to 1,500 RWF"
+                  },
+                  {
+                    "value": "1,500 to 2,000 RWF"
+                  },
+                  {
+                    "value": "2,000 to 3,000 RWF"
+                  },
+                  {
+                    "value": "More than 3,000 RWF"
+                  }
+                ]
+              }
+            }
+          }
         },
         "location": {
           "index": 3
@@ -135,15 +145,30 @@
     {
       "createItem": {
         "item": {
-          "title": "How likely are you to use Unipicks?",
+          "title": "What could stop you from using it?",
+          "description": "Optional. Pick all that apply.",
           "questionItem": {
             "question": {
-              "required": true,
-              "scaleQuestion": {
-                "low": 1,
-                "high": 5,
-                "lowLabel": "Not at all likely",
-                "highLabel": "Very likely"
+              "required": false,
+              "choiceQuestion": {
+                "type": "CHECKBOX",
+                "options": [
+                  {
+                    "value": "I don't trust paying in an app"
+                  },
+                  {
+                    "value": "My favourite places may not be on it"
+                  },
+                  {
+                    "value": "The discounts may be too small"
+                  },
+                  {
+                    "value": "I prefer cash"
+                  },
+                  {
+                    "isOther": true
+                  }
+                ]
               }
             }
           }
@@ -156,13 +181,13 @@
     {
       "createItem": {
         "item": {
-          "title": "What's the biggest problem Unipicks could solve for you?",
-          "description": "e.g. lunch is too expensive, I don't know the good spots, long queues, ordering for a group is messy…",
+          "title": "What would make food around campus better for you?",
+          "description": "Optional. One line is enough.",
           "questionItem": {
             "question": {
               "required": false,
               "textQuestion": {
-                "paragraph": true
+                "paragraph": false
               }
             }
           }
@@ -175,237 +200,8 @@
     {
       "createItem": {
         "item": {
-          "title": "Feature priorities",
-          "pageBreakItem": {}
-        },
-        "location": {
-          "index": 6
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "Rank these features from most to least useful to you.",
-          "description": "Give each feature a different rank: 1st = most useful.",
-          "questionGroupItem": {
-            "questions": [
-              {
-                "required": true,
-                "rowQuestion": {
-                  "title": "Student deals & discounts"
-                }
-              },
-              {
-                "required": true,
-                "rowQuestion": {
-                  "title": "Group orders with friends"
-                }
-              },
-              {
-                "required": true,
-                "rowQuestion": {
-                  "title": "Chat with the business"
-                }
-              },
-              {
-                "required": true,
-                "rowQuestion": {
-                  "title": "Stories from businesses & friends"
-                }
-              },
-              {
-                "required": true,
-                "rowQuestion": {
-                  "title": "Search (find food, places, people)"
-                }
-              }
-            ],
-            "grid": {
-              "columns": {
-                "type": "RADIO",
-                "options": [
-                  {
-                    "value": "1st"
-                  },
-                  {
-                    "value": "2nd"
-                  },
-                  {
-                    "value": "3rd"
-                  },
-                  {
-                    "value": "4th"
-                  },
-                  {
-                    "value": "5th"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "location": {
-          "index": 7
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "What might stop you from using Unipicks?",
-          "description": "Select all that apply.",
-          "questionItem": {
-            "question": {
-              "required": false,
-              "choiceQuestion": {
-                "type": "CHECKBOX",
-                "options": [
-                  {
-                    "value": "I don't trust paying through an app"
-                  },
-                  {
-                    "value": "Discounts might be too small"
-                  },
-                  {
-                    "value": "Few of the places I like would be on it"
-                  },
-                  {
-                    "value": "Waiting for the business to confirm my order"
-                  },
-                  {
-                    "value": "I prefer paying cash"
-                  },
-                  {
-                    "value": "Mobile data cost / my phone storage"
-                  },
-                  {
-                    "value": "I don't want another app"
-                  },
-                  {
-                    "isOther": true
-                  }
-                ],
-                "shuffle": true
-              }
-            }
-          }
-        },
-        "location": {
-          "index": 8
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "Willingness to pay & participate",
-          "pageBreakItem": {}
-        },
-        "location": {
-          "index": 9
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "For a good student lunch deal, what price feels right to you?",
-          "questionItem": {
-            "question": {
-              "required": true,
-              "choiceQuestion": {
-                "type": "RADIO",
-                "options": [
-                  {
-                    "value": "Under 1,000 RWF"
-                  },
-                  {
-                    "value": "1,000–1,500 RWF"
-                  },
-                  {
-                    "value": "1,500–2,000 RWF"
-                  },
-                  {
-                    "value": "2,000–3,000 RWF"
-                  },
-                  {
-                    "value": "More than 3,000 RWF if the quality is great"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "location": {
-          "index": 10
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "Would you like to be a Unipicks beta tester?",
-          "description": "Beta testers try Unipicks first, help us fix problems, and get early access to deals.",
-          "questionItem": {
-            "question": {
-              "required": true,
-              "choiceQuestion": {
-                "type": "RADIO",
-                "options": [
-                  {
-                    "value": "Yes, sign me up!"
-                  },
-                  {
-                    "value": "Maybe, tell me more"
-                  },
-                  {
-                    "value": "No thanks"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "location": {
-          "index": 11
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "Open feedback & follow-up",
-          "pageBreakItem": {}
-        },
-        "location": {
-          "index": 12
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "If you could change one thing about buying food around campus, what would it be?",
-          "questionItem": {
-            "question": {
-              "required": false,
-              "textQuestion": {
-                "paragraph": true
-              }
-            }
-          }
-        },
-        "location": {
-          "index": 13
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "Your email (optional, only if you'd like us to contact you)",
-          "description": "Leave this blank to stay anonymous. We'll only use it to contact you about Unipicks testing and never share it.",
+          "title": "Want to try Unipicks first? Leave your email.",
+          "description": "Optional. We will only use it to invite you to the beta, and never share it.",
           "questionItem": {
             "question": {
               "required": false,
@@ -416,37 +212,7 @@
           }
         },
         "location": {
-          "index": 14
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "What can we do with your answers?",
-          "description": "Optional. Select all that apply.",
-          "questionItem": {
-            "question": {
-              "required": false,
-              "choiceQuestion": {
-                "type": "CHECKBOX",
-                "options": [
-                  {
-                    "value": "Contact me about the beta (using the email above)"
-                  },
-                  {
-                    "value": "Invite me to a 15-minute chat about Unipicks"
-                  },
-                  {
-                    "value": "Quote my answers in Unipicks posts using my first name only"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "location": {
-          "index": 15
+          "index": 6
         }
       }
     }

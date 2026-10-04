@@ -2,13 +2,15 @@
 
 ## Student feedback form (v1)
 
-A 12-question, 2-minute Google Form for Kepler College students: validate demand, find friction, rank features, and recruit beta testers and testimonials.
+A simple 7-question, 1-minute, one-page Google Form for Kepler College students (Kigali campus), mostly one-tap answers: validate demand, find the top feature, payment habits, price and barriers, and recruit beta testers.
 
 | File | Purpose |
 |---|---|
 | [`google-form.md`](./google-form.md) | Full spec: exact wording, options, question types, rationale, deploy steps, distribution plan, analysis guide |
 | [`google-form-paste.txt`](./google-form-paste.txt) | Paste-ready text, question by question |
 | [`create-form.gs`](./create-form.gs) | One-click Google Apps Script that builds the whole form, including the email validation and the one-rank-per-column ranking grid |
+| [`brand/`](./brand/) | Unipicks logo, form header image (1600 × 400) and colour codes, with Google Forms theme steps |
+| [`email-invite.md`](./email-invite.md) | Ready-to-send email (and 3-day reminder) for the Kepler general student email list |
 | [`google-forms-api.json`](./google-forms-api.json) | `forms.batchUpdate` body for the Google Forms API |
 
 **v1 scope (founder decisions, 2026-10-03)**

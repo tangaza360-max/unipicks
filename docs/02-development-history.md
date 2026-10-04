@@ -380,6 +380,12 @@ A late payment is accepted (unlike the 5-minute window in `process-payment` / `p
 - Needs consent: members should be able to leave a saved group, and blocks (`blocked_students`) must break it.
 - Likely shape: a `friend_groups` + `friend_group_members` pair, suggested after the 3rd completed co-order, plus "Start a group with …" on Home.
 
+---
+
+## 2026-10-03 — Session summary
+
+The full list of today's audits, fixes (with commits), deploy status, the deploy checklist and open items is in [`03-session-2026-10-03.md`](./03-session-2026-10-03.md).
+
 ### 2026-10-03 — Historical order cleanup
 
 5 orders from 2026-09-15 (created before migration `20260915100000_add_payment_deadline_to_orders.sql`) had `status = 'confirmed'` with `payment_deadline = NULL`. They were moved to `payment_expired` via a one-time SQL update setting `payment_deadline = confirmation_deadline + interval '5 minutes'`.
