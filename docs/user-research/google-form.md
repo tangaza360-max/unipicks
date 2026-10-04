@@ -3,7 +3,7 @@
 **Goal:** validate demand, discover friction, rank features, and recruit beta testers and testimonials among Kepler College students before launch.
 **Audience:** current and incoming Kepler students (potential early users).
 **Length:** 11 questions in 5 short sections, about 2 minutes. Only 6 are required (Q1–Q3, Q5, Q7, Q8); the open-ended and contact questions are optional to protect the completion rate. Kepler College has one campus (Kigali), so there is no campus question.
-**Voice and design:** written by a student, for students. It presents Unipicks as a *student companion* for life around Kigali campus and names the real problems first (money runs out, lunch is expensive, hard to find good affordable places). Calm and professional: no emojis, no exclamation marks, no header image.
+**Voice and design:** written by a student, for students. It presents Unipicks as a *student companion* for life around Kigali campus and names the real problems first (money runs out, lunch is expensive, hard to find good affordable places). Calm and professional: no emojis, no exclamation marks, one quiet header with the Unipicks logo (see `brand/`).
 
 **Files in this folder**
 
@@ -27,7 +27,7 @@
 | Show progress bar | **On** | Reduces drop-off on multi-section forms |
 | Shuffle question order | Off (option order is shuffled for Q6 only) | Sections must stay in a logical order |
 | Confirmation message | *Murakoze. Thank you for helping us build something that truly works for Kepler students. If you left your email for the beta, we'll be in touch soon.* | Closes the loop |
-| Theme (palette icon) | Header image **none**; colour `#95BF47` (Unipicks green); background **light grey**; font style **Basic** | Simple, minimal and professional. One brand colour, no pictures or emojis |
+| Theme (palette icon) | Header image `brand/form-header-1600x400.png` (logo, name and "Your student companion at Kepler, Kigali campus" on a light background); colour `#95BF47` (Unipicks green); background the lightest option; font style **Basic** | Simple, minimal and professional. One brand colour, no photos or emojis. All colour codes: `brand/README.md` |
 
 ---
 
@@ -134,7 +134,7 @@
 2. Delete the sample code and paste all of `create-form.gs`.
 3. Click **Run** → choose `createUnipicksForm` → allow the permissions (it creates a form in **your** Drive).
 4. Open **View → Logs** (or **Execution log**) to get the **edit link** and the **public link**.
-5. Open the edit link → **Theme** (palette icon): header image none, colour `#95BF47`, background light grey, font style Basic. Turn on **Shuffle option order** for Q6 (⋮ menu). Preview on your phone and submit one test response.
+5. Open the edit link → **Theme** (palette icon): header image `brand/form-header-1600x400.png`, colour `#95BF47`, lightest background, font style Basic (details in `brand/README.md`). Turn on **Shuffle option order** for Q6 (⋮ menu). Preview on your phone and submit one test response.
 
 ### Option B — Build it by hand
 Open forms.google.com → **Blank**, then copy each question from `google-form-paste.txt`. Remember the Q5 grid settings ("Limit to one response per column"), the Q10 email validation and the theme above.
@@ -158,7 +158,7 @@ Create the form (`forms.create` with only `info.title`), then send `google-forms
 |---|---|---|
 | **Class WhatsApp groups** | Short message plus link (template below) | Post at **12:00–13:00** (lunch, when food is on their mind) or **19:00–21:00**. Send a reminder 3 days later. One post per group, no spam. |
 | **Class reps / student council** | Ask each rep to forward it to their class group with a personal line | People respond to someone they know. Give reps a ready-made message and the QR code. Thank them publicly afterwards. |
-| **Campus posters** | A4 poster with QR code at the canteen, library and notice boards | Headline: *"Lunch too expensive? Help build Unipicks in 2 minutes."* Plain layout: white or light grey background, one green accent, no pictures. Put the QR at least 5 cm wide at eye level, with "2 min · 11 questions" printed under it. |
+| **Campus posters** | A4 poster with QR code at the canteen, library and notice boards | Headline: *"Lunch too expensive? Help build Unipicks in 2 minutes."* Plain layout: light background, the Unipicks logo (`brand/unipicks-logo.png`), one green accent, no photos. Put the QR at least 5 cm wide at eye level, with "2 min · 11 questions" printed under it. |
 | **In person** | Stand near the canteen at lunch with a phone showing the QR | Fastest way to reach 100. Students fill it in on their own phones; don't watch them answer. |
 | **Instagram / TikTok** | Post the explainer video with the form link in bio | Pair with a story poll ("Would you use this? Yes / Maybe") that links to the form |
 | **Merchant partners** | QR on the counter at partner food spots near campus | Reaches the actual buyers; also a nice early signal to the merchants |

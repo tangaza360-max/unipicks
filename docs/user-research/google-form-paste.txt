@@ -11,7 +11,7 @@ This survey has 11 short questions and takes about 2 minutes. Your answers decid
 Murakoze, thank you.
 
 SETTINGS: Collect emails OFF · Limit to 1 response OFF · Progress bar ON
-THEME (palette icon): Header image none · Colour #95BF47 · Background light grey · Font style Basic
+THEME (palette icon): Header image brand/form-header-1600x400.png · Colour #95BF47 · Background lightest option · Font style Basic
 
 CONFIRMATION MESSAGE
 Murakoze. Thank you for helping us build something that truly works for Kepler students. If you left your email for the beta, we'll be in touch soon.

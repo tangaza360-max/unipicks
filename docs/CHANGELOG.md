@@ -7,6 +7,10 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ---
 
+## 2026-10-04
+
+- 04:30 — `docs(brand)`: Unipicks brand kit for the student form: Google Form header (1600 × 400), logo with name, app icon (PNG and SVG) and colour codes, all from the existing app logo and colours; form docs now use the header. No app code changed — `docs/user-research/brand/`, `docs/user-research/create-form.gs`, `docs/user-research/google-form.md`, `docs/user-research/google-form-paste.txt`, `docs/user-research/README.md`, `docs/CHANGELOG.md`
+
 ## 2026-10-03
 
 - 23:59 — `docs(research)`: student feedback form rewritten in a calm student voice. Unipicks is presented as a student companion for life around Kigali campus; the campus question is removed (Kepler has one campus), so the form now has 11 questions; no emojis or exclamation marks; minimal theme (no header image, `#95BF47`, light grey background, Basic font). Spec, paste text, API JSON and email updated to match — `docs/user-research/create-form.gs`, `docs/user-research/google-form.md`, `docs/user-research/google-form-paste.txt`, `docs/user-research/google-forms-api.json`, `docs/user-research/email-invite.md`, `docs/user-research/README.md`, `docs/audits/README.md`, `docs/CHANGELOG.md`

@@ -8,9 +8,10 @@
  * 11 questions, about 2 minutes. Kepler College has one campus (Kigali), so
  * there is no campus question.
  *
- * Design: calm and professional. No emojis or header image. After running,
- * open Theme (palette icon) and set: header image none, colour #95BF47 (Unipicks
- * green), background light grey, font style "Basic".
+ * Design: calm and professional, no emojis. After running, open Theme (palette
+ * icon) and set: header image brand/form-header-1600x400.png, colour #95BF47
+ * (Unipicks green), background the lightest option, font style "Basic".
+ * See docs/user-research/brand/README.md.
  */
 function createUnipicksForm() {
   var form = FormApp.create("Unipicks: help us build your student companion");
