@@ -21,8 +21,8 @@ export default function AIDealGenerator({ onDealCreated }) {
   const [confirmationData, setConfirmationData] = useState(null)
   const fileInputRef = useRef(null)
 
-  const finalPrice = originalPrice && discountPercent
-    ? Math.round(Number(originalPrice) * (1 - Number(discountPercent) / 100))
+  const finalPrice = originalPrice
+    ? Math.round(Number(originalPrice) * (1 - (Number(discountPercent) || 0) / 100))
     : null
 
   async function handleGenerate(e) {
@@ -164,12 +164,24 @@ export default function AIDealGenerator({ onDealCreated }) {
 
   function handleShowConfirmation() {
     if (!generatedDeal || !selectedImage) return
+    // Every deal needs the price students pay; a discount is optional
+    // (founder decision 2026-10-04; also enforced by the database).
+    const priceNumber = Number(originalPrice)
+    const discountNumber = discountPercent === '' ? 0 : Number(discountPercent)
+    if (!Number.isFinite(priceNumber) || priceNumber <= 0) {
+      setError('Enter the price before any discount, more than 0 RWF.')
+      return
+    }
+    if (!Number.isFinite(discountNumber) || discountNumber < 0 || discountNumber > 100) {
+      setError('Enter a discount between 0% and 100%, or leave it empty for no discount.')
+      return
+    }
 
     setConfirmationData({
       title: generatedDeal.title,
       description: generatedDeal.description,
-      originalPrice: Number(originalPrice),
-      discountPercent: Number(discountPercent),
+      originalPrice: priceNumber,
+      discountPercent: discountNumber > 0 ? discountNumber : null,
       finalPrice: finalPrice,
       selectedImage: selectedImage,
     })
@@ -397,7 +409,7 @@ export default function AIDealGenerator({ onDealCreated }) {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Discount</span>
-              <span className="font-medium">{confirmationData.discountPercent}%</span>
+              <span className="font-medium">{confirmationData.discountPercent ? `${confirmationData.discountPercent}%` : 'No discount'}</span>
             </div>
             <div className="flex justify-between border-t border-border pt-2 mt-1">
               <span className="text-muted-foreground font-semibold">Final Price</span>

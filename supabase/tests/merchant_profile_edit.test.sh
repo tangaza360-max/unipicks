@@ -94,7 +94,7 @@ q "insert into auth.users (id, email, raw_user_meta_data) values
   ('$ST','s@keplercollege.ac.rw','{\"role\":\"student\"}');
   update public.user_roles set role='admin' where user_id='$AD';
   update public.merchant_profiles set approved = true, rdb_number = '123456789' where id='$M1';
-  insert into public.deals (merchant_id, business_name, title, active) values ('$M1','Mr. Chips','Burger Thursday', true);"
+  insert into public.deals (merchant_id, business_name, title, active, price) values ('$M1','Mr. Chips','Burger Thursday', true, 6000);"
 deals_seen_by_students() { as_anon "select count(*) from public.deals where merchant_id='$M1';"; }
 
 echo "Before the fix (old policy)"

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { hasStudentPrice, offerBadge, struckOutPrice, studentPrice } from '../lib/dealPricing.js'
 import { liveChannel } from '../lib/realtime.js'
 import { createOrder } from '../lib/orders.js'
 import GroupOrders from './GroupOrders.jsx'
@@ -20,11 +21,7 @@ function makeJoinCode() {
   return code
 }
 
-function finalPriceOf(deal) {
-  if (deal.price == null) return null
-  if (deal.discount_percent == null) return deal.price
-  return Math.round(deal.price * (1 - deal.discount_percent / 100))
-}
+const finalPriceOf = studentPrice
 
 function extractBudget(text) {
   const kMatch = text.match(/(\d+(\.\d+)?)\s*k\b/i)
@@ -34,28 +31,7 @@ function extractBudget(text) {
   return null
 }
 
-function getOfferBadge(deal) {
-  const type = deal.offer_type || 'percentage'
-  if (type === 'percentage') {
-    const val = deal.discount_value ?? deal.discount_percent
-    return val != null && val > 0 ? `${val}% OFF` : null
-  }
-  if (type === 'fixed_amount') {
-    return deal.discount_value != null && deal.discount_value > 0 ? `SAVE ${deal.discount_value} RWF` : null
-  }
-  if (type === 'bogo') {
-    const buy = deal.buy_quantity ?? 1
-    const get = deal.get_quantity ?? 1
-    return `BUY ${buy} GET ${get}`
-  }
-  if (type === 'fixed_price') {
-    const fp = deal.final_price ?? deal.discount_value
-    return fp != null && fp > 0 ? `BUNDLE ${fp} RWF` : null
-  }
-  if (type === 'free_shipping') return 'FREE DELIVERY'
-  if (type === 'group_buy') return `GROUP BUY · ${deal.min_participants ?? 5} NEEDED`
-  return 'TIERED DEAL'
-}
+const getOfferBadge = offerBadge
 
 function getOfferBadgeClass(type) {
   if (type === 'percentage' || type === 'fixed_amount') return 'bg-accent text-background-foreground'
@@ -686,7 +662,8 @@ function DealCard({ deal, ratingStats }) {
   }, [orderId])
 
   const finalPrice = finalPriceOf(deal)
-  const hasDiscount = deal.discount_percent != null && deal.price != null
+  const originalPrice = struckOutPrice(deal)
+  const priced = hasStudentPrice(deal)
 
   function handleOrder() {
     navigate(`/deal/${deal.id}`)
@@ -737,13 +714,15 @@ function DealCard({ deal, ratingStats }) {
           <p className="text-amber-500 text-sm flex items-center gap-1"><Star size={14} className="fill-amber-500" /> {ratingStats.average_rating} <span className="text-muted-foreground">({ratingStats.review_count} reviews)</span></p>
         )}
         <div className="flex items-center gap-2 text-xs pt-1">
-          {finalPrice != null && (
+          {finalPrice != null ? (
             <span className="flex items-center gap-2">
-              {hasDiscount && (
-                <span className="line-through text-muted-foreground">{deal.price} RWF</span>
+              {originalPrice != null && (
+                <span className="line-through text-muted-foreground">{originalPrice.toLocaleString('en-US')} RWF</span>
               )}
-              <span className="text-primary font-bold text-sm">{finalPrice} RWF</span>
+              <span className="text-primary font-bold text-sm">{finalPrice.toLocaleString('en-US')} RWF</span>
             </span>
+          ) : (
+            <span className="text-muted-foreground">Price not set</span>
           )}
           {expiresLabel && <span className="text-muted-foreground">Valid until {expiresLabel}</span>}
         </div>
@@ -788,7 +767,7 @@ function DealCard({ deal, ratingStats }) {
           deal.offer_type === 'group_buy' ? (
             <button
               onClick={handleStartGroupOrder}
-              disabled={startingGroup}
+              disabled={startingGroup || !priced}
               className="mt-3 w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg py-2.5 transition disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <ShoppingCart size={16} />
@@ -797,7 +776,7 @@ function DealCard({ deal, ratingStats }) {
           ) : (
             <button
               onClick={handleOrder}
-              disabled={ordering}
+              disabled={ordering || !priced}
               className="mt-3 w-full bg-primary hover:bg-accent-dim text-primary-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
             >
               {ordering ? 'Processing...' : 'Order now'}

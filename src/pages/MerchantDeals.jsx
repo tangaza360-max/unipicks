@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { hasStudentPrice, offerBadge } from '../lib/dealPricing.js'
 import { liveChannel } from '../lib/realtime.js'
 import VerifyCode from './VerifyCode.jsx'
 import ConfirmModal from '../components/ConfirmModal.jsx'
@@ -165,8 +166,8 @@ export default function MerchantDeals() {
   const enteredDiscountValue = discountValue === '' ? null : Number(discountValue)
   let finalPrice = null
 
-  if (['percentage', 'group_buy'].includes(offerType) && enteredPrice !== null && discountPercent !== '') {
-    finalPrice = Math.round(enteredPrice * (1 - selectedDiscountPercent / 100))
+  if (['percentage', 'group_buy'].includes(offerType) && enteredPrice !== null) {
+    finalPrice = selectedDiscountPercent > 0 ? Math.round(enteredPrice * (1 - selectedDiscountPercent / 100)) : enteredPrice
   } else if (offerType === 'fixed_amount' && enteredPrice !== null && enteredDiscountValue !== null) {
     finalPrice = Math.max(0, Math.round(enteredPrice - enteredDiscountValue))
   } else if (offerType === 'fixed_price' && enteredDiscountValue !== null) {
@@ -183,16 +184,7 @@ export default function MerchantDeals() {
     })
   }
 
-  function getOfferBadge(deal) {
-    const type = deal.offer_type || 'percentage'
-    if (type === 'percentage') return `${deal.discount_value ?? deal.discount_percent ?? 0}% OFF`
-    if (type === 'fixed_amount') return `SAVE ${deal.discount_value ?? 0} RWF`
-    if (type === 'bogo') return `BUY ${deal.buy_quantity ?? 1} GET ${deal.get_quantity ?? 1}`
-    if (type === 'fixed_price') return `BUNDLE ${deal.final_price ?? deal.discount_value ?? 0} RWF`
-    if (type === 'free_shipping') return 'FREE DELIVERY'
-    if (type === 'group_buy') return `GROUP BUY · ${deal.min_participants ?? 5} NEEDED`
-    return 'TIERED DEAL'
-  }
+  const getOfferBadge = offerBadge
 
   function getOfferBadgeClass(type) {
     if (type === 'percentage' || type === 'fixed_amount') return 'bg-green-600 text-white'
@@ -333,9 +325,9 @@ export default function MerchantDeals() {
 
     if (['percentage', 'group_buy'].includes(offerType)) {
       const percent = Number(discountPercent)
-      if (discountPercent === '' || !Number.isFinite(percent) || percent < 0 || percent > 100) {
+      if (discountPercent !== '' && (!Number.isFinite(percent) || percent < 0 || percent > 100)) {
         setSaving(false)
-        setError('Enter a discount between 0% and 100%.')
+        setError('Enter a discount between 0% and 100%, or leave it empty for no discount.')
         return
       }
       if (percent > maxDiscountPercent) {
@@ -424,7 +416,8 @@ export default function MerchantDeals() {
       imageUrl = publicUrlData.publicUrl
     }
 
-    const savedDiscountPercent = ['percentage', 'group_buy'].includes(offerType)
+    // Empty or 0 = no discount (founder decision 2026-10-04): saved as null.
+    const savedDiscountPercent = ['percentage', 'group_buy'].includes(offerType) && Number(discountPercent) > 0
       ? Number(discountPercent)
       : null
     const savedDiscountValue = {
@@ -435,10 +428,10 @@ export default function MerchantDeals() {
       group_buy: savedDiscountPercent,
     }[offerType] ?? null
     const savedFinalPrice = {
-      percentage: Math.round(numericPrice * (1 - savedDiscountPercent / 100)),
+      percentage: Math.round(numericPrice * (1 - (savedDiscountPercent ?? 0) / 100)),
       fixed_amount: Math.round(numericPrice - numericDiscountValue),
       fixed_price: numericDiscountValue,
-      group_buy: Math.round(numericPrice * (1 - savedDiscountPercent / 100)),
+      group_buy: Math.round(numericPrice * (1 - (savedDiscountPercent ?? 0) / 100)),
     }[offerType] ?? null
 
     const dealData = {
@@ -673,9 +666,11 @@ export default function MerchantDeals() {
                     </div>
                   )}
                   <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/35 to-transparent" />
-                  <div className={`absolute top-3 right-3 font-display font-semibold text-sm rounded-lg px-3 py-1.5 shadow-lg ${getOfferBadgeClass(dealOfferType)}`}>
-                    {getOfferBadge(deal)}
-                  </div>
+                  {getOfferBadge(deal) && (
+                    <div className={`absolute top-3 right-3 font-display font-semibold text-sm rounded-lg px-3 py-1.5 shadow-lg ${getOfferBadgeClass(dealOfferType)}`}>
+                      {getOfferBadge(deal)}
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-4">
@@ -698,6 +693,11 @@ export default function MerchantDeals() {
                     </span>
                   </div>
 
+                  {dealOfferType !== 'free_shipping' && !hasStudentPrice(deal) && (
+                    <p role="alert" className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-600">
+                      Missing price. Students can't order this deal. Tap Edit and add the price students pay.
+                    </p>
+                  )}
                   <div className="flex items-center gap-2 text-xs pt-2">
                     <span className="text-primary font-bold text-sm">
                       {dealOfferType === 'free_shipping'
@@ -875,7 +875,7 @@ export default function MerchantDeals() {
                 {offerType !== 'free_shipping' && (
                   <div>
                     <label className="field-label">
-                      {offerType === 'bogo' ? 'Price per item (RWF)' : offerType === 'fixed_price' ? 'Original price (RWF, optional)' : 'Original price (RWF)'}
+                      {offerType === 'bogo' ? 'Price per item (RWF)' : offerType === 'fixed_price' ? 'Original price (RWF, optional)' : 'Price before any discount (RWF)'}
                     </label>
                     <input
                       className="field-input"
@@ -891,14 +891,14 @@ export default function MerchantDeals() {
 
                 {['percentage', 'group_buy'].includes(offerType) && (
                   <div>
-                    <label className="field-label">Discount (%)</label>
+                    <label className="field-label">Discount (%) · optional</label>
                     <input
                       className="field-input"
                       type="number"
                       min="0"
                       max="100"
                       step="0.01"
-                      placeholder="20"
+                      placeholder="Empty = no discount"
                       value={discountPercent}
                       onChange={(e) => setDiscountPercent(e.target.value)}
                     />

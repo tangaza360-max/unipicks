@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
-# Local Postgres test for migration 20261004110000_deal_seller_name_from_profile.
-# Builds the schema from EVERY migration (same stubs as delete_account.test.sh),
-# then checks that a deal's seller name always comes from the business profile:
-# backfill of placeholder names, insert and edit ignore the client's name, a
-# profile rename updates all deals, other businesses are untouched.
+# Local Postgres test for migration 20261004130000_deals_require_student_price.
+# Builds the schema from EVERY migration, seeds the production deal that had no
+# price, applies the migration, then checks that deals without a price the
+# student pays are refused and that deals without a discount are allowed.
 #
-# Usage: bash supabase/tests/deal_seller_name.test.sh
+# Usage: bash supabase/tests/deal_price_rule.test.sh
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 PGBIN="${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1)}"
-DIR="$(mktemp -d /tmp/seller-name-test.XXXXXX)"
-PORT="${PGPORT_TEST:-54338}"
+DIR="$(mktemp -d /tmp/price-rule-test.XXXXXX)"
+PORT="${PGPORT_TEST:-54340}"
 RUN=""
 if [ "$(id -u)" = "0" ]; then chown postgres "$DIR"; RUN="su postgres -s /bin/bash -c"; fi
 as_pg() { if [ -n "$RUN" ]; then $RUN "$1"; else bash -c "$1"; fi; }
@@ -69,7 +68,7 @@ alter default privileges in schema public grant all on tables to anon, authentic
 SQL
 
 # --- Every migration, in order (MAINTAIN is a Postgres 17 privilege; local is 16) -
-NEW=20261004110000_deal_seller_name_from_profile.sql
+NEW=20261004130000_deals_require_student_price.sql
 for f in "$REPO"/supabase/migrations/*.sql; do
   [ "$(basename "$f")" = "$NEW" ] && continue
   sed 's/MAINTAIN, //' "$f" | "${PSQL[@]}" >/dev/null 2>&1 || { echo "migration failed: $(basename "$f")"; "${PSQL[@]}" -f <(sed 's/MAINTAIN, //' "$f") 2>&1 | grep ERROR | head -3; exit 1; }
@@ -77,54 +76,36 @@ done
 
 PASS=0; FAIL=0
 check() { if [ "$2" = "$3" ]; then echo "  ok   $1"; PASS=$((PASS+1)); else echo "  FAIL $1: expected [$3], got [$2]"; FAIL=$((FAIL+1)); fi; }
+M=00000000-0000-0000-0000-0000000000b1
+PIZZA=60eb628b-ab9e-4db6-b965-e875d0a99799
+q "insert into auth.users (id, email, raw_user_meta_data) values ('$M','chips@x.rw','{\"role\":\"merchant\",\"business_name\":\"Mr. Chips\"}');
+   update public.merchant_profiles set approved = true;
+   insert into public.deals (id, merchant_id, business_name, title, offer_type, price) values ('$PIZZA','$M','Mr. Chips','30% off all pizzas','percentage', null);"
 
-M1=00000000-0000-0000-0000-0000000000b1   # Mr. Chips
-M2=00000000-0000-0000-0000-0000000000b2   # another business
-q "insert into auth.users (id, email, raw_user_meta_data) values
-  ('$M1','chips@x.rw','{\"role\":\"merchant\",\"business_name\":\"Mr. Chips\"}'),
-  ('$M2','cafe@x.rw','{\"role\":\"merchant\",\"business_name\":\"Campus Cafe\"}');
-  update public.merchant_profiles set approved = true;"
-check "profiles created by the signup trigger" "$(q "select string_agg(business_name, ',' order by business_name) from public.merchant_profiles")" "Campus Cafe,Mr. Chips"
+"${PSQL[@]}" -f "$REPO/supabase/migrations/$NEW" >/dev/null 2>&1 || { echo "migration failed"; "${PSQL[@]}" -f "$REPO/supabase/migrations/$NEW" 2>&1 | grep ERROR; exit 1; }
+echo "Existing deal"
+check "the pizza deal now has the price students pay (8000)" "$(q "select price from public.deals where id='$PIZZA'")" "8000"
+check "  …and no discount" "$(q "select coalesce(discount_percent::text,'none') from public.deals where id='$PIZZA'")" "none"
+check "rule is validated for all rows" "$(q "select convalidated from pg_constraint where conname='deals_have_student_price'")" "t"
 
-# Production state before the fix: placeholder and wrong names on deals.
-q "insert into public.deals (id, merchant_id, business_name, title, price) values
-  ('00000000-0000-0000-0000-00000000d001','$M1','Your Business','Burger Thursday', 6000),
-  ('00000000-0000-0000-0000-00000000d002','$M1','Mr. Chips','After Class Thursday', 10000),
-  ('00000000-0000-0000-0000-00000000d003','$M2','Your Business','Cafe deal', 2000);"
-
-echo "Backfill"
-"${PSQL[@]}" -f "$REPO/supabase/migrations/$NEW" >/dev/null 2>&1
-check "placeholder replaced by the real name" "$(q "select business_name from public.deals where id='00000000-0000-0000-0000-00000000d001'")" "Mr. Chips"
-check "each business gets its own name" "$(q "select business_name from public.deals where id='00000000-0000-0000-0000-00000000d003'")" "Campus Cafe"
-check "no deal says 'Your Business' any more" "$(q "select count(*) from public.deals where business_name = 'Your Business'")" "0"
-
-echo "New and edited deals (as the business itself, through RLS)"
-as_user $M1 "insert into public.deals (merchant_id, business_name, title, active, price) values ('$M1','Your Business','AI deal', true, 3000);" >/dev/null
-check "insert with placeholder → profile name" "$(q "select business_name from public.deals where title='AI deal'")" "Mr. Chips"
-as_user $M1 "insert into public.deals (merchant_id, business_name, title, active, price) values ('$M1','KFC','Fake brand', true, 3000);" >/dev/null
-check "insert with another brand's name → profile name" "$(q "select business_name from public.deals where title='Fake brand'")" "Mr. Chips"
-as_user $M1 "update public.deals set business_name='Pizza Hut' where id='00000000-0000-0000-0000-00000000d002';" >/dev/null
-check "editing the name on a deal is ignored" "$(q "select business_name from public.deals where id='00000000-0000-0000-0000-00000000d002'")" "Mr. Chips"
-as_user $M1 "update public.deals set active=false where id='00000000-0000-0000-0000-00000000d002';" >/dev/null
-check "pausing a deal still works" "$(q "select active from public.deals where id='00000000-0000-0000-0000-00000000d002'")" "f"
-
-echo "Business is renamed"
-# As the service role: today an approved business cannot update its own
-# profile (policy "Merchants can update own profile" requires approved = false;
-# reported separately). The trigger is what is tested here.
-as_user '' "update public.merchant_profiles set business_name='Mr. Chips Kigali' where id='$M1';" >/dev/null
-check "profile renamed" "$(q "select business_name from public.merchant_profiles where id='$M1'")" "Mr. Chips Kigali"
-check "all 4 of its deals follow" "$(q "select count(*) from public.deals where merchant_id='$M1' and business_name='Mr. Chips Kigali'")" "4"
-check "the other business is untouched" "$(q "select business_name from public.deals where merchant_id='$M2'")" "Campus Cafe"
-
-echo "Profile without a name"
-q "update public.merchant_profiles set business_name=null where id='$M2'"
-check "clearing the profile name keeps the deals' names" "$(q "select business_name from public.deals where merchant_id='$M2'")" "Campus Cafe"
-as_user $M2 "insert into public.deals (merchant_id, business_name, title, active, price) values ('$M2','Campus Cafe Two','No-profile deal', true, 3000);" >/dev/null
-check "no profile name → the sent name is kept (column is required)" "$(q "select business_name from public.deals where title='No-profile deal'")" "Campus Cafe Two"
-
-echo "Permissions"
-check "clients cannot call the trigger functions" "$(as_user $M1 "select public.sync_deal_business_names();")" "permission denied for function sync_deal_business_names"
+ins() { as_user $M "insert into public.deals (merchant_id, business_name, title, active, offer_type, price, discount_percent, discount_value, final_price) values ('$M','x','$1', true, $2) returning 'saved';" | sed 's/.*violates check constraint.*/refused/'; }
+echo "New deals (as the business, through RLS)"
+check "percentage with no price → refused" "$(ins 'a' "'percentage', null, null, null, null")" "refused"
+check "price 0 → refused" "$(ins 'b' "'percentage', 0, null, null, null")" "refused"
+check "price, no discount → allowed" "$(ins 'c' "'percentage', 8000, null, null, null")" "saved"
+check "price, 0% → allowed (shown as no discount)" "$(ins 'd' "'percentage', 8000, 0, null, null")" "saved"
+check "price, 20% → allowed" "$(ins 'e' "'percentage', 6000, 20, null, null")" "saved"
+check "discount over 100% → refused" "$(ins 'f' "'percentage', 6000, 150, null, null")" "refused"
+check "group buy with price → allowed" "$(ins 'g' "'group_buy', 10000, 0, null, null")" "saved"
+check "group buy without price → refused" "$(ins 'h' "'group_buy', null, null, null, null")" "refused"
+check "save 500 of 3000 → allowed" "$(ins 'i' "'fixed_amount', 3000, null, 500, null")" "saved"
+check "save more than the price → refused" "$(ins 'j' "'fixed_amount', 3000, null, 3000, null")" "refused"
+check "bundle 7000, no original price → allowed" "$(ins 'k' "'fixed_price', null, null, null, 7000")" "saved"
+check "bundle with no price → refused" "$(ins 'l' "'fixed_price', null, null, null, null")" "refused"
+check "free delivery needs no price" "$(ins 'm' "'free_shipping', null, null, null, null")" "saved"
+echo "Editing"
+check "removing the price of a live deal → refused" "$(as_user $M "update public.deals set price=null where title='c' returning 'saved';" | sed 's/.*violates check constraint.*/refused/')" "refused"
+check "pausing a deal still works" "$(as_user $M "update public.deals set active=false where id='$PIZZA' returning 'saved';")" "saved"
 
 echo
 echo "$PASS passed, $FAIL failed"

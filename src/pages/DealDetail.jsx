@@ -3,12 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Star, Store, Users } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { dealHoursLabel, hasDealHours, isDealOpenNow } from '../../supabase/functions/_shared/deal-availability.ts'
-
-function finalPriceOf(deal) {
-  if (deal.price == null) return null
-  if (deal.discount_percent == null) return deal.price
-  return Math.round(deal.price * (1 - deal.discount_percent / 100))
-}
+import { hasStudentPrice, offerBadge, struckOutPrice, studentPrice } from '../lib/dealPricing.js'
 
 function formatRelativeTime(isoString) {
   const diff = Date.now() - new Date(isoString).getTime()
@@ -135,9 +130,10 @@ export default function DealDetail() {
     )
   }
 
-  const finalPrice = finalPriceOf(deal)
-  const hasDiscount =
-    deal.discount_percent != null && deal.price != null
+  const finalPrice = studentPrice(deal)
+  const originalPrice = struckOutPrice(deal)
+  const badge = offerBadge(deal)
+  const priced = hasStudentPrice(deal)
 
   // Same rule the order functions enforce (Kigali time).
   const openNow = isDealOpenNow(deal)
@@ -176,9 +172,9 @@ export default function DealDetail() {
               </div>
             )}
 
-            {deal.discount_percent != null && (
+            {badge && (
               <div className="absolute right-4 top-4 rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-background-foreground shadow-lg">
-                {deal.discount_percent}% off
+                {badge}
               </div>
             )}
           </div>
@@ -217,15 +213,17 @@ export default function DealDetail() {
 
             <div className="rounded-lg border border-border bg-muted/30 p-4">
               <div className="flex flex-wrap items-end gap-3">
-                {hasDiscount && (
+                {originalPrice != null && (
                   <span className="text-sm text-muted-foreground line-through">
-                    {deal.price} RWF
+                    {originalPrice.toLocaleString('en-US')} RWF
                   </span>
                 )}
-                {finalPrice != null && (
+                {finalPrice != null ? (
                   <span className="text-2xl font-bold text-primary">
-                    {finalPrice} RWF
+                    {finalPrice.toLocaleString('en-US')} RWF
                   </span>
+                ) : (
+                  <span className="text-sm text-muted-foreground">Price not set. This deal can't be ordered yet.</span>
                 )}
               </div>
 
@@ -301,10 +299,10 @@ export default function DealDetail() {
             )}
             <button
               onClick={() => navigate(`/deal/${deal.id}/confirm`)}
-              disabled={!openNow}
+              disabled={!openNow || !priced}
               className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-accent-dim disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {openNow ? 'Continue to Order' : 'Not available right now'}
+              {!priced ? 'Price not set' : openNow ? 'Continue to Order' : 'Not available right now'}
             </button>
           </div>
         </div>

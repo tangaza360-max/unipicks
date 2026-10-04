@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { realDiscountPercent, studentPrice } from '../lib/dealPricing.js'
 import RatingPrompt from './RatingPrompt.jsx'
 import StatusBadge from './StatusBadge.jsx'
 import RaiseDisputeModal from './RaiseDisputeModal.jsx'
@@ -303,11 +304,8 @@ function OrderCard({ order, type, quantity }) {
     minute: '2-digit',
   })
 
-  const finalPrice = deal?.price != null
-    ? (deal.discount_percent != null
-        ? Math.round(deal.price * (1 - deal.discount_percent / 100))
-        : deal.price)
-    : null
+  const finalPrice = deal ? studentPrice(deal) : null
+  const discountPercent = deal ? realDiscountPercent(deal) : null
   const payableAmount = type === 'joined'
     ? (finalPrice != null && quantity ? finalPrice * quantity : null)
     : null
@@ -325,8 +323,8 @@ function OrderCard({ order, type, quantity }) {
           {finalPrice != null && (
             <p className="text-muted-foreground text-xs mt-1">
               {type === 'hosted' ? 'Total: ' : 'Your total: '}
-              {finalPrice} RWF
-              {deal?.discount_percent != null && ` (${deal.discount_percent}% off)`}
+              {finalPrice.toLocaleString('en-US')} RWF
+              {discountPercent && ` (${discountPercent}% off)`}
             </p>
           )}
           {type === 'joined' && quantity != null && quantity > 0 && (
