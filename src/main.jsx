@@ -16,6 +16,8 @@ import PaymentCheckout from './pages/PaymentCheckout.jsx'
 import DealDetail from './pages/DealDetail.jsx'
 import OrderConfirmation from './pages/OrderConfirmation.jsx'
 import { readAuthLinkError } from './lib/authLinkError.js'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
+import { initMonitoring } from './lib/monitoring.js'
 
 function RouteTitle() {
   const { pathname } = useLocation()
@@ -81,6 +83,8 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   })
 }
 
+initMonitoring()
+
 // A failed email link lands here with the error in the URL; show it on the
 // login page instead of silently redirecting to signup.
 const authLinkError = readAuthLinkError()
@@ -91,6 +95,7 @@ if (authLinkError) {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThemeProvider>
+      <ErrorBoundary>
       <BrowserRouter>
         <RouteTitle />
         <Routes>
@@ -108,6 +113,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="*" element={<Navigate to="/register" replace />} />
         </Routes>
       </BrowserRouter>
+      </ErrorBoundary>
     </ThemeProvider>
   </React.StrictMode>,
 )
