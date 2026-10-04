@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 13:30 — `docs`: forgot password tested in production by the founder (works); new open item: auth emails land in Gmail spam until templates are customized and a domain is set up — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`
+
 - 13:00 — `feat(auth)`: forgot password. "Forgot password?" on Login opens `/forgot-password`, which emails a reset link (`redirectTo: appUrl("/reset-password")`) and always shows the same answer so it cannot reveal who has an account (a 429 shows "please wait"). `/reset-password` (opened from the email) sets a new password (min 8, confirmed), logs out every other device, and opens the dashboard; a missing or expired link shows a clear message with "Request a new link". The expired-link message on Login now mentions "Forgot password?". Standards: OWASP ASVS v4.0.3 §2.5 (credential recovery: no account enumeration, single-use links, other sessions ended), NIST SP 800-63B §5.1.1 (minimum password length) — `src/pages/ForgotPassword.jsx`, `src/pages/ResetPassword.jsx`, `src/pages/Login.jsx`, `src/main.jsx`, `src/lib/authLinkError.js`, `docs/CHANGELOG.md`
 
 - 12:30 — `docs`: work log: all 2026-10-04 commits, founder decisions (no deal limits, only the 3-waiting rule, groups formed any time, Gmail SMTP until a domain), Sentry setup and privacy settings, new open items — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`
