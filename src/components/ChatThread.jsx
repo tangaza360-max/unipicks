@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { liveChannel } from '../lib/realtime.js'
 import { linkPhoneNumbers } from '../lib/linkPhoneNumbers.jsx'
 import { Flag } from 'lucide-react'
 import ReportDialog from './ReportDialog.jsx'
@@ -137,8 +138,7 @@ export default function ChatThread({
 
     loadMessages()
 
-    const channel = supabase
-      .channel(
+    const channel = liveChannel(
         `chat-${isGroup ? groupOrderId : [currentUserId, otherUserId].sort().join('-')}`
       )
       .on(

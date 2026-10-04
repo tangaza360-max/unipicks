@@ -9,6 +9,14 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 15:00 — `fix(realtime)`: Sentry UNIPICKS-WEB-2 ("cannot add postgres_changes callbacks … after subscribe()"). After a login renewal the Dashboard treated the same person as a new user, reloaded data and restarted its live channels; Supabase handed back the old, still-closing channel with the same name, so the business unread/orders badges stopped updating live. Dashboard live features now restart only when the user id changes and skip the role reload for the same user; every live channel gets a unique name (`liveChannel()`, 15 call sites). Standards: ISO/IEC 25010 reliability (fault tolerance) — `src/lib/realtime.js`, `src/pages/Dashboard.jsx`, `src/components/NotificationBell.jsx`, `src/components/ChatThread.jsx`, `src/components/StudentLayout.jsx`, `src/pages/DealsFeed.jsx`, `src/pages/MerchantDeals.jsx`, `src/pages/MerchantOrders.jsx`, `src/pages/Messages.jsx`, `src/pages/PaymentCheckout.jsx`, `docs/CHANGELOG.md`
+
+- 14:30 — `docs(email)`: branded auth emails installed in production (subjects + Confirm signup and Reset Password templates, set through the Management API and verified) — `docs/email-templates/README.md`, `docs/CHANGELOG.md`
+
+- 14:00 — `docs(email)`: branded auth email templates (Confirm signup, Reset Password) with the Unipicks logo, brand colours, a clear button, the link as plain text, and a short footer explaining why the email was sent. Founder pastes them into Supabase → Authentication → Emails → Templates — `docs/email-templates/`, `docs/CHANGELOG.md`
+
+- 13:30 — `docs`: forgot password tested in production by the founder (works); new open item: auth emails land in Gmail spam until templates are customized and a domain is set up — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`
+
 - 13:00 — `feat(auth)`: forgot password. "Forgot password?" on Login opens `/forgot-password`, which emails a reset link (`redirectTo: appUrl("/reset-password")`) and always shows the same answer so it cannot reveal who has an account (a 429 shows "please wait"). `/reset-password` (opened from the email) sets a new password (min 8, confirmed), logs out every other device, and opens the dashboard; a missing or expired link shows a clear message with "Request a new link". The expired-link message on Login now mentions "Forgot password?". Standards: OWASP ASVS v4.0.3 §2.5 (credential recovery: no account enumeration, single-use links, other sessions ended), NIST SP 800-63B §5.1.1 (minimum password length) — `src/pages/ForgotPassword.jsx`, `src/pages/ResetPassword.jsx`, `src/pages/Login.jsx`, `src/main.jsx`, `src/lib/authLinkError.js`, `docs/CHANGELOG.md`
 
 - 12:30 — `docs`: work log: all 2026-10-04 commits, founder decisions (no deal limits, only the 3-waiting rule, groups formed any time, Gmail SMTP until a domain), Sentry setup and privacy settings, new open items — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`

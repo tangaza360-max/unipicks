@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { liveChannel } from '../lib/realtime.js'
 import { createOrder } from '../lib/orders.js'
 import GroupOrders from './GroupOrders.jsx'
 import StoryViewer from '../components/StoryViewer.jsx'
@@ -215,8 +216,7 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
     loadDeals()
     loadStories()
 
-    const dealsChannel = supabase
-      .channel('student-feed-deals')
+    const dealsChannel = liveChannel('student-feed-deals')
       .on(
         'postgres_changes',
         {
@@ -231,8 +231,7 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
       )
       .subscribe()
 
-    const storiesChannel = supabase
-      .channel('student-feed-stories')
+    const storiesChannel = liveChannel('student-feed-stories')
       .on(
         'postgres_changes',
         {
@@ -661,8 +660,7 @@ function DealCard({ deal, ratingStats }) {
 
     loadOrderStatus()
 
-    const channel = supabase
-      .channel(`order-status-${orderId}`)
+    const channel = liveChannel(`order-status-${orderId}`)
       .on(
         'postgres_changes',
         {

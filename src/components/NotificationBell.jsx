@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { liveChannel } from '../lib/realtime.js'
 import { Bell } from 'lucide-react'
 
 // Dashboard bell for merchants and admins. It merges two inboxes:
@@ -70,7 +71,7 @@ export default function NotificationBell({ includeMerchantInbox = true }) {
       }
       if (!active || subscribedUserId !== user.id) return
 
-      channel = supabase.channel(`notifications:${user.id}`)
+      channel = liveChannel(`notifications:${user.id}`)
       if (includeMerchantInbox) {
         channel = channel.on(
           'postgres_changes',

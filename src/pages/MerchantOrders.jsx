@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { liveChannel } from '../lib/realtime.js'
 
 const DISPUTE_STATUS_LABELS = {
   open: 'Open',
@@ -111,8 +112,7 @@ export default function MerchantOrders() {
 
       if (!userData.user) return
 
-      channel = supabase
-        .channel('merchant-orders')
+      channel = liveChannel('merchant-orders')
         .on(
           'postgres_changes',
           {
