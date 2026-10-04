@@ -1,14 +1,15 @@
 import * as Sentry from '@sentry/react'
 
 // Crash reports to Sentry (EU region), so the team gets an email when the
-// app breaks. Only runs when VITE_SENTRY_DSN is set (Vercel Production), so
-// local runs, previews and tests send nothing.
+// app breaks. Only runs in production builds (vite build) with
+// VITE_SENTRY_DSN set (committed in .env; the DSN is public by design), so
+// local dev runs and tests send nothing.
 //
 // Privacy: errors only (no session replay, no performance tracing), no user
 // identity, IP, cookies or headers, and URLs are cut at "?" and "#" so login
 // tokens (#access_token=…) and query values never leave the browser.
 
-const dsn = import.meta.env.VITE_SENTRY_DSN
+const dsn = import.meta.env.PROD ? import.meta.env.VITE_SENTRY_DSN : ''
 let enabled = false
 
 function stripUrl(url) {
