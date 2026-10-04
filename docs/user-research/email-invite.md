@@ -2,26 +2,33 @@
 
 Ready-to-send email for the Kepler College general student email list (English only, v1). Replace `[form link]` with the form's public link (`forms.gle/…`).
 
-**Subject:** Help build Unipicks, a student companion for Kepler (1-minute survey)
+**Subject:** Help us with a 1-minute survey about food near campus
 
 > Hello everyone,
 >
-> I'm Olivier, a Kepler student. Like many of you, I know the struggle: the money runs out before the month does, lunch near campus is expensive, and it is hard to find good, affordable places.
+> My name is Olivier. I am a student at Kepler.
 >
-> That is why I'm building **Unipicks**, a student companion for life around Kigali campus. It brings together student-only deals from food places near campus. You can order ahead, pay with MoMo or Airtel Money, team up with friends on a group order for a better price, and pick up with a code instead of waiting in line.
+> Food near campus is expensive, and it is hard to find good places. So I am building **Unipicks**, an app for Kepler students. With Unipicks you can:
 >
-> Before we launch, I would value your opinion. The survey has 7 quick questions and takes about 1 minute. Most are just one tap. Your answers will decide what we build first.
+> - get student discounts at food places near campus
+> - order before you arrive, so you do not wait in line
+> - pay with MoMo or Airtel Money
+> - order with friends to get a better price
+>
+> Before we start, we need your opinion. Please answer our short survey:
 >
 > **[form link]**
 >
-> At the end, you can leave your email to try Unipicks before everyone else.
+> - 7 questions
+> - 1 minute
+> - No name needed
 >
-> Your answers are anonymous and used only to improve Unipicks. Leaving your email is optional.
+> If you want to try the app first, you can leave your email at the end.
 >
-> Thank you, murakoze.
+> Thank you. Murakoze.
 >
 > Olivier Chris Tuyishime
-> Kepler College student, founder of Unipicks
+> Kepler student, founder of Unipicks
 
 ## Before sending
 - Get permission from whoever manages the general email list (college or student council).
@@ -31,6 +38,14 @@ Ready-to-send email for the Kepler College general student email list (English o
 
 ## Reminder (3 days later)
 
-**Subject:** Reminder: 1-minute Unipicks survey
+**Subject:** Reminder: 1-minute survey about food near campus
 
-> Hello everyone, thank you to all who have already answered. If you have not yet, the survey is open for a few more days and takes about 1 minute: **[form link]**. Murakoze.
+> Hello everyone,
+>
+> Thank you to everyone who answered our survey.
+>
+> If you did not answer yet, it is still open. It takes 1 minute: **[form link]**
+>
+> Murakoze.
+>
+> Olivier

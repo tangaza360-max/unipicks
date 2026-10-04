@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 05:30 — `docs(research)`: student email rewritten in short, simple English (short sentences, a list of what Unipicks does, the survey facts as a list) — `docs/user-research/email-invite.md`, `docs/CHANGELOG.md`
+
 - 05:00 — `docs(research)`: simpler student form so students do not struggle: 7 questions on one page, about 1 minute, 5 one-tap (4 required) and 2 optional typing (would use, top feature, payment, lunch price, barriers, one idea, email for the beta). Removed the year question, ranking grid, sections and consent boxes. Spec, paste text, API JSON, email and READMEs updated — `docs/user-research/create-form.gs`, `docs/user-research/google-form.md`, `docs/user-research/google-form-paste.txt`, `docs/user-research/google-forms-api.json`, `docs/user-research/email-invite.md`, `docs/user-research/README.md`, `docs/audits/README.md`, `docs/CHANGELOG.md`
 
 - 04:30 — `docs(brand)`: Unipicks brand kit for the student form: Google Form header (1600 × 400), logo with name, app icon (PNG and SVG) and colour codes, all from the existing app logo and colours; form docs now use the header. No app code changed — `docs/user-research/brand/`, `docs/user-research/create-form.gs`, `docs/user-research/google-form.md`, `docs/user-research/google-form-paste.txt`, `docs/user-research/README.md`, `docs/CHANGELOG.md`
