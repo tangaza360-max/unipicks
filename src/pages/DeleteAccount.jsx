@@ -1,11 +1,11 @@
 import { Link, useSearchParams } from 'react-router-dom'
+import { SUPPORT_EMAIL } from '../lib/support.js'
 
 // Public page (no login): how to delete a Unipicks account and what happens
 // to the data. Required by Apple App Store 5.1.1(v) and Google Play's account
 // deletion policy, including a way to ask without signing in.
 // Describes the tombstone in supabase/migrations/20261003220000 and 20261003240000.
 
-const SUPPORT_EMAIL = 'support@unipicks.app' // placeholder until the support inbox exists
 
 const deleted = [
   'Your profile: name, photo, bio, student ID and university details',

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { SUPPORT_EMAIL } from '../lib/support.js'
 
 const sections = [
   ['Using Unipicks', 'You must provide accurate account information, keep your credentials secure, and use the platform lawfully. Accounts are personal and may not be shared or used to impersonate another person or business.'],
@@ -7,7 +8,7 @@ const sections = [
   ['Reviews and content', 'Only students who have completed an eligible order may submit a rating. Reviews must be honest, relevant, and respectful. We may remove unlawful, abusive, deceptive, or otherwise inappropriate content.'],
   ['Administrators and enforcement', 'Administrators may approve merchants, manage platform settings, moderate content, and suspend accounts when needed to protect users or the service. Administrative actions may be recorded in an audit log.'],
   ['Disclaimer and liability', 'Unipicks provides a platform connecting students and merchants. Merchants are responsible for their goods, services, prices, and compliance obligations. To the extent permitted by law, Unipicks is not responsible for merchant conduct, unavailable deals, or indirect losses.'],
-  ['Changes and contact', 'We may update these terms as the service evolves. Continued use after an update means you accept the revised terms. Questions can be directed to the support contact shown in the platform settings.'],
+  ['Changes and contact', `We may update these terms as the service evolves. Continued use after an update means you accept the revised terms. Questions: email ${SUPPORT_EMAIL}.`],
 ]
 
 export default function Terms() {
