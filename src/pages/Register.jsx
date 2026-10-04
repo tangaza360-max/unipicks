@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { appUrl } from '../lib/authRedirect.js'
 import { UNIVERSITIES, domainForUniversity } from '../lib/universities.js'
 import Logo from '../components/Logo.jsx'
 
@@ -70,7 +71,7 @@ export default function Register() {
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: form.email.trim().toLowerCase(),
       password: form.password,
-      options: { data: metadata },
+      options: { data: metadata, emailRedirectTo: appUrl('/dashboard') },
     })
     setLoading(false)
 

@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 06:00 — `fix(auth)`: signup confirmation emails no longer depend on the Supabase dashboard Site URL (production sent users to `http://localhost:3000`). New `appUrl()` helper; student and merchant `signUp` pass `emailRedirectTo: appUrl('/dashboard')`. Audit: these are the only auth calls that produce a redirect (no password reset, magic link, OTP or email change exists yet; `ProfileTab` `updateUser` changes metadata only). Standard: Supabase docs, "Redirect URLs" (pass `emailRedirectTo` explicitly; it must match the allow list) — `src/lib/authRedirect.js`, `src/pages/Register.jsx`, `src/pages/RegisterMerchant.jsx`, `docs/CHANGELOG.md`
+
 - 05:30 — `docs(research)`: student email rewritten in short, simple English (short sentences, a list of what Unipicks does, the survey facts as a list) — `docs/user-research/email-invite.md`, `docs/CHANGELOG.md`
 
 - 05:00 — `docs(research)`: simpler student form so students do not struggle: 7 questions on one page, about 1 minute, 5 one-tap (4 required) and 2 optional typing (would use, top feature, payment, lunch price, barriers, one idea, email for the beta). Removed the year question, ranking grid, sections and consent boxes. Spec, paste text, API JSON, email and READMEs updated — `docs/user-research/create-form.gs`, `docs/user-research/google-form.md`, `docs/user-research/google-form-paste.txt`, `docs/user-research/google-forms-api.json`, `docs/user-research/email-invite.md`, `docs/user-research/README.md`, `docs/audits/README.md`, `docs/CHANGELOG.md`
