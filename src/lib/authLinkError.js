@@ -6,7 +6,7 @@
 
 const MESSAGES = {
   otp_expired:
-    'This email link has expired or was already used. If you already confirmed your email, log in below. If not, sign up again to get a new link.',
+    'This email link has expired or was already used. If you already confirmed your email, log in below. If not, sign up again to get a new link. Forgot your password? Use "Forgot password?" below to get a new reset link.',
 }
 
 const FALLBACK = 'This email link did not work. Please log in below, or sign up again to get a new link.'
