@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 08:00 — `fix(merchant)`: the business dashboard header shows the business name (from `merchant_profiles`, the same name students see) with "Business account", instead of "Hi, {owner name}" and "Merchant account". Falls back to the signup business name, then the owner name, then the email; updates right after the business renames itself in Profile. Students and admins unchanged. Standards: Nielsen heuristics #2 (match the real world) and #4 (consistency); WCAG 2.2 SC 2.4.6 (headings describe the topic) — `src/pages/Dashboard.jsx`, `src/pages/MerchantProfile.jsx`, `docs/CHANGELOG.md`
+
 - 06:30 — `docs`: work log updated with the founder-confirmed production state (all 5 migrations applied, email confirmation on, test merchant profile created by the fix 1 trigger) and the Site URL incident — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`
 
 - 06:00 — `fix(auth)`: signup confirmation emails no longer depend on the Supabase dashboard Site URL (production sent users to `http://localhost:3000`). New `appUrl()` helper; student and merchant `signUp` pass `emailRedirectTo: appUrl('/dashboard')`. Audit: these are the only auth calls that produce a redirect (no password reset, magic link, OTP or email change exists yet; `ProfileTab` `updateUser` changes metadata only). Standard: Supabase docs, "Redirect URLs" (pass `emailRedirectTo` explicitly; it must match the allow list) — `src/lib/authRedirect.js`, `src/pages/Register.jsx`, `src/pages/RegisterMerchant.jsx`, `docs/CHANGELOG.md`

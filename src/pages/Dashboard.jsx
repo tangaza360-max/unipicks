@@ -34,6 +34,7 @@ export default function Dashboard() {
   const [pendingOrderCount, setPendingOrderCount] = useState(0)
   const [openDisputeCount, setOpenDisputeCount] = useState(0)
   const [openReportCount, setOpenReportCount] = useState(0)
+  const [businessName, setBusinessName] = useState('')
   const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
@@ -89,6 +90,27 @@ return () => {
       navigate(`/dashboard/${defaultTab}`, { replace: true })
     }
   }, [dashboardTab, loading, navigate, role])
+
+  // Merchant header: the account belongs to the business, so show the
+  // business name students see on deals and chats (merchant_profiles).
+  useEffect(() => {
+    if (role !== 'merchant' || !user) return
+    let active = true
+
+    supabase
+      .from('merchant_profiles')
+      .select('business_name')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) console.error('[merchant header] business name fetch failed:', error)
+        else if (active) setBusinessName(data?.business_name?.trim() || '')
+      })
+
+    return () => {
+      active = false
+    }
+  }, [role, user])
 
   // Merchant pending-order badge: count of orders awaiting the merchant's accept/decline.
   useEffect(() => {
@@ -283,6 +305,8 @@ return () => {
   }
 
   const name = user.user_metadata?.full_name ?? user.email
+  const merchantTitle =
+    businessName || user.user_metadata?.business_name?.trim() || user.user_metadata?.full_name || user.email
 
   if (!role) {
     return (
@@ -355,7 +379,9 @@ return () => {
         {dashboardTab === 'deals' && <MerchantDeals />}
         {dashboardTab === 'orders' && <MerchantOrders />}
         {dashboardTab === 'stats' && <MerchantAnalytics />}
-        {dashboardTab === 'profile' && <MerchantProfile merchantId={user.id} />}
+        {dashboardTab === 'profile' && (
+          <MerchantProfile merchantId={user.id} onBusinessNameChange={setBusinessName} />
+        )}
         {dashboardTab === 'stories' && <MerchantStories />}
         {dashboardTab === 'messages' && <Messages />}
       </>
@@ -434,8 +460,17 @@ return () => {
           <div className="flex items-center gap-3">
             <Logo size={32} className="text-accent" />
             <div>
-              <h1 className="font-display text-2xl font-semibold">Hi, {name}</h1>
-              <p className="text-muted-foreground text-sm capitalize">{role} account</p>
+              {role === 'merchant' ? (
+                <>
+                  <h1 className="font-display text-2xl font-semibold">{merchantTitle}</h1>
+                  <p className="text-muted-foreground text-sm">Business account</p>
+                </>
+              ) : (
+                <>
+                  <h1 className="font-display text-2xl font-semibold">Hi, {name}</h1>
+                  <p className="text-muted-foreground text-sm capitalize">{role} account</p>
+                </>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
