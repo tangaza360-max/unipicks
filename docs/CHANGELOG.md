@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 11:30 — `fix(monitoring)`: the Sentry DSN was never set in Vercel (only misnamed `ITE_SUPABASE_*` variables exist there), so production sent no crash reports. The DSN (public by design) is now in the committed `.env`, like the Supabase settings, and Sentry only starts in production builds, so local runs send nothing. `.env.example` documents it — `.env`, `.env.example`, `src/lib/monitoring.js`, `docs/CHANGELOG.md`
+
 - 11:00 — `feat(monitoring)`: crash reports to Sentry (EU region) so the team is emailed when the app breaks. Runs only when `VITE_SENTRY_DSN` is set (Vercel Production). Privacy: errors only (no session replay or tracing), `sendDefaultPii: false`, no user/IP/cookies/headers, console messages dropped, every URL cut at `?` and `#` so login tokens never leave the browser. Privacy page updated. Standards: privacy by design / data minimisation (Law N° 058/2021 on personal data; GDPR Art. 25) — `package.json`, `package-lock.json`, `src/lib/monitoring.js`, `src/components/ErrorBoundary.jsx`, `src/main.jsx`, `src/pages/Privacy.jsx`, `docs/CHANGELOG.md`
 
 - 10:30 — `fix(app)`: a crash anywhere in the app now shows "Something went wrong" with a Reload button and a link to the home page, instead of a blank white page. The error goes to the browser console only (no personal data collected or sent). Standards: Nielsen heuristic #9 (help users recover from errors); WCAG 2.2 SC 4.1.3 (status messages, `role="alert"`) — `src/components/ErrorBoundary.jsx`, `src/main.jsx`, `docs/CHANGELOG.md`
