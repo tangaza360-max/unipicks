@@ -464,7 +464,7 @@ function NormalOrderCard({ order, onRaiseDispute }) {
       )}
 
       {showRedeemed && (
-        <p className="mt-3 text-xs text-green-400">Redeemed ✓</p>
+        <p className="mt-3 text-xs text-green-400">Collected ✓</p>
       )}
 
       {showDecline && (

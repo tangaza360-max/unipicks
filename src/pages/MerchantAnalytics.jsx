@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import StatusBadge from '../components/StatusBadge.jsx'
 
 export default function MerchantAnalytics() {
   const [loading, setLoading] = useState(true)
@@ -219,13 +220,7 @@ export default function MerchantAnalytics() {
                   <p className="text-xs text-muted-foreground">
                     {r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}
                   </p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    r.status === 'redeemed'
-                      ? 'bg-primary/10 text-primary'
-                      : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {r.status || 'pending'}
-                  </span>
+                  <StatusBadge status={r.status || 'pending'} audience="business" />
                 </div>
               </div>
             ))}

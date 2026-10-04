@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { statusLabel } from '../components/StatusBadge.jsx'
 import { CheckCircle2, Clock, Eye } from 'lucide-react'
 
 export default function AdminStudentView() {
@@ -216,7 +217,7 @@ export default function AdminStudentView() {
                 {studentData.hostedOrders.map((order) => (
                   <div key={order.id} className="border border-border rounded-lg p-2 text-sm">
                     <span className="font-medium">{order.deals?.title}</span>
-                    <span className="text-muted-foreground text-xs ml-2">· {order.status}</span>
+                    <span className="text-muted-foreground text-xs ml-2">· {statusLabel(order.status)}</span>
                     <span className="text-muted-foreground text-xs ml-2">{order.join_code}</span>
                   </div>
                 ))}

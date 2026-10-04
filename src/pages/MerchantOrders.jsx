@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import StatusBadge from '../components/StatusBadge.jsx'
 import { liveChannel } from '../lib/realtime.js'
 
 const DISPUTE_STATUS_LABELS = {
@@ -299,9 +300,7 @@ export default function MerchantOrders() {
                   </p>
                 </div>
 
-                <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
-                  {order.status}
-                </span>
+                <StatusBadge status={order.status} audience="business" />
               </div>
 
               <div className="text-sm text-muted-foreground">
