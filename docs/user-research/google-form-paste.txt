@@ -1,106 +1,61 @@
 FORM TITLE
-Unipicks: help us build your student companion
+Unipicks: 1-minute student survey
 
 FORM DESCRIPTION
-Hello. I'm a Kepler student, and like you, I know the struggle: the money runs out before the month does, lunch near campus is expensive, and you never know where the good, affordable places are.
+Hi, I'm a Kepler student building Unipicks: student deals from food places near Kigali campus. You order ahead, pay with MoMo or Airtel Money, and pick up without waiting in line.
 
-That's why we're building Unipicks, a student companion for life around Kigali campus. It brings together student-only deals from food places near campus, lets you order ahead and pay with MoMo or Airtel Money, and lets you team up with friends on group orders to unlock better prices. You skip the queue and pick up with a code.
+7 quick questions, about 1 minute. Most are just one tap. No name needed. Murakoze.
 
-This survey has 11 short questions and takes about 2 minutes. Your answers decide what we build first. It's anonymous unless you choose to leave your email at the end.
-
-Murakoze, thank you.
-
-SETTINGS: Collect emails OFF · Limit to 1 response OFF · Progress bar ON
+SETTINGS: Collect emails OFF · Limit to 1 response OFF · One page, no sections
 THEME (palette icon): Header image brand/form-header-1600x400.png · Colour #95BF47 · Background lightest option · Font style Basic
 
 CONFIRMATION MESSAGE
-Murakoze. Thank you for helping us build something that truly works for Kepler students. If you left your email for the beta, we'll be in touch soon.
+Murakoze. Your answers help us build Unipicks for Kepler students.
 
 ============================================================
 
---- SECTION 1: About you ---  (first section uses the form header)
+Q1. Would you use Unipicks?
+Type: Linear scale · Required
+  Scale 1–5 · 1 = No · 5 = Yes, a lot
 
-Q1. First, which year are you in?
+Q2. Which would you use the most?
 Type: Multiple choice · Required
-  ○ Year 1
-  ○ Year 2
-  ○ Year 3
-  ○ Year 4
-  ○ Joining Kepler soon
-  ○ Graduated / alumni
+Description: Pick one.
+  ○ Student deals and discounts
+  ○ Order ahead and skip the queue
+  ○ Group orders with friends for a better price
+  ○ Chat with the food place
 
-Q2. How do you usually pay for food and snacks?
+Q3. How do you pay for food?
 Type: Checkboxes · Required
 Description: Pick all that apply.
   ☐ MTN MoMo
   ☐ Airtel Money
   ☐ Cash
   ☐ Bank card
-  + Add "Other"
 
---- SECTION 2: Unipicks, your student companion ---  (Add section)
-Section description: Here's the idea. Every food place near campus can post deals that only Kepler students get. You open the app, find a deal you like, and order it. The place confirms, you pay with mobile money, and you get a pickup code, so no waiting in line. Going with friends? Start a group order, everyone adds what they want, and the group gets a better price. You can also message the food place directly and connect with friends on campus.
-
-Q3. Honestly, how likely are you to use Unipicks?
-Type: Linear scale · Required
-  Scale 1–5 · 1 = Not likely at all · 5 = I'd use it a lot
-
-Q4. What's your biggest struggle with food around campus?
-Type: Paragraph · Optional
-Description: For example: lunch costs too much, I don't know the good places, the queues are long, ordering for a group is a mess…
-
---- SECTION 3: What matters most to you ---  (Add section)
-
-Q5. Which features would help you most? Put them in order.
-Type: Multiple choice grid · Required
-Description: Give each feature a different rank. 1st = the one you'd use the most.
-  Rows: Student deals and discounts | Group orders with friends | Chatting with the food place | Stories from food places and friends | Search for food, places and friends
-  Columns: 1st | 2nd | 3rd | 4th | 5th
-  ⋮ Require a response in each row: ON · Limit to one response per column: ON
-
-Q6. What could stop you from using Unipicks?
-Type: Checkboxes · Optional
-Description: Be honest, it helps us. Pick all that apply.
-  ☐ I don't trust paying through an app
-  ☐ The discounts might be too small
-  ☐ My favourite places might not be on it
-  ☐ Waiting for the place to confirm my order
-  ☐ I prefer paying cash
-  ☐ Mobile data or phone storage
-  ☐ I don't want another app
-  + Add "Other"
-  ⋮ Shuffle option order: ON
-
---- SECTION 4: Prices and early access ---  (Add section)
-
-Q7. For a good student lunch deal, what price feels right?
+Q4. What is a good price for a student lunch?
 Type: Multiple choice · Required
   ○ Under 1,000 RWF
-  ○ 1,000–1,500 RWF
-  ○ 1,500–2,000 RWF
-  ○ 2,000–3,000 RWF
-  ○ More than 3,000 RWF if the food is really good
+  ○ 1,000 to 1,500 RWF
+  ○ 1,500 to 2,000 RWF
+  ○ 2,000 to 3,000 RWF
+  ○ More than 3,000 RWF
 
-Q8. Want to try Unipicks before everyone else?
-Type: Multiple choice · Required
-Description: Beta testers use the app first, tell us what's not working, and get the first deals.
-  ○ Yes, count me in
-  ○ Maybe, tell me more
-  ○ No thanks
-
---- SECTION 5: Your ideas ---  (Add section)
-
-Q9. If you could change one thing about buying food around campus, what would it be?
-Type: Paragraph · Optional
-
-Q10. Your email (optional)
-Type: Short answer · Optional
-Description: Only if you want us to contact you, for example about the beta. Leave it blank to stay anonymous. We'll never share it.
-  ⋮ Response validation: Text → Email address
-
-Q11. Is it okay if we…
+Q5. What could stop you from using it?
 Type: Checkboxes · Optional
 Description: Optional. Pick all that apply.
-  ☐ Contact you about the beta (using the email above)
-  ☐ Invite you to a 15-minute chat about Unipicks
-  ☐ Quote your answers in Unipicks posts (first name only)
+  ☐ I don't trust paying in an app
+  ☐ My favourite places may not be on it
+  ☐ The discounts may be too small
+  ☐ I prefer cash
+  + Add "Other"
+
+Q6. What would make food around campus better for you?
+Type: Short answer · Optional
+Description: Optional. One line is enough.
+
+Q7. Want to try Unipicks first? Leave your email.
+Type: Short answer · Optional
+Description: Optional. We will only use it to invite you to the beta, and never share it.
+  ⋮ Response validation: Text → Email address

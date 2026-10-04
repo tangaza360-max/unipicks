@@ -1,11 +1,11 @@
 {
-  "_comment": "Body for forms.batchUpdate. First call forms.create with {\"info\": {\"title\": \"Unipicks: help us build your student companion\", \"documentTitle\": \"Unipicks student survey\"}}. The API cannot set response validation: after running, open the editor and set Q5 \"Limit to one response per column\" and Q10 \"Response validation: Email\". Also set the confirmation message and progress bar in Settings, and the calm theme (see google-form.md). Remove this _comment key before sending.",
+  "_comment": "Body for forms.batchUpdate. First call forms.create with {\"info\": {\"title\": \"Unipicks: 1-minute student survey\", \"documentTitle\": \"Unipicks student survey\"}}. The API cannot set response validation: after running, set Q7 \"Response validation: Email\" in the editor. Also set the confirmation message in Settings and the theme (see brand/README.md). Remove this _comment key before sending.",
   "includeFormInResponse": false,
   "requests": [
     {
       "updateFormInfo": {
         "info": {
-          "description": "Hello. I'm a Kepler student, and like you, I know the struggle: the money runs out before the month does, lunch near campus is expensive, and you never know where the good, affordable places are.\n\nThat's why we're building Unipicks, a student companion for life around Kigali campus. It brings together student-only deals from food places near campus, lets you order ahead and pay with MoMo or Airtel Money, and lets you team up with friends on group orders to unlock better prices. You skip the queue and pick up with a code.\n\nThis survey has 11 short questions and takes about 2 minutes. Your answers decide what we build first. It's anonymous unless you choose to leave your email at the end.\n\nMurakoze, thank you."
+          "description": "Hi, I'm a Kepler student building Unipicks: student deals from food places near Kigali campus. You order ahead, pay with MoMo or Airtel Money, and pick up without waiting in line.\n\n7 quick questions, about 1 minute. Most are just one tap. No name needed. Murakoze."
         },
         "updateMask": "description"
       }
@@ -23,32 +23,15 @@
     {
       "createItem": {
         "item": {
-          "title": "First, which year are you in?",
+          "title": "Would you use Unipicks?",
           "questionItem": {
             "question": {
               "required": true,
-              "choiceQuestion": {
-                "type": "RADIO",
-                "options": [
-                  {
-                    "value": "Year 1"
-                  },
-                  {
-                    "value": "Year 2"
-                  },
-                  {
-                    "value": "Year 3"
-                  },
-                  {
-                    "value": "Year 4"
-                  },
-                  {
-                    "value": "Joining Kepler soon"
-                  },
-                  {
-                    "value": "Graduated / alumni"
-                  }
-                ]
+              "scaleQuestion": {
+                "low": 1,
+                "high": 5,
+                "lowLabel": "No",
+                "highLabel": "Yes, a lot"
               }
             }
           }
@@ -61,7 +44,40 @@
     {
       "createItem": {
         "item": {
-          "title": "How do you usually pay for food and snacks?",
+          "title": "Which would you use the most?",
+          "description": "Pick one.",
+          "questionItem": {
+            "question": {
+              "required": true,
+              "choiceQuestion": {
+                "type": "RADIO",
+                "options": [
+                  {
+                    "value": "Student deals and discounts"
+                  },
+                  {
+                    "value": "Order ahead and skip the queue"
+                  },
+                  {
+                    "value": "Group orders with friends for a better price"
+                  },
+                  {
+                    "value": "Chat with the food place"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "location": {
+          "index": 1
+        }
+      }
+    },
+    {
+      "createItem": {
+        "item": {
+          "title": "How do you pay for food?",
           "description": "Pick all that apply.",
           "questionItem": {
             "question": {
@@ -80,26 +96,11 @@
                   },
                   {
                     "value": "Bank card"
-                  },
-                  {
-                    "isOther": true
                   }
                 ]
               }
             }
           }
-        },
-        "location": {
-          "index": 1
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "Unipicks, your student companion",
-          "pageBreakItem": {},
-          "description": "Here's the idea. Every food place near campus can post deals that only Kepler students get. You open the app, find a deal you like, and order it. The place confirms, you pay with mobile money, and you get a pickup code, so no waiting in line. Going with friends? Start a group order, everyone adds what they want, and the group gets a better price. You can also message the food place directly and connect with friends on campus."
         },
         "location": {
           "index": 2
@@ -109,15 +110,29 @@
     {
       "createItem": {
         "item": {
-          "title": "Honestly, how likely are you to use Unipicks?",
+          "title": "What is a good price for a student lunch?",
           "questionItem": {
             "question": {
               "required": true,
-              "scaleQuestion": {
-                "low": 1,
-                "high": 5,
-                "lowLabel": "Not likely at all",
-                "highLabel": "I'd use it a lot"
+              "choiceQuestion": {
+                "type": "RADIO",
+                "options": [
+                  {
+                    "value": "Under 1,000 RWF"
+                  },
+                  {
+                    "value": "1,000 to 1,500 RWF"
+                  },
+                  {
+                    "value": "1,500 to 2,000 RWF"
+                  },
+                  {
+                    "value": "2,000 to 3,000 RWF"
+                  },
+                  {
+                    "value": "More than 3,000 RWF"
+                  }
+                ]
               }
             }
           }
@@ -130,13 +145,30 @@
     {
       "createItem": {
         "item": {
-          "title": "What's your biggest struggle with food around campus?",
-          "description": "For example: lunch costs too much, I don't know the good places, the queues are long, ordering for a group is a mess…",
+          "title": "What could stop you from using it?",
+          "description": "Optional. Pick all that apply.",
           "questionItem": {
             "question": {
               "required": false,
-              "textQuestion": {
-                "paragraph": true
+              "choiceQuestion": {
+                "type": "CHECKBOX",
+                "options": [
+                  {
+                    "value": "I don't trust paying in an app"
+                  },
+                  {
+                    "value": "My favourite places may not be on it"
+                  },
+                  {
+                    "value": "The discounts may be too small"
+                  },
+                  {
+                    "value": "I prefer cash"
+                  },
+                  {
+                    "isOther": true
+                  }
+                ]
               }
             }
           }
@@ -149,237 +181,8 @@
     {
       "createItem": {
         "item": {
-          "title": "What matters most to you",
-          "pageBreakItem": {}
-        },
-        "location": {
-          "index": 5
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "Which features would help you most? Put them in order.",
-          "description": "Give each feature a different rank. 1st = the one you'd use the most.",
-          "questionGroupItem": {
-            "questions": [
-              {
-                "required": true,
-                "rowQuestion": {
-                  "title": "Student deals and discounts"
-                }
-              },
-              {
-                "required": true,
-                "rowQuestion": {
-                  "title": "Group orders with friends"
-                }
-              },
-              {
-                "required": true,
-                "rowQuestion": {
-                  "title": "Chatting with the food place"
-                }
-              },
-              {
-                "required": true,
-                "rowQuestion": {
-                  "title": "Stories from food places and friends"
-                }
-              },
-              {
-                "required": true,
-                "rowQuestion": {
-                  "title": "Search for food, places and friends"
-                }
-              }
-            ],
-            "grid": {
-              "columns": {
-                "type": "RADIO",
-                "options": [
-                  {
-                    "value": "1st"
-                  },
-                  {
-                    "value": "2nd"
-                  },
-                  {
-                    "value": "3rd"
-                  },
-                  {
-                    "value": "4th"
-                  },
-                  {
-                    "value": "5th"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "location": {
-          "index": 6
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "What could stop you from using Unipicks?",
-          "description": "Be honest, it helps us. Pick all that apply.",
-          "questionItem": {
-            "question": {
-              "required": false,
-              "choiceQuestion": {
-                "type": "CHECKBOX",
-                "options": [
-                  {
-                    "value": "I don't trust paying through an app"
-                  },
-                  {
-                    "value": "The discounts might be too small"
-                  },
-                  {
-                    "value": "My favourite places might not be on it"
-                  },
-                  {
-                    "value": "Waiting for the place to confirm my order"
-                  },
-                  {
-                    "value": "I prefer paying cash"
-                  },
-                  {
-                    "value": "Mobile data or phone storage"
-                  },
-                  {
-                    "value": "I don't want another app"
-                  },
-                  {
-                    "isOther": true
-                  }
-                ],
-                "shuffle": true
-              }
-            }
-          }
-        },
-        "location": {
-          "index": 7
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "Prices and early access",
-          "pageBreakItem": {}
-        },
-        "location": {
-          "index": 8
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "For a good student lunch deal, what price feels right?",
-          "questionItem": {
-            "question": {
-              "required": true,
-              "choiceQuestion": {
-                "type": "RADIO",
-                "options": [
-                  {
-                    "value": "Under 1,000 RWF"
-                  },
-                  {
-                    "value": "1,000–1,500 RWF"
-                  },
-                  {
-                    "value": "1,500–2,000 RWF"
-                  },
-                  {
-                    "value": "2,000–3,000 RWF"
-                  },
-                  {
-                    "value": "More than 3,000 RWF if the food is really good"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "location": {
-          "index": 9
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "Want to try Unipicks before everyone else?",
-          "description": "Beta testers use the app first, tell us what's not working, and get the first deals.",
-          "questionItem": {
-            "question": {
-              "required": true,
-              "choiceQuestion": {
-                "type": "RADIO",
-                "options": [
-                  {
-                    "value": "Yes, count me in"
-                  },
-                  {
-                    "value": "Maybe, tell me more"
-                  },
-                  {
-                    "value": "No thanks"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "location": {
-          "index": 10
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "Your ideas",
-          "pageBreakItem": {}
-        },
-        "location": {
-          "index": 11
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "If you could change one thing about buying food around campus, what would it be?",
-          "questionItem": {
-            "question": {
-              "required": false,
-              "textQuestion": {
-                "paragraph": true
-              }
-            }
-          }
-        },
-        "location": {
-          "index": 12
-        }
-      }
-    },
-    {
-      "createItem": {
-        "item": {
-          "title": "Your email (optional)",
-          "description": "Only if you want us to contact you, for example about the beta. Leave it blank to stay anonymous. We'll never share it.",
+          "title": "What would make food around campus better for you?",
+          "description": "Optional. One line is enough.",
           "questionItem": {
             "question": {
               "required": false,
@@ -390,37 +193,26 @@
           }
         },
         "location": {
-          "index": 13
+          "index": 5
         }
       }
     },
     {
       "createItem": {
         "item": {
-          "title": "Is it okay if we…",
-          "description": "Optional. Pick all that apply.",
+          "title": "Want to try Unipicks first? Leave your email.",
+          "description": "Optional. We will only use it to invite you to the beta, and never share it.",
           "questionItem": {
             "question": {
               "required": false,
-              "choiceQuestion": {
-                "type": "CHECKBOX",
-                "options": [
-                  {
-                    "value": "Contact you about the beta (using the email above)"
-                  },
-                  {
-                    "value": "Invite you to a 15-minute chat about Unipicks"
-                  },
-                  {
-                    "value": "Quote your answers in Unipicks posts (first name only)"
-                  }
-                ]
+              "textQuestion": {
+                "paragraph": false
               }
             }
           }
         },
         "location": {
-          "index": 14
+          "index": 6
         }
       }
     }

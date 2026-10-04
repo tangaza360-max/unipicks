@@ -2,7 +2,7 @@
 
 Ready-to-send email for the Kepler College general student email list (English only, v1). Replace `[form link]` with the form's public link (`forms.gle/…`).
 
-**Subject:** Help build Unipicks, a student companion for Kepler (2-minute survey)
+**Subject:** Help build Unipicks, a student companion for Kepler (1-minute survey)
 
 > Hello everyone,
 >
@@ -10,11 +10,11 @@ Ready-to-send email for the Kepler College general student email list (English o
 >
 > That is why I'm building **Unipicks**, a student companion for life around Kigali campus. It brings together student-only deals from food places near campus. You can order ahead, pay with MoMo or Airtel Money, team up with friends on a group order for a better price, and pick up with a code instead of waiting in line.
 >
-> Before we launch, I would value your opinion. The survey has 11 short questions and takes about 2 minutes. Your answers will decide what we build first.
+> Before we launch, I would value your opinion. The survey has 7 quick questions and takes about 1 minute. Most are just one tap. Your answers will decide what we build first.
 >
 > **[form link]**
 >
-> At the end, you can also join the beta and try Unipicks before everyone else.
+> At the end, you can leave your email to try Unipicks before everyone else.
 >
 > Your answers are anonymous and used only to improve Unipicks. Leaving your email is optional.
 >
@@ -31,6 +31,6 @@ Ready-to-send email for the Kepler College general student email list (English o
 
 ## Reminder (3 days later)
 
-**Subject:** Reminder: 2-minute Unipicks survey
+**Subject:** Reminder: 1-minute Unipicks survey
 
-> Hello everyone, thank you to all who have already answered. If you have not yet, the survey is open for a few more days and takes about 2 minutes: **[form link]**. Murakoze.
+> Hello everyone, thank you to all who have already answered. If you have not yet, the survey is open for a few more days and takes about 1 minute: **[form link]**. Murakoze.
