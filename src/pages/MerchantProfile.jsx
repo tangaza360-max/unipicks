@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import { Store, Trash2 } from 'lucide-react'
 import DeleteAccountDialog from '../components/DeleteAccountDialog.jsx'
+import PhoneAlertsCard from '../components/PhoneAlertsCard.jsx'
 
 export default function MerchantProfile({ merchantId, onBusinessNameChange }) {
   const [loading, setLoading] = useState(true)
@@ -197,6 +198,8 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange }) {
         </div>
 
         {success && <p className="text-sm text-green-400">{success}</p>}
+
+        <PhoneAlertsCard audience="merchant" />
 
         <div className="border border-border rounded-lg p-4">
           <p className="text-sm font-medium">Account</p>

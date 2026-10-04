@@ -78,3 +78,49 @@ self.addEventListener('fetch', (event) => {
     })
   )
 })
+// --- Phone alerts (Web Push) ---------------------------------------------------
+// Payload sent by the Edge Functions (JSON): { title, body, url, tag }.
+// url must be a path inside Unipicks ("/dashboard/orders"); anything else
+// opens the dashboard. tag replaces an older alert about the same thing.
+
+function safeAlertPath(url) {
+  return typeof url === 'string' && url.startsWith('/') && !url.startsWith('//') ? url : '/dashboard'
+}
+
+self.addEventListener('push', (event) => {
+  let data = {}
+  try {
+    data = event.data ? event.data.json() : {}
+  } catch {
+    data = { body: event.data ? event.data.text() : '' }
+  }
+
+  const options = {
+    body: typeof data.body === 'string' ? data.body : '',
+    icon: '/apple-touch-icon.png',
+    data: { url: safeAlertPath(data.url) },
+  }
+  if (typeof data.tag === 'string' && data.tag) {
+    options.tag = data.tag
+    options.renotify = true
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(typeof data.title === 'string' && data.title ? data.title : 'Unipicks', options)
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const target = new URL(safeAlertPath(event.notification.data && event.notification.data.url), self.location.origin).href
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      const open = windows.find((client) => new URL(client.url).origin === self.location.origin)
+      if (open) {
+        return open.focus().then((client) => (client && 'navigate' in client ? client.navigate(target) : client))
+      }
+      return self.clients.openWindow(target)
+    })
+  )
+})

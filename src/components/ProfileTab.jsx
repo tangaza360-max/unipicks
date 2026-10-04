@@ -18,6 +18,8 @@ import { supabase } from '../lib/supabaseClient.js'
 import { useTheme } from '../context/ThemeContext.jsx'
 import OrdersTab from './OrdersTab.jsx'
 import DeleteAccountDialog from './DeleteAccountDialog.jsx'
+import PhoneAlertsCard from './PhoneAlertsCard.jsx'
+import { forgetThisPhone } from '../lib/pushNotifications.js'
 
 // University and student ID are set server-side from the verified email
 // domain (auth app_metadata, which the client cannot write). user_metadata
@@ -391,6 +393,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
   }
 
   async function handleLogout() {
+    await forgetThisPhone()
     await supabase.auth.signOut()
     navigate('/login', { replace: true })
   }
@@ -999,7 +1002,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
          </button>
        </div>
 
-       {/* Real notification preferences land with Web Push (post-MVP). */}
+       <PhoneAlertsCard audience="student" />
 
        {/* Privacy & Security */}
        <div className="rounded-xl border border-border bg-card p-4 space-y-3">

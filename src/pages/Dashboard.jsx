@@ -23,6 +23,8 @@ import AdminDisputes from './AdminDisputes.jsx'
 import AdminReports from './AdminReports.jsx'
 import StudentLayout from '../components/StudentLayout.jsx'
 import NotificationBell from '../components/NotificationBell.jsx'
+import PhoneAlertsCard from '../components/PhoneAlertsCard.jsx'
+import { forgetThisPhone } from '../lib/pushNotifications.js'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -297,6 +299,7 @@ return () => {
   }, [role, userId])
 
   async function handleLogout() {
+    await forgetThisPhone()
     await supabase.auth.signOut()
     setUser(null)
     navigate('/login', { replace: true })
@@ -385,6 +388,10 @@ return () => {
               </button>
             )
           })}
+        </div>
+
+        <div className="mb-4">
+          <PhoneAlertsCard variant="prompt" audience="merchant" />
         </div>
 
         {dashboardTab === 'deals' && <MerchantDeals />}
