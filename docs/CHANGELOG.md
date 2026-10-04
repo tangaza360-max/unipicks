@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 08:30 — `fix(auth)`: an expired or already-used email link no longer drops the user on the signup page with no explanation. When Supabase returns an auth error in the URL (`#error_code=otp_expired`), the app opens `/login` with a clear message (log in if already confirmed, or sign up again for a new link). Standards: Nielsen heuristic #9 (help users recognize, diagnose and recover from errors); WCAG 2.2 SC 3.3.1 (error identification), SC 4.1.3 (status messages, `role="alert"`) — `src/lib/authLinkError.js`, `src/main.jsx`, `src/pages/Login.jsx`, `docs/CHANGELOG.md`
+
 - 08:00 — `fix(merchant)`: the business dashboard header shows the business name (from `merchant_profiles`, the same name students see) with "Business account", instead of "Hi, {owner name}" and "Merchant account". Falls back to the signup business name, then the owner name, then the email; updates right after the business renames itself in Profile. Students and admins unchanged. Standards: Nielsen heuristics #2 (match the real world) and #4 (consistency); WCAG 2.2 SC 2.4.6 (headings describe the topic) — `src/pages/Dashboard.jsx`, `src/pages/MerchantProfile.jsx`, `docs/CHANGELOG.md`
 
 - 06:30 — `docs`: work log updated with the founder-confirmed production state (all 5 migrations applied, email confirmation on, test merchant profile created by the fix 1 trigger) and the Site URL incident — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`
