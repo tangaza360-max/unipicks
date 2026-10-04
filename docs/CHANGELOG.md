@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 09:30 — `docs`: work log updated: all deploy steps done (migrations, 7 Edge Functions, frontend), custom SMTP on, test business accounts removed — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`
+
 - 08:45 — `fix(auth)`: signing up with an email that already has an account no longer shows "Check your email" (Supabase sends no email in that case). Both signup pages detect the repeated signup (returned user with no identities) and show "This email already has a Unipicks account. Log in instead" with a link to the login page. Standards: Nielsen heuristics #1 (visibility of system status) and #9 (recover from errors); WCAG 2.2 SC 3.3.1 (error identification) — `src/pages/Register.jsx`, `src/pages/RegisterMerchant.jsx`, `docs/CHANGELOG.md`
 
 - 08:30 — `fix(auth)`: an expired or already-used email link no longer drops the user on the signup page with no explanation. When Supabase returns an auth error in the URL (`#error_code=otp_expired`), the app opens `/login` with a clear message (log in if already confirmed, or sign up again for a new link). Standards: Nielsen heuristic #9 (help users recognize, diagnose and recover from errors); WCAG 2.2 SC 3.3.1 (error identification), SC 4.1.3 (status messages, `role="alert"`) — `src/lib/authLinkError.js`, `src/main.jsx`, `src/pages/Login.jsx`, `docs/CHANGELOG.md`
