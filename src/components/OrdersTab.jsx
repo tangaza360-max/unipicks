@@ -110,7 +110,9 @@ export default function OrdersTab() {
     // ON  = complete record (every order).
     // OFF = actionable orders only (things needing the student's attention).
     let filteredHosted = hosted || []
-    let filteredJoined = joined || []
+    // A membership whose group can't be read (deleted, or hidden by access
+    // rules) comes back with group_orders = null; skip it instead of crashing.
+    let filteredJoined = (joined || []).filter((membership) => membership.group_orders)
     let filteredNormal = normal || []
     let filteredRedemptions = redeemed || []
 
