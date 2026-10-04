@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import './index.css'
 import { ThemeProvider } from './context/ThemeContext.jsx'
+import { registerServiceWorker } from './lib/serviceWorker.js'
 import Register from './pages/Register.jsx'
 import RegisterMerchant from './pages/RegisterMerchant.jsx'
 import Login from './pages/Login.jsx'
@@ -84,13 +85,7 @@ function RouteTitle() {
   return null
 }
 
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((error) => {
-      console.error('Service worker registration failed:', error)
-    })
-  })
-}
+if (import.meta.env.PROD) registerServiceWorker()
 
 initMonitoring()
 
