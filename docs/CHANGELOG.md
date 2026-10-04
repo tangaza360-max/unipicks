@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 14:30 — `docs(email)`: branded auth emails installed in production (subjects + Confirm signup and Reset Password templates, set through the Management API and verified) — `docs/email-templates/README.md`, `docs/CHANGELOG.md`
+
 - 14:00 — `docs(email)`: branded auth email templates (Confirm signup, Reset Password) with the Unipicks logo, brand colours, a clear button, the link as plain text, and a short footer explaining why the email was sent. Founder pastes them into Supabase → Authentication → Emails → Templates — `docs/email-templates/`, `docs/CHANGELOG.md`
 
 - 13:30 — `docs`: forgot password tested in production by the founder (works); new open item: auth emails land in Gmail spam until templates are customized and a domain is set up — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`

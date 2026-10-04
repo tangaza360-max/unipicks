@@ -8,6 +8,8 @@ founder pastes them into the dashboard (they are not deployed from git).
 | Confirm signup | `confirm-signup.html` | `Confirm your email for Unipicks` |
 | Reset Password | `reset-password.html` | `Reset your Unipicks password` |
 
+**Status:** installed in production on 2026-10-04 by the founder through the Management API (`PATCH /v1/projects/{ref}/config/auth` with only `mailer_subjects_confirmation`, `mailer_templates_confirmation_content`, `mailer_subjects_recovery`, `mailer_templates_recovery_content`; checked with a GET afterwards). The token needs the `auth_config_write` and `project_admin_write` permissions; the CLI login token is read-only for this. Delete such a token after use.
+
 ## How to install (Supabase dashboard)
 1. Authentication → Emails → **Templates**.
 2. Open **Confirm signup**: set the Subject above, replace the whole body with the file content, **Save**.
