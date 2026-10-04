@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import RatingPrompt from './RatingPrompt.jsx'
 import StatusBadge from './StatusBadge.jsx'
@@ -454,6 +454,15 @@ function NormalOrderCard({ order, onRaiseDispute }) {
             </p>
           )}
         </div>
+      )}
+
+      {['paid', 'redeemed', 'completed'].includes(status) && (
+        <Link
+          to={`/receipt/${order.id}`}
+          className="mt-3 inline-block text-xs font-medium text-accent hover:underline"
+        >
+          View receipt
+        </Link>
       )}
 
       {showRedeemed && (
