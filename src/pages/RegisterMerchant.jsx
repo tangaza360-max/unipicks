@@ -23,6 +23,7 @@ export default function RegisterMerchant() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [successEmail, setSuccessEmail] = useState('')
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false)
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -44,6 +45,7 @@ export default function RegisterMerchant() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
+    setAlreadyRegistered(false)
 
     const validationError = validate()
     if (validationError) {
@@ -71,6 +73,14 @@ export default function RegisterMerchant() {
 
     if (signUpError) {
       setError(signUpError.message)
+      return
+    }
+
+    // With email confirmation on, Supabase answers a signup for an address
+    // that already has an account with a user that has no identities and
+    // sends no email, so "Check your email" would be wrong here.
+    if (signUpData.user && signUpData.user.identities?.length === 0) {
+      setAlreadyRegistered(true)
       return
     }
 
@@ -222,6 +232,14 @@ export default function RegisterMerchant() {
           </label>
 
           {error && <p className="text-sm text-red-400">{error}</p>}
+          {alreadyRegistered && (
+            <p role="alert" className="text-sm text-red-400">
+              This email already has a Unipicks account.{' '}
+              <Link to="/login" className="text-accent hover:underline">
+                Log in instead
+              </Link>
+            </p>
+          )}
 
           <button
             type="submit"
