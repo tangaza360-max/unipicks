@@ -45,9 +45,20 @@ export default function NotificationBell({ includeMerchantInbox = true }) {
     let active = true
     let subscribedUserId = null
 
-    function stopSubscription() {
+    let hadOutage = false
+
+    function startPolling(currentUserId) {
+      if (!pollTimer) pollTimer = setInterval(() => fetchNotifications(currentUserId, false), 30000)
+    }
+
+    function stopPolling() {
       if (pollTimer) clearInterval(pollTimer)
       pollTimer = null
+    }
+
+    function stopSubscription() {
+      stopPolling()
+      hadOutage = false
       if (channel) supabase.removeChannel(channel)
       channel = null
       subscribedUserId = null
@@ -87,12 +98,23 @@ export default function NotificationBell({ includeMerchantInbox = true }) {
         )
         .subscribe((status, error) => {
           if (error) console.error('[notifications] realtime error:', error)
-          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          if (!active || subscribedUserId !== user.id) return
+          if (status === 'SUBSCRIBED') {
+            // Live updates work, so there is no need to ask the server every
+            // 30 seconds. After an outage, fetch once to catch up.
+            const caughtUp = hadOutage
+            hadOutage = false
+            stopPolling()
+            if (caughtUp) fetchNotifications(user.id, false)
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
             console.warn('[notifications] realtime unavailable; polling fallback is active')
+            hadOutage = true
+            startPolling(user.id)
           }
         })
 
-      pollTimer = setInterval(() => fetchNotifications(user.id, false), 30000)
+      // Safety net until the live connection confirms it is working.
+      startPolling(user.id)
     }
 
     const { data: authListener, error: authListenerError } = supabase.auth.onAuthStateChange((_event, session) => {

@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 15:30 — `perf(notifications)`: the notification bell asked the server for notifications every 30 seconds even when live updates worked (2 requests per 30 s per open tab). It now polls only while the live connection is down, and fetches once to catch up when it comes back. Verified with a fake realtime server: live working → 1 request in 95 s (old code: 4); live down → still every 30 s. Standards: ISO/IEC 25010 performance efficiency (resource utilisation) — `src/components/NotificationBell.jsx`, `docs/CHANGELOG.md`
+
 - 15:00 — `fix(realtime)`: Sentry UNIPICKS-WEB-2 ("cannot add postgres_changes callbacks … after subscribe()"). After a login renewal the Dashboard treated the same person as a new user, reloaded data and restarted its live channels; Supabase handed back the old, still-closing channel with the same name, so the business unread/orders badges stopped updating live. Dashboard live features now restart only when the user id changes and skip the role reload for the same user; every live channel gets a unique name (`liveChannel()`, 15 call sites). Standards: ISO/IEC 25010 reliability (fault tolerance) — `src/lib/realtime.js`, `src/pages/Dashboard.jsx`, `src/components/NotificationBell.jsx`, `src/components/ChatThread.jsx`, `src/components/StudentLayout.jsx`, `src/pages/DealsFeed.jsx`, `src/pages/MerchantDeals.jsx`, `src/pages/MerchantOrders.jsx`, `src/pages/Messages.jsx`, `src/pages/PaymentCheckout.jsx`, `docs/CHANGELOG.md`
 
 - 14:30 — `docs(email)`: branded auth emails installed in production (subjects + Confirm signup and Reset Password templates, set through the Management API and verified) — `docs/email-templates/README.md`, `docs/CHANGELOG.md`
