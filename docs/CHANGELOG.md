@@ -9,6 +9,8 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ## 2026-10-04
 
+- 12:30 — `docs`: work log: all 2026-10-04 commits, founder decisions (no deal limits, only the 3-waiting rule, groups formed any time, Gmail SMTP until a domain), Sentry setup and privacy settings, new open items — `docs/03-session-2026-10-03.md`, `docs/CHANGELOG.md`
+
 - 12:00 — `fix(orders)`: spam guard: a student can have at most 3 orders waiting at once (business has not answered, or accepted but not paid). A 4th order, or sending a group as a host with 3 waiting, is refused with 429 and a clear message; nothing is saved and the group stays open. Paid, finished and `payment_processing` orders do not count; quantity inside one order is not limited (founder decision); no per-10-minute limit for now. Standards: OWASP API Security Top 10 2023 — API6 (unrestricted access to sensitive business flows), API4 (unrestricted resource consumption) — `supabase/functions/_shared/order-limits.ts`, `supabase/functions/create-order/index.ts`, `supabase/functions/create-group-order-payment/index.ts`, `supabase/functions/tests/order-limits.test.ts`, `docs/CHANGELOG.md`
 
 - 11:30 — `fix(monitoring)`: the Sentry DSN was never set in Vercel (only misnamed `ITE_SUPABASE_*` variables exist there), so production sent no crash reports. The DSN (public by design) is now in the committed `.env`, like the Supabase settings, and Sentry only starts in production builds, so local runs send nothing. `.env.example` documents it — `.env`, `.env.example`, `src/lib/monitoring.js`, `docs/CHANGELOG.md`
