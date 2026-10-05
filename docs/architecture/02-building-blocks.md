@@ -22,7 +22,7 @@ flowchart TB
   subgraph SUPA["Supabase project dylgephsnywowxxasifs"]
     AUTH["Auth<br/>accounts, log-in, email"]:::ours
     DB[("Database (Postgres)<br/>32 tables · 82 rules · 25 triggers<br/>75 functions (RPC)")]:::ours
-    RT["Realtime<br/>live updates of 5 tables"]:::ours
+    RT["Realtime<br/>live updates of 6 tables"]:::ours
     ST["Storage<br/>4 photo buckets"]:::ours
     EF["Server functions (9)<br/>orders, payments, timers,<br/>account deletion, AI"]:::ours
   end
@@ -101,13 +101,13 @@ business standing check).
 
 ## Live updates (Realtime)
 
-Switched on for: `chat_messages`, `deals`, `notifications`, `orders`,
-`user_notifications`.
+Switched on for: `chat_messages`, `deals`, `merchant_stories`,
+`notifications`, `orders`, `user_notifications`. Realtime applies each
+table's rules, so people only receive changes they may read.
 
-🟡 **Found while mapping:** the Home screen also listens for
-`merchant_stories` (new business stories), but that table is **not switched
-on** for live updates, so a new business story only appears after a reload.
-Small fix (one database line), not done yet.
+(`merchant_stories` was added on 2026-10-05, migration
+`20261005130000_merchant_stories_realtime.sql`: before, new business stories
+only showed after a reload.)
 
 ## Secrets (names only — values live in Supabase, never in code or chat)
 
