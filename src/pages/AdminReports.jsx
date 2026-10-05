@@ -11,7 +11,7 @@ const STATUS_LABELS = {
   dismissed: 'Dismissed',
 }
 
-const CONTEXT_LABELS = { chat: 'from a chat', profile: 'from a profile', business: 'about a business' }
+const CONTEXT_LABELS = { chat: 'from a chat', profile: 'from a profile', business: 'about a business', story: 'about a story' }
 
 const FILTERS = [
   ['open', 'Open'],

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 
-// Report a student or a business (fix 8). Reports go to the admin Reports
+// Report a student, a business or a student's story (fix 8). Reports go to the admin Reports
 // queue; admins are alerted and aim to respond within 24 hours (decision D5).
 const CATEGORIES = ['Harassment', 'Spam', 'Impersonation', 'Inappropriate behavior', 'Other']
 
-export default function ReportDialog({ reportedId, reportedName, context, onClose }) {
+export default function ReportDialog({ reportedId, reportedName, context, storyId = null, onClose }) {
   const [category, setCategory] = useState('')
   const [description, setDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -40,6 +40,7 @@ export default function ReportDialog({ reportedId, reportedName, context, onClos
       category,
       description: description.trim() || null,
       context,
+      ...(storyId ? { story_id: storyId } : {}),
     })
     setSubmitting(false)
 
@@ -68,7 +69,7 @@ export default function ReportDialog({ reportedId, reportedName, context, onClos
         className="w-full max-w-md rounded-2xl bg-card border border-border p-5 shadow-2xl"
       >
         <h2 id="report-title" className="font-display text-lg font-semibold">
-          Report {reportedName || 'this account'}
+          {storyId ? `Report this story from ${reportedName || 'this student'}` : `Report ${reportedName || 'this account'}`}
         </h2>
 
         {done ? (

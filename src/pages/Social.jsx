@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Bell,
   Search,
@@ -17,32 +17,32 @@ import ReportDialog from '../components/ReportDialog.jsx'
 import BackLink from '../components/BackLink.jsx'
 import Button from '../components/Button.jsx'
 import { STORY_POSTED_EVENT, openStoryCamera } from '../lib/studentStories.js'
+import StudentStoryViewer from '../components/StudentStoryViewer.jsx'
 
 export default function Social() {
   const searchInputRef = useRef(null)
-  const [myStoryCount, setMyStoryCount] = useState(0)
+  const [storyTray, setStoryTray] = useState([])
+  const [viewerStart, setViewerStart] = useState(null) // { owners, index }
 
-  // Your own live stories (friends' stories come with the story viewer).
-  useEffect(() => {
-    let cancelled = false
-
-    async function loadMyStories() {
-      const { data, error } = await supabase.rpc('get_story_tray')
-      if (cancelled) return
-      if (error) {
-        console.error('Failed to load stories:', error.message)
-        return
-      }
-      setMyStoryCount((data || []).find((row) => row.is_me)?.story_count || 0)
+  // Your own stories and friends' live stories (unseen first).
+  const loadStoryTray = useCallback(async () => {
+    const { data, error } = await supabase.rpc('get_story_tray')
+    if (error) {
+      console.error('Failed to load stories:', error.message)
+      return
     }
-
-    loadMyStories()
-    window.addEventListener(STORY_POSTED_EVENT, loadMyStories)
-    return () => {
-      cancelled = true
-      window.removeEventListener(STORY_POSTED_EVENT, loadMyStories)
-    }
+    setStoryTray(data || [])
   }, [])
+
+  useEffect(() => {
+    loadStoryTray()
+    window.addEventListener(STORY_POSTED_EVENT, loadStoryTray)
+    return () => window.removeEventListener(STORY_POSTED_EVENT, loadStoryTray)
+  }, [loadStoryTray])
+
+  const myStory = storyTray.find((row) => row.is_me)
+  const myStoryCount = myStory?.story_count || 0
+  const friendStories = storyTray.filter((row) => !row.is_me)
   const [showActivity, setShowActivity] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStudent, setSelectedStudent] = useState(null)
@@ -637,33 +637,88 @@ export default function Social() {
                 </section>
               )}
 
-              {/* Your story */}
+              {/* Stories: yours, then friends' (unseen first) */}
               {!searchQuery.trim() && (
-                <section aria-label="Stories">
-                  <button
-                    type="button"
-                    onClick={openStoryCamera}
-                    className="flex w-full items-center gap-4 rounded-xl border border-border bg-card p-4 text-left hover:bg-muted/50 transition"
-                  >
-                    <span
+                <section aria-label="Stories" className="space-y-4">
+                  <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        myStoryCount > 0
+                          ? setViewerStart({ owners: [myStory], index: 0 })
+                          : openStoryCamera()
+                      }
+                      aria-label={myStoryCount > 0 ? 'View your story' : 'Add to your story'}
                       className={`flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full ${
                         myStoryCount > 0
                           ? 'border-[3px] border-accent bg-muted'
                           : 'border-2 border-dashed border-border'
                       }`}
                     >
-                      <Plus size={22} className="text-muted-foreground" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block font-semibold">Your story</span>
-                      <span className="block text-sm text-muted-foreground">
+                      {myStoryCount > 0 ? (
+                        <span className="text-lg font-semibold">
+                          {(myStory.display_name || 'Y').charAt(0).toUpperCase()}
+                        </span>
+                      ) : (
+                        <Plus size={22} className="text-muted-foreground" />
+                      )}
+                    </button>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold">Your story</p>
+                      <p className="text-sm text-muted-foreground">
                         {myStoryCount > 0
-                          ? `${myStoryCount} ${myStoryCount === 1 ? 'photo' : 'photos'} live for your friends. Add another.`
+                          ? `${myStoryCount} ${myStoryCount === 1 ? 'photo' : 'photos'} live for your friends.`
                           : 'Share a photo or GIF with your friends. It disappears after 24 hours.'}
-                      </span>
-                    </span>
-                  </button>
+                      </p>
+                    </div>
+                    {myStoryCount > 0 && (
+                      <Button variant="secondary" onClick={openStoryCamera} aria-label="Add to your story">
+                        <Plus size={18} />
+                        Add
+                      </Button>
+                    )}
+                  </div>
+
+                  {friendStories.length > 0 && (
+                    <div>
+                      <h2 className="mb-2 font-display text-lg font-semibold">Friends' stories</h2>
+                      <ul className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {friendStories.map((friend, index) => (
+                          <li key={friend.student_id} className="flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => setViewerStart({ owners: friendStories, index })}
+                              aria-label={`${friend.display_name}'s story${friend.has_unseen ? ', new' : ''}`}
+                              className="flex w-[72px] flex-col items-center gap-1"
+                            >
+                              <span
+                                className={`flex h-16 w-16 items-center justify-center rounded-full bg-muted text-lg font-semibold ${
+                                  friend.has_unseen ? 'border-[3px] border-accent' : 'border-2 border-border'
+                                }`}
+                              >
+                                {(friend.display_name || 'S').charAt(0).toUpperCase()}
+                              </span>
+                              <span className="w-full truncate text-center text-xs">
+                                {friend.display_name}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </section>
+              )}
+
+              {viewerStart && (
+                <StudentStoryViewer
+                  owners={viewerStart.owners}
+                  startIndex={viewerStart.index}
+                  onClose={() => {
+                    setViewerStart(null)
+                    loadStoryTray()
+                  }}
+                />
               )}
 
               {/* Empty state. The social feed is not built yet (business
