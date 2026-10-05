@@ -11,8 +11,8 @@ date shown; anything not checked is marked **[inference]**.
 | 3 | [Main journeys, step by step](03-journeys.md) | What happens, in order, when a student orders, pays, reports…? | ✅ 2026-10-05 |
 | 4 | [Life of each thing](04-lifecycles.md) | Which stages does an order / payment / group / story / report / refund go through? | ✅ 2026-10-05 |
 | 5 | [The data](05-data.md) | Which tables exist and how are they linked? | ✅ 2026-10-05 |
-| 6 | Who can see and do what | Which roles exist, and which rules protect each table? | next |
-| 7 | Running it | Where each part lives, deploys, secrets (names only), logs, what to check when it breaks | planned |
+| 6 | [Who can see and do what](06-access.md) | Which roles exist, and which rules protect each table? | ✅ 2026-10-05 |
+| 7 | [Running it](07-running.md) | Where each part lives, deploys, secrets (names only), logs, what to check when it breaks | ✅ 2026-10-05 |
 
 Open `architecture.html` (same folder) to see every diagram as pictures, on a
 phone or a laptop. On GitHub the diagrams in these `.md` pages also show as
