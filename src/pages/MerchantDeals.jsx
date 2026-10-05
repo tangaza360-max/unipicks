@@ -6,6 +6,7 @@ import VerifyCode from './VerifyCode.jsx'
 import ConfirmModal from '../components/ConfirmModal.jsx'
 import { Search, Sparkles, X, Pencil, UtensilsCrossed, CheckCircle2, ShoppingCart } from 'lucide-react'
 import { formatMoney } from '../lib/format.js'
+import Button from '../components/Button.jsx'
 
 export default function MerchantDeals() {
   // --- State for deals and form ---
@@ -734,7 +735,7 @@ export default function MerchantDeals() {
                       </p>
                     )}
 
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
+                  <div className="mt-2 flex flex-col gap-2 border-t border-border/50 pt-2">
                     <div>
                       {deal.redemptions && deal.redemptions.total > 0 ? (
                         <p className="text-xs">
@@ -749,29 +750,16 @@ export default function MerchantDeals() {
                         <p className="text-muted-foreground text-xs">No orders yet</p>
                       )}
                     </div>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => startEdit(deal)}
-                        className="text-xs bg-muted/40 hover:bg-muted text-foreground rounded-lg px-3 py-1.5 transition"
-                      >
+                    <div className="grid w-full grid-cols-3 gap-2">
+                      <Button variant="secondary" onClick={() => startEdit(deal)}>
                         Edit
-                      </button>
-                      <button
-                        onClick={() => toggleActive(deal)}
-                        className={`text-xs rounded-lg px-3 py-1.5 transition ${
-                          deal.active
-                            ? 'bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30'
-                            : 'bg-accent/15 text-accent hover:bg-accent/25'
-                        }`}
-                      >
+                      </Button>
+                      <Button variant="secondary" onClick={() => toggleActive(deal)}>
                         {deal.active ? 'Pause' : 'Activate'}
-                      </button>
-                      <button
-                        onClick={() => openDeleteModal(deal.id)}
-                        className="text-xs bg-red-500/10 text-red-600 hover:bg-red-500/20 rounded-lg px-3 py-1.5 transition"
-                      >
+                      </Button>
+                      <Button variant="danger" onClick={() => openDeleteModal(deal.id)}>
                         Delete
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>

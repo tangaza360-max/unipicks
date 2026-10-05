@@ -7,6 +7,10 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ---
 
+## 2026-10-05
+
+- 05:50 — `refactor(ui)`: shared `Button` with the 3 approved types (main, secondary, danger), all at least 44 px tall (style guide §4). Business deal cards: Edit / Pause / Delete were about 26 px tall and squeezed next to the order count; they are now a full-width row of 44 px buttons, with Delete in red outline. Business order cards: "Call student" (secondary), "Accept" (main, the one green button), "Decline" (red outline; it was grey). Small tap targets on phone: business Deals 21 → 9, Orders 10 → 7 (the rest are the tab pills and header icons, next step). Standards: WCAG 2.5.8, Apple HIG 44 pt, Material 48 dp — `src/components/Button.jsx`, `src/pages/MerchantDeals.jsx`, `src/pages/MerchantOrders.jsx`, `docs/ui-audit/9-business-buttons-after.jpg`, `docs/CHANGELOG.md`
+
 ## 2026-10-04
 
 - 01:00 — `refactor(ui)`: one "Back" link (style guide §7). New `BackLink` component: arrow + "Back", grey, 44 px tall. Replaces 12 different top-of-screen back links ("← Back to dashboard" in green, "← My orders", "← Back to Profile", "Back to Social", "← Back to Unipicks", a bare "Back" in chat) on the deal page, order confirmation, payment, receipt, Order History, chat, Social (2), Terms, Privacy and delete-account (2). Each keeps its destination. Standards: NN/g heuristic 4 (consistency), WCAG 2.5.8 / Apple HIG (44 px) — `src/components/BackLink.jsx`, 11 files in `src/`, `docs/CHANGELOG.md`

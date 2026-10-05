@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import StatusBadge from '../components/StatusBadge.jsx'
 import { liveChannel } from '../lib/realtime.js'
 import { formatMoney } from '../lib/format.js'
+import Button from '../components/Button.jsx'
 
 const DISPUTE_STATUS_LABELS = {
   open: 'Open',
@@ -334,32 +335,19 @@ export default function MerchantOrders() {
                   </p>
 
                   {order.student_phone && (
-                    <a
-                      href={`tel:${order.student_phone}`}
-                      className="block w-full rounded-lg border border-border px-4 py-2 text-center text-sm font-medium text-foreground hover:bg-muted"
-                    >
-                      Call Student
-                    </a>
+                    <Button variant="secondary" href={`tel:${order.student_phone}`} className="w-full">
+                      Call student
+                    </Button>
                   )}
 
                   <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateOrderStatus(order.id, 'accept')
-                      }
-                      className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-background-foreground hover:bg-accent-dim"
-                    >
+                    <Button className="flex-1" onClick={() => updateOrderStatus(order.id, 'accept')}>
                       Accept
-                    </button>
+                    </Button>
 
-                    <button
-                      type="button"
-                      onClick={() => openDeclineDialog(order)}
-                      className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
-                    >
+                    <Button variant="danger" className="flex-1" onClick={() => openDeclineDialog(order)}>
                       Decline
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
