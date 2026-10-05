@@ -166,6 +166,14 @@ check "friend reports a story" "$(as_user $F "insert into public.student_reports
 check "stranger can't report a story they can't see" "$(as_user $S "insert into public.student_reports (reporter_id, reported_id, category, story_id) values ('$S','$A','Spam','$P1') returning 1;")" "You can only report a story you can see."
 check "story must belong to the reported student" "$(as_user $F "insert into public.student_reports (reporter_id, reported_id, category, story_id) values ('$F','$S','Spam','$P1') returning 1;")" "You can only report a story you can see."
 check "context 'story' needs a story" "$(as_user $F "insert into public.student_reports (reporter_id, reported_id, category, context) values ('$F','$A','Spam','story') returning 1;")" "Choose the story to report."
+echo "reported stories are kept until reviewed"
+check "owner's Delete on a reported story deletes nothing" "$(as_user $A "delete from public.student_stories where id = '$P1' returning 1;")" ""
+check "... but hides it from friends at once" "$(as_user $F "select count(*) from public.student_stories where id = '$P1';")" "0"
+check "... and from the owner's tray (1 live story left of 2)" "$(as_user $A "select story_count from public.get_story_tray() where is_me;")" "1"
+check "the row is kept for the admin" "$(q "select count(*) from public.student_stories where id = '$P1'")" "1"
+check "owner can't delete the reported photo file" "$(as_user $A "delete from storage.objects where name = '$A/p1.jpg' returning 1;")" ""
+check "the photo file is kept" "$(q "select count(*) from storage.objects where name = '$A/p1.jpg'")" "1"
+check "owner can still delete an unreported photo file" "$(as_user $A "delete from storage.objects where name = '$A/never-posted.jpg' returning 1;")" "1"
 echo "admin reports show the story"
 RID=$(q "select id from public.student_reports where context = 'story' limit 1")
 check "admin's report list includes the photo path and caption" "$(as_user $AD "select story_media_path || '|' || story_caption || '|' || story_removed from public.get_admin_reports() where id = '$RID';")" "$A/p1.jpg|Lunch|false"
@@ -181,6 +189,9 @@ check "removing twice gives a clear message" "$(as_user $AD "select public.admin
 q "insert into public.student_stories (id, student_id, media_url, caption, created_at, expires_at) values ('$P1','$A','$A/p1.jpg','Lunch', now(), now() + interval '24 hours'); update public.student_reports set story_id = '$P1' where id = '$RID';"
 check "admin can remove the story" "$(as_user $AD "delete from public.student_stories where id = '$P1' returning 1;")" "1"
 check "report kept after removal (story link cleared)" "$(q "select count(*) || '|' || count(story_id) from public.student_reports where context = 'story'")" "1|0"
+P2=$(q "select id from public.student_stories where media_url = '$A/p2.png'")
+as_user $F "insert into public.student_reports (reporter_id, reported_id, category, story_id) values ('$F','$A','Spam','$P2');" >/dev/null
+check "a dismissed report no longer protects the story" "$(as_user $AD "select public.review_report((select id from public.student_reports where story_id = '$P2'), 'dismissed', null);")" ""
 check "owner deletes own story" "$(as_user $A "delete from public.student_stories where media_url = '$A/p2.png' returning 1;")" "1"
 check "friend can't delete it" "$(as_user $F "delete from public.student_stories where student_id = '$A' returning 1;")" ""
 
