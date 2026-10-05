@@ -9,9 +9,9 @@ date shown; anything not checked is marked **[inference]**.
 | 1 | [The whole ecosystem](01-ecosystem.md) | Who uses Unipicks, and which outside services does it talk to? | ✅ 2026-10-05 |
 | 2 | [The building blocks](02-building-blocks.md) | What are the parts inside Unipicks, and how do they talk? | ✅ 2026-10-05 |
 | 3 | [Main journeys, step by step](03-journeys.md) | What happens, in order, when a student orders, pays, reports…? | ✅ 2026-10-05 |
-| 4 | Life of each thing | Which stages does an order / payment / group / story / report / refund go through? | next |
-| 5 | The data | Which tables exist and how are they linked? | planned |
-| 6 | Who can see and do what | Which roles exist, and which rules protect each table? | planned |
+| 4 | [Life of each thing](04-lifecycles.md) | Which stages does an order / payment / group / story / report / refund go through? | ✅ 2026-10-05 |
+| 5 | [The data](05-data.md) | Which tables exist and how are they linked? | ✅ 2026-10-05 |
+| 6 | Who can see and do what | Which roles exist, and which rules protect each table? | next |
 | 7 | Running it | Where each part lives, deploys, secrets (names only), logs, what to check when it breaks | planned |
 
 Open `architecture.html` (same folder) to see every diagram as pictures, on a
