@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Bell,
   Search,
-  Plus,
   UserPlus,
   UserCheck,
   MessageCircle,
@@ -15,16 +14,10 @@ import { supabase } from '../lib/supabaseClient.js'
 import SocialActivity from '../components/SocialActivity.jsx'
 import ReportDialog from '../components/ReportDialog.jsx'
 import BackLink from '../components/BackLink.jsx'
-
-const tabs = [
-  { id: 'for-you', label: 'For You' },
-  { id: 'deals', label: 'Deals' },
-  { id: 'events', label: 'Events' },
-  { id: 'activities', label: 'Activities' },
-]
+import Button from '../components/Button.jsx'
 
 export default function Social() {
-  const [activeTab, setActiveTab] = useState('for-you')
+  const searchInputRef = useRef(null)
   const [showActivity, setShowActivity] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStudent, setSelectedStudent] = useState(null)
@@ -524,7 +517,9 @@ export default function Social() {
         />
 
         <input
+          ref={searchInputRef}
           type="search"
+          aria-label="Search students"
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
           placeholder="Search students, businesses, deals and more..."
@@ -617,77 +612,25 @@ export default function Social() {
                 </section>
               )}
 
-              {/* Stories */}
-              <section>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="font-display text-lg font-semibold">Stories</h2>
-
-                  <button className="text-sm text-muted-foreground hover:text-foreground transition">
-                    See all
-                  </button>
-                </div>
-
-                <div className="flex gap-4 overflow-x-auto pb-2">
-                  <button className="flex-shrink-0 flex flex-col items-center gap-2">
-                    <div className="w-16 h-16 rounded-full border-2 border-dashed border-border flex items-center justify-center">
-                      <Plus size={22} className="text-muted-foreground" />
-                    </div>
-
-                    <span className="text-xs text-muted-foreground">
-                      Your Story
-                    </span>
-                  </button>
-
-                  <div className="flex-shrink-0 flex flex-col items-center gap-2">
-                    <div className="w-16 h-16 rounded-full bg-muted border border-border" />
-                    <span className="text-xs text-muted-foreground">Stories</span>
-                  </div>
-
-                  <div className="flex-shrink-0 flex flex-col items-center gap-2">
-                    <div className="w-16 h-16 rounded-full bg-muted border border-border" />
-                    <span className="text-xs text-muted-foreground">Stories</span>
-                  </div>
-
-                  <div className="flex-shrink-0 flex flex-col items-center gap-2">
-                    <div className="w-16 h-16 rounded-full bg-muted border border-border" />
-                    <span className="text-xs text-muted-foreground">Stories</span>
-                  </div>
-                </div>
-              </section>
-
-              {/* Feed tabs */}
-              <div className="flex gap-2 overflow-x-auto border-b border-border">
-                {tabs.map((tab) => {
-                  const isActive = activeTab === tab.id
-
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition ${
-                        isActive
-                          ? 'border-primary text-primary'
-                          : 'border-transparent text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* Feed */}
-              <section className="min-h-[300px] flex items-center justify-center">
-                <div className="text-center max-w-md">
-                  <h2 className="font-display text-xl font-semibold">
-                    {tabs.find((tab) => tab.id === activeTab)?.label}
-                  </h2>
-
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Social content will appear here.
+              {/* Empty state. Student stories and the social feed are not
+                  built yet (business stories are on Home), so show one
+                  sentence and one action instead of placeholder circles and
+                  tabs (style guide section 9). */}
+              {!searchQuery.trim() && (
+                <section className="rounded-xl border border-border bg-card px-6 py-10 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Find students from your campus and follow them.
                   </p>
-                </div>
-              </section>
+
+                  <Button
+                    onClick={() => searchInputRef.current?.focus()}
+                    className="mt-4"
+                  >
+                    <Search size={18} />
+                    Search students
+                  </Button>
+                </section>
+              )}
             </>
           )}
         </div>

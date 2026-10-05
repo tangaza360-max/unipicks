@@ -255,7 +255,7 @@ const [studentConversations, setStudentConversations] = useState([])
 
       const { data: memberships, error: membershipError } = await supabase
         .from('group_order_members')
-        .select('group_order_id, group_orders(id, host_name, join_code)')
+        .select('group_order_id, group_orders(id, host_name, join_code, deals(title))')
         .eq('student_id', userId)
 
       if (membershipError) {
@@ -265,7 +265,10 @@ const [studentConversations, setStudentConversations] = useState([])
         )
       }
 
-      setGroupChats(memberships || [])
+      // A group order the student can no longer see (deleted, or hidden by
+      // RLS) comes back with group_orders = null: leave it out instead of
+      // showing a placeholder name.
+      setGroupChats((memberships || []).filter((m) => m.group_orders))
     }
 
     async function loadMerchantInbox(userId) {
@@ -461,36 +464,38 @@ const [studentConversations, setStudentConversations] = useState([])
             Group orders
           </p>
 
-          {groupChats.map((group) => (
-            <button
-              key={group.group_order_id}
-              onClick={() =>
-                setOpenChat({
-                  groupOrderId: group.group_order_id,
-                  groupOrderLabel: `Group order (code ${
-                    group.group_orders?.join_code || '----'
-                  })`,
-                })
-              }
-              className="w-full text-left border border-border rounded-lg p-3 hover:border-accent/50 transition flex items-center gap-3"
-            >
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0">
-                <Users size={18} />
-              </div>
+          {groupChats.map((group) => {
+            const groupOrder = group.group_orders
+            const name = groupOrder.deals?.title
+              ? `Group order: ${groupOrder.deals.title}`
+              : 'Group order'
 
-              <div>
-                <p className="font-medium text-sm">
-                  Group order (code{' '}
-                  {group.group_orders?.join_code || '----'})
-                </p>
+            return (
+              <button
+                key={group.group_order_id}
+                onClick={() =>
+                  setOpenChat({
+                    groupOrderId: group.group_order_id,
+                    groupOrderLabel: name,
+                  })
+                }
+                className="w-full text-left border border-border rounded-lg p-3 hover:border-accent/50 transition flex items-center gap-3"
+              >
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0">
+                  <Users size={18} />
+                </div>
 
-                <p className="text-muted-foreground text-xs">
-                  Hosted by{' '}
-                  {group.group_orders?.host_name || 'a student'}
-                </p>
-              </div>
-            </button>
-          ))}
+                <div className="min-w-0">
+                  <p className="font-medium text-sm truncate">{name}</p>
+
+                  <p className="text-muted-foreground text-xs">
+                    Hosted by {groupOrder.host_name || 'a student'} · Code{' '}
+                    {groupOrder.join_code}
+                  </p>
+                </div>
+              </button>
+            )
+          })}
         </div>
       )}
 
