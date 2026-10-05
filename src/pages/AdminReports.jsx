@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { STORY_BUCKET } from '../lib/studentStories.js'
+import { formatDateTime } from '../lib/format.js'
 
 // Admin → Reports (fix 8; social audit D5). Reports from students and
 // businesses, oldest open first. Target: first response within 24 hours.
@@ -38,6 +40,7 @@ export default function AdminReports() {
   const [target, setTarget] = useState(null) // { report, status }
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [storyUrls, setStoryUrls] = useState({}) // media path → private link
 
   useEffect(() => {
     loadReports()
@@ -49,6 +52,16 @@ export default function AdminReports() {
     const { data, error: fetchError } = await supabase.rpc('get_admin_reports')
     if (fetchError) setError(fetchError.message)
     else setReports(data || [])
+
+    // Reported story photos are private: open them with 1-hour links.
+    const paths = (data || []).map((r) => r.story_media_path).filter(Boolean)
+    if (paths.length) {
+      const { data: links, error: linkError } = await supabase.storage
+        .from(STORY_BUCKET)
+        .createSignedUrls(paths, 3600)
+      if (linkError) console.error('Failed to open reported story photos:', linkError.message)
+      setStoryUrls(Object.fromEntries((links || []).map((link) => [link.path, link.signedUrl])))
+    }
     setLoading(false)
   }
 
@@ -90,6 +103,22 @@ export default function AdminReports() {
     setSubmitting(false)
     if (banError) {
       setError(banError.message)
+      return
+    }
+    await loadReports()
+  }
+
+  async function removeStory(report) {
+    if (!window.confirm(`Remove this story from ${report.reported_name || 'this student'}? Their friends will no longer see it.`)) return
+    setSubmitting(true)
+    const { data: path, error: removeError } = await supabase.rpc('admin_remove_story', { p_report_id: report.id })
+    if (!removeError && path) {
+      const { error: fileError } = await supabase.storage.from(STORY_BUCKET).remove([path])
+      if (fileError) console.error('Story photo not removed:', fileError.message)
+    }
+    setSubmitting(false)
+    if (removeError) {
+      setError(removeError.message)
       return
     }
     await loadReports()
@@ -177,6 +206,36 @@ export default function AdminReports() {
                   </div>
                 )}
 
+                {report.story_media_path && (
+                  <div className="flex gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                    {storyUrls[report.story_media_path] ? (
+                      <img
+                        src={storyUrls[report.story_media_path]}
+                        alt={report.story_caption || 'Reported story photo'}
+                        className="h-40 w-24 flex-shrink-0 rounded-md bg-black object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-40 w-24 flex-shrink-0 items-center justify-center rounded-md bg-muted text-xs text-muted-foreground">
+                        No photo
+                      </div>
+                    )}
+                    <div className="min-w-0 space-y-1 text-sm">
+                      <p className="text-xs text-muted-foreground">Reported story</p>
+                      {report.story_caption && <p className="break-words">“{report.story_caption}”</p>}
+                      <p className="text-xs text-muted-foreground">Posted {formatDateTime(report.story_created_at)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(report.story_expires_at) > new Date()
+                          ? `Friends can see it until ${formatDateTime(report.story_expires_at)}`
+                          : 'Ended (friends no longer see it)'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {report.story_removed && (
+                  <p className="text-xs text-muted-foreground">The reported story was removed.</p>
+                )}
+
                 {report.admin_note && (
                   <p className="text-xs text-muted-foreground">Admin note: “{report.admin_note}”</p>
                 )}
@@ -209,12 +268,22 @@ export default function AdminReports() {
                     >
                       Dismiss
                     </button>
+                    {report.story_media_path && (
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        onClick={() => removeStory(report)}
+                        className="text-xs border border-[color:var(--status-bad-fg)] text-[color:var(--status-bad-fg)] hover:bg-[color:var(--status-bad-bg)] rounded-lg px-3 py-2 transition disabled:opacity-50"
+                      >
+                        Remove story
+                      </button>
+                    )}
                     {!report.reported_banned && !report.reported_deleted && (
                       <button
                         type="button"
                         disabled={submitting}
                         onClick={() => banReported(report)}
-                        className="text-xs border border-red-400/40 text-red-400 hover:text-red-300 rounded-lg px-3 py-2 transition disabled:opacity-50"
+                        className="text-xs border border-[color:var(--status-bad-fg)] text-[color:var(--status-bad-fg)] hover:bg-[color:var(--status-bad-bg)] rounded-lg px-3 py-2 transition disabled:opacity-50"
                       >
                         Ban reported account
                       </button>
