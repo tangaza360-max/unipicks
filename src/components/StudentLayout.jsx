@@ -12,6 +12,7 @@ import Messages from '../pages/Messages.jsx'
 import StudentSearch from '../pages/StudentSearch.jsx'
 import StudentTopBar from './StudentTopBar.jsx'
 import StudentBottomNav from './StudentBottomNav.jsx'
+import { OPEN_CAMERA_EVENT } from '../lib/studentStories.js'
 
 export default function StudentLayout({ children, onLogout }) {
   const navigate = useNavigate()
@@ -55,6 +56,13 @@ export default function StudentLayout({ children, onLogout }) {
       )
     }
   }, [navigate])
+
+  // "Your story" on Social (and any other screen) opens the camera.
+  useEffect(() => {
+    const openCamera = () => setCameraOpen(true)
+    window.addEventListener(OPEN_CAMERA_EVENT, openCamera)
+    return () => window.removeEventListener(OPEN_CAMERA_EVENT, openCamera)
+  }, [])
 
   useEffect(() => {
     let active = true

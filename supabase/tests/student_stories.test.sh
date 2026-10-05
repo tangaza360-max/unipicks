@@ -106,6 +106,8 @@ post() { as_user "$1" "insert into public.student_stories (student_id, media_url
 
 echo "posting"
 check "student posts a photo; the database sets 24 hours (phone asked for 30 days)" "$(post $A $A "$A/p1.jpg" 'Lunch')" "86400|friends|image"
+check "the app's insert (no times sent) gets 24 hours" "$(as_user $A "insert into public.student_stories (student_id, media_url) values ('$A','$A/app-1.jpg') returning extract(epoch from (expires_at - created_at))::int;")" "86400"
+q "delete from public.student_stories where media_url = '$A/app-1.jpg';"
 check "GIF allowed" "$(post $A $A "$A/fun_1.gif" '')" "86400|friends|image"
 check "can't post as someone else" "$(post $A $F "$F/x.jpg" '')" "You can only post your own story."
 check "can't use a file from another student's folder" "$(post $A $A "$F/x.jpg" '')" "Choose a photo or GIF to post."

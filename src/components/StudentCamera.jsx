@@ -1,17 +1,33 @@
 import { useEffect, useRef, useState } from 'react'
-import { CameraOff, RefreshCw, X } from 'lucide-react'
+import { CameraOff, ImageUp, RefreshCw, X } from 'lucide-react'
 import { haptic } from '../lib/haptics.js'
+import Button from './Button.jsx'
+import {
+  STORY_CAPTION_MAX,
+  STORY_POSTED_EVENT,
+  STORY_TYPES,
+  canvasToStoryFile,
+  postStory,
+  storyFileProblem,
+} from '../lib/studentStories.js'
 
+// Camera: take a photo (or choose a photo or GIF from the phone), then post
+// it to your story (friends see it for 24 hours), save it, or share it to
+// another app.
 export default function StudentCamera({ onClose }) {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
   const lastTapRef = useRef(0)
+  const fileInputRef = useRef(null)
   const [facingMode, setFacingMode] = useState('user')
-  const [cameraMode, setCameraMode] = useState('story')
   const [permissionDenied, setPermissionDenied] = useState(false)
-  const [capturedBlob, setCapturedBlob] = useState(null)
-  const [capturedUrl, setCapturedUrl] = useState(null)
+  const [file, setFile] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState(null)
+  const [caption, setCaption] = useState('')
+  const [error, setError] = useState('')
+  const [posting, setPosting] = useState(false)
+  const [posted, setPosted] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -55,17 +71,16 @@ export default function StudentCamera({ onClose }) {
 
   useEffect(() => {
     return () => {
-      if (capturedUrl) {
-        URL.revokeObjectURL(capturedUrl)
-      }
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
     }
-  }, [capturedUrl])
+  }, [previewUrl])
 
   const handleToggleCamera = () => {
     setFacingMode((current) => (current === 'user' ? 'environment' : 'user'))
   }
+
   const handleVideoTap = () => {
-    if (capturedUrl) return
+    if (previewUrl) return
 
     const now = Date.now()
     if (now - lastTapRef.current <= 300) {
@@ -77,9 +92,13 @@ export default function StudentCamera({ onClose }) {
     lastTapRef.current = now
   }
 
+  const showFile = (nextFile) => {
+    setFile(nextFile)
+    setPreviewUrl(URL.createObjectURL(nextFile))
+    setError('')
+  }
 
-  const handleShutter = () => {
-
+  const handleShutter = async () => {
     const video = videoRef.current
     const canvas = canvasRef.current
     if (!video || !canvas) return
@@ -96,30 +115,31 @@ export default function StudentCamera({ onClose }) {
 
     ctx.drawImage(video, 0, 0, width, height)
 
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) return
+    const photo = await canvasToStoryFile(canvas)
+    if (!photo) return
+    showFile(photo)
+    haptic(20)
+  }
 
-        if (capturedUrl) {
-          URL.revokeObjectURL(capturedUrl)
-        }
+  const handleChooseFile = (event) => {
+    const chosen = event.target.files?.[0]
+    event.target.value = ''
+    if (!chosen) return
 
-        const url = URL.createObjectURL(blob)
-        setCapturedBlob(blob)
-        setCapturedUrl(url)
-        haptic(20)
-      },
-      'image/jpeg',
-      0.92
-    )
+    const problem = storyFileProblem(chosen)
+    if (problem) {
+      setError(problem)
+      return
+    }
+    showFile(chosen)
   }
 
   const handleSave = () => {
-    if (!capturedUrl) return
+    if (!previewUrl || !file) return
 
     const a = document.createElement('a')
-    a.href = capturedUrl
-    a.download = `unipicks-${Date.now()}.jpg`
+    a.href = previewUrl
+    a.download = `unipicks-${Date.now()}.${STORY_TYPES[file.type] || 'jpg'}`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -127,18 +147,14 @@ export default function StudentCamera({ onClose }) {
   }
 
   const handleShare = async () => {
-    if (!capturedBlob) return
-
-    const file = new File([capturedBlob], `unipicks-${Date.now()}.jpg`, {
-      type: 'image/jpeg',
-    })
+    if (!file) return
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({ files: [file] })
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          console.error(error)
+      } catch (shareError) {
+        if (shareError.name !== 'AbortError') {
+          console.error(shareError)
         }
       }
     } else {
@@ -147,14 +163,41 @@ export default function StudentCamera({ onClose }) {
   }
 
   const handleRetake = () => {
-    if (capturedUrl) {
-      URL.revokeObjectURL(capturedUrl)
-    }
-
-    setCapturedBlob(null)
-    setCapturedUrl(null)
+    setFile(null)
+    setPreviewUrl(null)
+    setCaption('')
+    setError('')
     haptic(10)
   }
+
+  const handlePost = async () => {
+    if (!file || posting) return
+    setPosting(true)
+    setError('')
+
+    try {
+      await postStory({ file, caption })
+      haptic(20)
+      setPosted(true)
+      window.dispatchEvent(new CustomEvent(STORY_POSTED_EVENT))
+      setTimeout(onClose, 1500)
+    } catch (postError) {
+      setError(postError.message)
+    } finally {
+      setPosting(false)
+    }
+  }
+
+  const chooseButton = (
+    <button
+      type="button"
+      onClick={() => fileInputRef.current?.click()}
+      aria-label="Choose a photo or GIF from your phone"
+      className="flex h-12 w-12 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md"
+    >
+      <ImageUp size={22} />
+    </button>
+  )
 
   return (
     <div className="fixed inset-0 z-[100] flex min-h-[100dvh] flex-col bg-background text-foreground">
@@ -164,124 +207,131 @@ export default function StudentCamera({ onClose }) {
       >
         <button
           type="button"
-          onClick={onClose}
-          aria-label="Close camera"
+          onClick={previewUrl && !posted ? handleRetake : onClose}
+          aria-label={previewUrl && !posted ? 'Retake' : 'Close camera'}
           className="flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md"
         >
           <X size={24} />
         </button>
 
-        <button
-          type="button"
-          onClick={handleToggleCamera}
-          aria-label="Switch camera"
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md"
-        >
-          <RefreshCw size={22} />
-        </button>
+        {!previewUrl && !permissionDenied && (
+          <button
+            type="button"
+            onClick={handleToggleCamera}
+            aria-label="Switch camera"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md"
+          >
+            <RefreshCw size={22} />
+          </button>
+        )}
       </div>
 
       <canvas ref={canvasRef} className="hidden" />
-
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={Object.keys(STORY_TYPES).join(',')}
+        onChange={handleChooseFile}
+        className="hidden"
+        data-testid="story-file-input"
+      />
 
       <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-black">
-        {permissionDenied ? (
+        {previewUrl ? (
+          <img
+            src={previewUrl}
+            alt="Your photo"
+            className="h-full w-full object-contain"
+          />
+        ) : permissionDenied ? (
           <div className="flex max-w-sm flex-col items-center gap-4 px-6 text-center text-white">
             <CameraOff size={48} />
             <p className="text-base">
-              Camera access is needed to take photos. Enable it in your browser settings.
+              Camera access is needed to take photos. Turn it on in your browser settings, or choose a photo from your phone.
             </p>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full bg-accent px-6 py-3 font-medium text-accent-foreground"
-            >
-              Close
-            </button>
+            <Button onClick={() => fileInputRef.current?.click()}>
+              <ImageUp size={18} />
+              Choose from phone
+            </Button>
           </div>
-        ) : capturedUrl ? (
-          <img
-            src={capturedUrl}
-            alt="Captured"
-            className="h-full w-full object-contain"
-          />
         ) : (
           <video
             ref={videoRef}
             autoPlay
             playsInline
             muted
-           onClick={handleVideoTap}
+            onClick={handleVideoTap}
             className="h-full w-full object-cover"
           />
         )}
       </div>
 
       <div
-        className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center bg-gradient-to-t from-black/80 via-black/30 to-transparent px-4"
+        className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center bg-gradient-to-t from-black/90 via-black/50 to-transparent px-4 pt-10"
         style={{ paddingBottom: 'calc(var(--safe-area-bottom) + 16px)' }}
       >
-        {capturedUrl ? (
-          <div className="flex w-full items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={handleRetake}
-              className="flex-1 rounded-full border border-white/30 bg-white/10 px-5 py-3 font-medium text-white backdrop-blur-md"
-            >
-              Retake
-            </button>
+        {error && (
+          <p role="alert" className="mb-3 w-full max-w-md rounded-lg bg-black/70 px-3 py-2 text-center text-sm text-white">
+            {error}
+          </p>
+        )}
 
-            <button
-              type="button"
-              onClick={handleSave}
-              className="flex-1 rounded-full bg-accent px-5 py-3 font-medium text-accent-foreground"
-            >
-              Save
-            </button>
-
-            <button
-              type="button"
-              onClick={handleShare}
-              className="flex-1 rounded-full bg-accent px-5 py-3 font-medium text-accent-foreground"
-            >
-              Share
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="mb-5 flex items-center gap-8 text-sm font-medium text-white/60">
+        {posted ? (
+          <p role="status" className="mb-4 w-full max-w-md rounded-lg bg-black/70 px-3 py-3 text-center text-sm font-medium text-white">
+            Posted. Your friends can see it for 24 hours.
+          </p>
+        ) : previewUrl ? (
+          <div className="flex w-full max-w-md flex-col gap-3">
+            <label className="sr-only" htmlFor="story-caption">Caption</label>
+            <input
+              id="story-caption"
+              type="text"
+              value={caption}
+              maxLength={STORY_CAPTION_MAX}
+              onChange={(event) => setCaption(event.target.value)}
+              placeholder="Add a caption · optional"
+              className="min-h-11 w-full rounded-lg border border-white/30 bg-black/40 px-3 text-base text-white placeholder:text-white/70 outline-none focus:border-white"
+            />
+            <p className="text-center text-xs text-white/90">
+              Only your friends see your story. It disappears after 24 hours.
+            </p>
+            <Button onClick={handlePost} disabled={posting} className="w-full">
+              {posting ? 'Posting…' : 'Post to your story'}
+            </Button>
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setCameraMode('story')}
-                className={cameraMode === 'story' ? 'text-accent' : 'text-white/60'}
+                onClick={handleSave}
+                className="min-h-11 rounded-lg border border-white/50 px-4 text-sm font-semibold text-white transition hover:bg-white/10"
               >
-                Story
+                Save
               </button>
               <button
                 type="button"
-                onClick={() => setCameraMode('post')}
-                className={cameraMode === 'post' ? 'text-accent' : 'text-white/60'}
+                onClick={handleShare}
+                className="min-h-11 rounded-lg border border-white/50 px-4 text-sm font-semibold text-white transition hover:bg-white/10"
               >
-                Post
-              </button>
-              <button
-                type="button"
-                onClick={() => setCameraMode('scan')}
-                className={cameraMode === 'scan' ? 'text-accent' : 'text-white/60'}
-              >
-                Scan
+                Share
               </button>
             </div>
+          </div>
+        ) : (
+          <div className="flex w-full max-w-md items-center justify-between">
+            {permissionDenied ? <span className="h-12 w-12" /> : chooseButton}
 
-            <button
-              type="button"
-              onClick={handleShutter}
-              aria-label="Take photo"
-              className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-white/20 p-1"
-            >
-              <span className="h-full w-full rounded-full bg-white" />
-            </button>
-          </>
+            {!permissionDenied && (
+              <button
+                type="button"
+                onClick={handleShutter}
+                aria-label="Take photo"
+                className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-white/20 p-1"
+              >
+                <span className="h-full w-full rounded-full bg-white" />
+              </button>
+            )}
+
+            <span className="h-12 w-12" aria-hidden="true" />
+          </div>
         )}
       </div>
     </div>

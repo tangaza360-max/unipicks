@@ -9,15 +9,40 @@ import {
   Flag,
   Check,
   X,
+  Plus,
 } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import SocialActivity from '../components/SocialActivity.jsx'
 import ReportDialog from '../components/ReportDialog.jsx'
 import BackLink from '../components/BackLink.jsx'
 import Button from '../components/Button.jsx'
+import { STORY_POSTED_EVENT, openStoryCamera } from '../lib/studentStories.js'
 
 export default function Social() {
   const searchInputRef = useRef(null)
+  const [myStoryCount, setMyStoryCount] = useState(0)
+
+  // Your own live stories (friends' stories come with the story viewer).
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadMyStories() {
+      const { data, error } = await supabase.rpc('get_story_tray')
+      if (cancelled) return
+      if (error) {
+        console.error('Failed to load stories:', error.message)
+        return
+      }
+      setMyStoryCount((data || []).find((row) => row.is_me)?.story_count || 0)
+    }
+
+    loadMyStories()
+    window.addEventListener(STORY_POSTED_EVENT, loadMyStories)
+    return () => {
+      cancelled = true
+      window.removeEventListener(STORY_POSTED_EVENT, loadMyStories)
+    }
+  }, [])
   const [showActivity, setShowActivity] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStudent, setSelectedStudent] = useState(null)
@@ -612,10 +637,38 @@ export default function Social() {
                 </section>
               )}
 
-              {/* Empty state. Student stories and the social feed are not
-                  built yet (business stories are on Home), so show one
-                  sentence and one action instead of placeholder circles and
-                  tabs (style guide section 9). */}
+              {/* Your story */}
+              {!searchQuery.trim() && (
+                <section aria-label="Stories">
+                  <button
+                    type="button"
+                    onClick={openStoryCamera}
+                    className="flex w-full items-center gap-4 rounded-xl border border-border bg-card p-4 text-left hover:bg-muted/50 transition"
+                  >
+                    <span
+                      className={`flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full ${
+                        myStoryCount > 0
+                          ? 'border-[3px] border-accent bg-muted'
+                          : 'border-2 border-dashed border-border'
+                      }`}
+                    >
+                      <Plus size={22} className="text-muted-foreground" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-semibold">Your story</span>
+                      <span className="block text-sm text-muted-foreground">
+                        {myStoryCount > 0
+                          ? `${myStoryCount} ${myStoryCount === 1 ? 'photo' : 'photos'} live for your friends. Add another.`
+                          : 'Share a photo or GIF with your friends. It disappears after 24 hours.'}
+                      </span>
+                    </span>
+                  </button>
+                </section>
+              )}
+
+              {/* Empty state. The social feed is not built yet (business
+                  stories are on Home), so show one sentence and one action
+                  instead of placeholder tabs (style guide section 9). */}
               {!searchQuery.trim() && (
                 <section className="rounded-xl border border-border bg-card px-6 py-10 text-center">
                   <p className="text-sm text-muted-foreground">
