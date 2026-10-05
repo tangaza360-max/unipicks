@@ -6,6 +6,7 @@ import {
   Users,
 } from 'lucide-react'
 import IconButton from './IconButton.jsx'
+import { haptic } from '../lib/haptics.js'
 
 const navigationItems = [
   {
@@ -107,36 +108,38 @@ export default function StudentBottomNav({
   )
 }
 
+// Icon + word (style guide §7, audit G9): new students should not have to guess.
 function NavItem({ item, active, onClick, badgeCount = 0, badgeLabel }) {
   const { Icon, label } = item
   const showBadge = badgeCount > 0
 
   return (
-    <div className="relative flex items-center justify-center">
-      <IconButton
-        ariaLabel={showBadge && badgeLabel ? `${label}, ${badgeLabel(badgeCount)}` : label}
-        active={active}
-        onClick={onClick}
-        className={[
-          'h-11 w-11 min-h-11 min-w-11',
-          active ? 'text-accent' : 'text-muted-foreground',
-        ].join(' ')}
-      >
-        <Icon
-          size={22}
-          strokeWidth={active ? 2.5 : 2}
-          fill={active ? 'currentColor' : 'none'}
-          aria-hidden="true"
-        />
-      </IconButton>
-      {showBadge && (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-0.5 ml-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
-        >
-          {badgeCount > 99 ? '99+' : badgeCount}
-        </span>
-      )}
-    </div>
+    <button
+      type="button"
+      onClick={() => {
+        haptic(10)
+        onClick?.()
+      }}
+      aria-label={showBadge && badgeLabel ? `${label}, ${badgeLabel(badgeCount)}` : label}
+      aria-current={active ? 'page' : undefined}
+      className={[
+        'flex h-full min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium',
+        'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-lg',
+        active ? 'text-accent' : 'text-muted-foreground hover:text-foreground',
+      ].join(' ')}
+    >
+      <span className="relative">
+        <Icon size={22} strokeWidth={active ? 2.5 : 2} aria-hidden="true" />
+        {showBadge && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-2.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold leading-none text-white"
+          >
+            {badgeCount > 99 ? '99+' : badgeCount}
+          </span>
+        )}
+      </span>
+      {label}
+    </button>
   )
 }
