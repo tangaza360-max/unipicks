@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CameraOff, ImageUp, RefreshCw, X } from 'lucide-react'
+import { CameraOff, ImageUp, RefreshCw, Timer, X, Zap, ZapOff } from 'lucide-react'
 import { haptic } from '../lib/haptics.js'
 import Button from './Button.jsx'
 import {
@@ -10,10 +10,16 @@ import {
   postStory,
   storyFileProblem,
 } from '../lib/studentStories.js'
+import { clampZoom, drawCrop, nextTimer, pinchZoom, visibleCrop } from '../lib/cameraFrame.js'
 
 // Camera: take a photo (or choose a photo or GIF from the phone), then post
 // it to your story (friends see it for 24 hours), save it, or share it to
-// another app.
+// another app. The photo is exactly what the screen showed (same crop and
+// zoom; selfies mirrored). Flash: the phone light on the back camera when the
+// phone allows it, otherwise a white screen. Timer: 3 or 10 seconds. Zoom:
+// pinch, or tap the 1× / 2× button.
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
 export default function StudentCamera({ onClose }) {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
@@ -28,6 +34,17 @@ export default function StudentCamera({ onClose }) {
   const [error, setError] = useState('')
   const [posting, setPosting] = useState(false)
   const [posted, setPosted] = useState(false)
+  const [zoom, setZoom] = useState(1)
+  const [flashOn, setFlashOn] = useState(false)
+  const [torchSupported, setTorchSupported] = useState(false)
+  const [screenFlash, setScreenFlash] = useState(false)
+  const [timerSeconds, setTimerSeconds] = useState(0)
+  const [countdown, setCountdown] = useState(0)
+  const [capturing, setCapturing] = useState(false)
+  const pointersRef = useRef(new Map())
+  const pinchRef = useRef(null)
+  const countdownRef = useRef(null)
+  const mirror = facingMode === 'user'
 
   useEffect(() => {
     let cancelled = false
@@ -51,6 +68,10 @@ export default function StudentCamera({ onClose }) {
           videoRef.current.srcObject = stream
         }
 
+        const track = stream.getVideoTracks()[0]
+        const capabilities = track?.getCapabilities?.() || {}
+        setTorchSupported(Boolean(capabilities.torch))
+        setZoom(1)
         setPermissionDenied(false)
       } catch (error) {
         if (!cancelled) {
@@ -75,6 +96,17 @@ export default function StudentCamera({ onClose }) {
     }
   }, [previewUrl])
 
+  useEffect(() => () => clearInterval(countdownRef.current), [])
+
+  // The video is removed while a photo is shown; reconnect the camera when it
+  // comes back (Retake). Without this the picture stayed black.
+  useEffect(() => {
+    const video = videoRef.current
+    if (video && streamRef.current && video.srcObject !== streamRef.current) {
+      video.srcObject = streamRef.current
+    }
+  }, [previewUrl, permissionDenied])
+
   const handleToggleCamera = () => {
     setFacingMode((current) => (current === 'user' ? 'environment' : 'user'))
   }
@@ -98,27 +130,106 @@ export default function StudentCamera({ onClose }) {
     setError('')
   }
 
-  const handleShutter = async () => {
+  // Exactly what the screen shows: same crop, zoom and mirror.
+  const takePhoto = async () => {
     const video = videoRef.current
     const canvas = canvasRef.current
     if (!video || !canvas) return
 
-    const width = video.videoWidth
-    const height = video.videoHeight
-    if (!width || !height) return
+    const box = video.parentElement.getBoundingClientRect()
+    const crop = visibleCrop(video.videoWidth, video.videoHeight, box.width, box.height, zoom)
+    if (!crop) return
 
-    canvas.width = width
-    canvas.height = height
-
+    canvas.width = Math.round(crop.sw)
+    canvas.height = Math.round(crop.sh)
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-
-    ctx.drawImage(video, 0, 0, width, height)
+    drawCrop(ctx, video, crop, { mirror })
 
     const photo = await canvasToStoryFile(canvas)
     if (!photo) return
     showFile(photo)
     haptic(20)
+  }
+
+  const setTorch = async (on) => {
+    const track = streamRef.current?.getVideoTracks()[0]
+    try {
+      await track?.applyConstraints({ advanced: [{ torch: on }] })
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  const fire = async () => {
+    setCapturing(true)
+    try {
+      if (flashOn && !mirror && torchSupported && (await setTorch(true))) {
+        await sleep(350)
+        await takePhoto()
+        await setTorch(false)
+      } else if (flashOn) {
+        // Front camera, or no phone light: light the face with a white screen.
+        setScreenFlash(true)
+        await sleep(250)
+        await takePhoto()
+        setScreenFlash(false)
+      } else {
+        await takePhoto()
+      }
+    } finally {
+      setCapturing(false)
+    }
+  }
+
+  const handleShutter = () => {
+    if (capturing) return
+    if (countdown > 0) {
+      clearInterval(countdownRef.current)
+      setCountdown(0)
+      return
+    }
+    if (!timerSeconds) {
+      fire()
+      return
+    }
+    let left = timerSeconds
+    setCountdown(left)
+    countdownRef.current = setInterval(() => {
+      left -= 1
+      if (left <= 0) {
+        clearInterval(countdownRef.current)
+        setCountdown(0)
+        fire()
+      } else {
+        setCountdown(left)
+        haptic(5)
+      }
+    }, 1000)
+  }
+
+  // Pinch to zoom (two fingers on the camera picture).
+  const distanceBetween = () => {
+    const [a, b] = [...pointersRef.current.values()]
+    return Math.hypot(a.x - b.x, a.y - b.y)
+  }
+  const handlePointerDown = (event) => {
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    if (pointersRef.current.size === 2) {
+      pinchRef.current = { zoom, distance: distanceBetween() }
+    }
+  }
+  const handlePointerMove = (event) => {
+    if (!pointersRef.current.has(event.pointerId)) return
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    if (pointersRef.current.size === 2 && pinchRef.current) {
+      setZoom(pinchZoom(pinchRef.current.zoom, pinchRef.current.distance, distanceBetween()))
+    }
+  }
+  const handlePointerEnd = (event) => {
+    pointersRef.current.delete(event.pointerId)
+    if (pointersRef.current.size < 2) pinchRef.current = null
   }
 
   const handleChooseFile = (event) => {
@@ -202,7 +313,7 @@ export default function StudentCamera({ onClose }) {
   return (
     <div className="fixed inset-0 z-[100] flex min-h-[100dvh] flex-col bg-background text-foreground">
       <div
-        className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-4"
+        className="absolute inset-x-0 top-0 z-10 flex items-start justify-between px-4"
         style={{ paddingTop: 'calc(var(--safe-area-top) + 12px)' }}
       >
         <button
@@ -215,18 +326,54 @@ export default function StudentCamera({ onClose }) {
         </button>
 
         {!previewUrl && !permissionDenied && (
-          <button
-            type="button"
-            onClick={handleToggleCamera}
-            aria-label="Switch camera"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md"
-          >
-            <RefreshCw size={22} />
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={handleToggleCamera}
+              aria-label="Switch camera"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md"
+            >
+              <RefreshCw size={22} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setFlashOn((on) => !on)}
+              aria-label={flashOn ? 'Flash: on' : 'Flash: off'}
+              aria-pressed={flashOn}
+              className={`flex h-11 w-11 items-center justify-center rounded-full backdrop-blur-md ${
+                flashOn ? 'bg-white text-black' : 'bg-black/40 text-white'
+              }`}
+            >
+              {flashOn ? <Zap size={22} /> : <ZapOff size={22} />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimerSeconds(nextTimer)}
+              aria-label={timerSeconds ? `Timer: ${timerSeconds} seconds` : 'Timer: off'}
+              className={`flex h-11 w-11 items-center justify-center rounded-full backdrop-blur-md ${
+                timerSeconds ? 'bg-white text-black' : 'bg-black/40 text-white'
+              }`}
+            >
+              {timerSeconds ? <span className="text-sm font-bold">{timerSeconds}s</span> : <Timer size={22} />}
+            </button>
+          </div>
         )}
       </div>
 
       <canvas ref={canvasRef} className="hidden" />
+
+      {screenFlash && <div className="fixed inset-0 z-[120] bg-white" aria-hidden="true" />}
+
+      {countdown > 0 && (
+        <div
+          className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
+          aria-live="assertive"
+        >
+          <span className="text-8xl font-bold text-white drop-shadow-lg" data-testid="countdown">
+            {countdown}
+          </span>
+        </div>
+      )}
       <input
         ref={fileInputRef}
         type="file"
@@ -261,7 +408,13 @@ export default function StudentCamera({ onClose }) {
             playsInline
             muted
             onClick={handleVideoTap}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerEnd}
+            onPointerCancel={handlePointerEnd}
+            style={{ transform: `scale(${mirror ? -zoom : zoom}, ${zoom})`, touchAction: 'none' }}
             className="h-full w-full object-cover"
+            data-testid="camera-video"
           />
         )}
       </div>
@@ -316,14 +469,25 @@ export default function StudentCamera({ onClose }) {
             </div>
           </div>
         ) : (
-          <div className="flex w-full max-w-md items-center justify-between">
+          <div className="flex w-full max-w-md flex-col items-center gap-4">
+            {!permissionDenied && (
+              <button
+                type="button"
+                onClick={() => setZoom((current) => (current > 1 ? 1 : 2))}
+                aria-label={`Zoom ${zoom.toFixed(1)} times. Tap to ${zoom > 1 ? 'zoom out' : 'zoom in'}`}
+                className="flex h-11 min-w-11 items-center justify-center rounded-full bg-black/50 px-3 text-sm font-semibold text-white backdrop-blur-md"
+              >
+                {zoom > 1 ? `${clampZoom(zoom).toFixed(1)}×` : '1×'}
+              </button>
+            )}
+          <div className="flex w-full items-center justify-between">
             {permissionDenied ? <span className="h-12 w-12" /> : chooseButton}
 
             {!permissionDenied && (
               <button
                 type="button"
                 onClick={handleShutter}
-                aria-label="Take photo"
+                aria-label={countdown > 0 ? 'Cancel timer' : 'Take photo'}
                 className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-white/20 p-1"
               >
                 <span className="h-full w-full rounded-full bg-white" />
@@ -331,6 +495,7 @@ export default function StudentCamera({ onClose }) {
             )}
 
             <span className="h-12 w-12" aria-hidden="true" />
+          </div>
           </div>
         )}
       </div>
