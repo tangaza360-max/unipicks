@@ -99,7 +99,7 @@ erDiagram
 ```
 
 - Photos are not in tables: they are files in Storage (page 2); a story row
-  keeps the file path.
+  keeps the file path. Ended stories are deleted 48 h after they end (page 4).
 
 ## E. Moderation and admin
 

@@ -69,7 +69,7 @@ Deno.test('response reports both counts', async () => {
   seed()
   const { status, body } = await run()
   assertEquals(status, 200)
-  assertEquals(body, { success: true, expired_pending: 1, expired_confirmed: 1, expired_groups: 1, expired_count: 2 })
+  assertEquals(body, { success: true, expired_pending: 1, expired_confirmed: 1, expired_groups: 1, stories_cleaned: 0, expired_count: 2 })
 })
 
 Deno.test('running twice in a row has no additional effect', async () => {
@@ -77,7 +77,7 @@ Deno.test('running twice in a row has no additional effect', async () => {
   await run()
   const after1 = JSON.stringify(db.tables.orders)
   const { body } = await run()
-  assertEquals(body, { success: true, expired_pending: 0, expired_confirmed: 0, expired_groups: 0, expired_count: 0 })
+  assertEquals(body, { success: true, expired_pending: 0, expired_confirmed: 0, expired_groups: 0, stories_cleaned: 0, expired_count: 0 })
   assertEquals(JSON.stringify(db.tables.orders), after1)
 })
 
@@ -100,4 +100,48 @@ Deno.test('wrong cron secret → 401, nothing changes', async () => {
   } finally {
     Deno.env.delete('CRON_SECRET')
   }
+})
+
+// Rule 4: ended student stories (photo first, then the row).
+function seedStories() {
+  seed()
+  db.tables.student_stories = [
+    { id: 'old-1', media_url: 'u1/a.jpg' },
+    { id: 'old-2', media_url: 'u2/b.gif' },
+    { id: 'live', media_url: 'u1/live.jpg' },
+  ]
+  db.storage['student-stories'] = ['u1/a.jpg', 'u2/b.gif', 'u1/live.jpg']
+  // The database function decides which stories are old enough (SQL test).
+  db.rpcs.student_stories_to_clean = () => ({
+    data: [{ id: 'old-1', media_url: 'u1/a.jpg' }, { id: 'old-2', media_url: 'u2/b.gif' }],
+    error: null,
+  })
+}
+
+Deno.test('ended stories: photos and rows deleted, live story kept', async () => {
+  seedStories()
+  const { status, body } = await run()
+  assertEquals(status, 200)
+  assertEquals(body.stories_cleaned, 2)
+  assertEquals(db.storage['student-stories'], ['u1/live.jpg'])
+  assertEquals(db.tables.student_stories.map((s) => s.id), ['live'])
+  assertEquals(db.rpcCalls.find((c) => c.name === 'student_stories_to_clean')?.args, { p_limit: 100 })
+})
+
+Deno.test('photo delete fails: rows kept for the next run, orders still expire', async () => {
+  seedStories()
+  db.storageFail = { 'student-stories': 'storage down' }
+  const { status, body } = await run()
+  assertEquals(status, 200)
+  assertEquals(body.stories_cleaned, 0)
+  assertEquals(db.tables.student_stories.length, 3)
+  assertEquals(statusOf('pending-late'), 'confirmation_expired')
+})
+
+Deno.test('clean-up function missing: orders still expire', async () => {
+  seed()
+  const { status, body } = await run()
+  assertEquals(status, 200)
+  assertEquals(body.stories_cleaned, 0)
+  assertEquals(statusOf('confirmed-late'), 'payment_expired')
 })

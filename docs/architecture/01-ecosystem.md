@@ -65,7 +65,7 @@ flowchart LR
 | **Sentry** (EU) | Tells us when the app crashes | Website sends error reports (`src/lib/monitoring.js`); no names, emails or phones | We stop seeing crashes; the app works |
 | **Google Gemini** | AI writes deal text for businesses | Server function `generate-deal` | "Generate with AI" fails; businesses can still type deals |
 | **Unsplash** | Suggests a photo for an AI deal | Server function `generate-deal` | No suggested photo |
-| **cron-job.org** | Timer: closes orders nobody answered or paid | Calls `expire-orders` every 60 s with a secret header | Old orders stay "waiting" until someone opens them (the server also checks when a business acts) |
+| **cron-job.org** | Timer: closes orders nobody answered or paid, closes old groups, deletes ended stories | Calls `expire-orders` every 60 s with a secret header | Old orders stay "waiting" until someone opens them (the server also checks when a business acts); ended stories wait |
 | **Supabase Auth email** | Sign-up confirmation, password reset | Supabase sends it with our templates (`docs/email-templates/`). Which mail sender is used is **[inference: Supabase's built-in sender]** — to confirm in the Supabase dashboard; a custom domain + sender is still an open item | People cannot confirm accounts or reset passwords |
 
 **Hosting** (where Unipicks itself runs) is on page 2: the website on

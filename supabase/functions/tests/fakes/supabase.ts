@@ -17,6 +17,8 @@ export const db: {
   rpcCalls: { name: string; args: Row }[]
   // bucket -> object paths, for storage.list/remove
   storage: Record<string, string[]>
+  // bucket -> error message: storage.remove fails for that bucket
+  storageFail?: Record<string, string>
   signIns: string[]
   // table -> its real column list. When set, selecting, filtering or writing
   // any other column fails with 42703, like PostgREST on the real schema.
@@ -34,6 +36,7 @@ export function resetDb() {
   db.rpcs = {}
   db.rpcCalls = []
   db.storage = {}
+  db.storageFail = {}
   db.signIns = []
   db.columns = {}
   db.queryLog = []
@@ -171,6 +174,7 @@ export function createClient(_url: string, _key: string, _options?: Row) {
           return Promise.resolve({ data: names, error: null })
         },
         remove: (paths: string[]): Promise<{ data: Row; error: Row }> => {
+          if (db.storageFail?.[bucket]) return Promise.resolve({ data: null, error: { message: db.storageFail[bucket] } })
           db.storage[bucket] = (db.storage[bucket] ?? []).filter((p) => !paths.includes(p))
           return Promise.resolve({ data: paths, error: null })
         },

@@ -10,6 +10,8 @@
 //      (the student never paid; payment_deadline is set when the merchant accepts).
 //   3. group_orders still open past expires_at (24 hours) -> cancelled; the
 //      notify_group_expired trigger tells the members.
+//   4. student stories that ended 48 h+ ago with no open report: photo and
+//      row deleted (student_stories_to_clean, at most 100 per run).
 //
 // Each rule is one conditional UPDATE (status + deadline in the WHERE clause), so
 // an order that moves on between runs, e.g. accepted or paid a moment before,
@@ -99,8 +101,31 @@ serve(async (req) => {
     if (groupError) throw new Error(`group_orders open -> cancelled: ${groupError.message}`)
     const groupIds = (closedGroups ?? []).map((g: { id: string }) => g.id)
 
+    // Ended student stories: photo first, then the row, so a failed photo
+    // delete is simply retried next minute. Never stops the order rules.
+    let storiesCleaned = 0
+    try {
+      const { data: toClean, error: listError } = await supabaseAdmin.rpc('student_stories_to_clean', { p_limit: 100 })
+      if (listError) throw new Error(`list: ${listError.message}`)
+      const stories = (toClean ?? []) as { id: string; media_url: string }[]
+      if (stories.length) {
+        const { error: fileError } = await supabaseAdmin.storage
+          .from('student-stories')
+          .remove(stories.map((s) => s.media_url))
+        if (fileError) throw new Error(`photos: ${fileError.message}`)
+        const { error: rowError } = await supabaseAdmin
+          .from('student_stories')
+          .delete()
+          .in('id', stories.map((s) => s.id))
+        if (rowError) throw new Error(`rows: ${rowError.message}`)
+        storiesCleaned = stories.length
+      }
+    } catch (cleanError) {
+      console.error('[expire-orders] story clean-up failed (will retry):', cleanError)
+    }
+
     console.log(
-      `[expire-orders] expired ${pendingIds.length} pending_confirmation, ${confirmedIds.length} confirmed, ${groupIds.length} groups`,
+      `[expire-orders] expired ${pendingIds.length} pending_confirmation, ${confirmedIds.length} confirmed, ${groupIds.length} groups; cleaned ${storiesCleaned} ended stories`,
       { confirmation_expired: pendingIds, payment_expired: confirmedIds, groups_closed: groupIds },
     )
 
@@ -109,6 +134,7 @@ serve(async (req) => {
       expired_pending: pendingIds.length,
       expired_confirmed: confirmedIds.length,
       expired_groups: groupIds.length,
+      stories_cleaned: storiesCleaned,
       // Kept for existing callers: total across both rules.
       expired_count: pendingIds.length + confirmedIds.length,
     })

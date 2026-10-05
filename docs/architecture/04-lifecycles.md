@@ -120,14 +120,17 @@ stateDiagram-v2
 ```mermaid
 stateDiagram-v2
   [*] --> live: posted (database sets 24 h)
-  live --> ended: 24 h pass (hidden, row and photo kept)
+  live --> ended: 24 h pass (hidden)
+  ended --> [*]: 48 h later, photo and row deleted (expire-orders)
   live --> deleted: owner deletes (row and photo removed)
   live --> hidden: owner deletes while a report is open (kept for the admin)
   live --> removed: admin "Remove story"
   hidden --> removed: admin "Remove story"
 ```
 
-🟡 Ended stories and their photos are **never cleaned up** (no timer job yet).
+Ended stories are deleted (photo and row) **48 hours after they end**, i.e. 3
+days after posting, by the every-minute timer job, unless a report on them is
+still open (`20261005140000_clean_up_ended_stories.sql`).
 
 ## Report (`student_reports.status`)
 

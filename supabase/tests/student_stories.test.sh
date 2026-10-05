@@ -195,6 +195,20 @@ check "a dismissed report no longer protects the story" "$(as_user $AD "select p
 check "owner deletes own story" "$(as_user $A "delete from public.student_stories where media_url = '$A/p2.png' returning 1;")" "1"
 check "friend can't delete it" "$(as_user $F "delete from public.student_stories where student_id = '$A' returning 1;")" ""
 
+echo "clean-up of ended stories"
+q "insert into public.student_stories (id, student_id, media_url, created_at, expires_at) values
+  ('00000000-0000-0000-0000-00000000c001','$A','$A/old.jpg', now() - interval '4 days', now() - interval '3 days'),
+  ('00000000-0000-0000-0000-00000000c002','$A','$A/recent.jpg', now() - interval '30 hours', now() - interval '6 hours'),
+  ('00000000-0000-0000-0000-00000000c003','$F','$F/reported-old.jpg', now() - interval '4 days', now() - interval '3 days');"
+# An open report on the third one (triggers off: written directly as test data).
+q "set session_replication_role = replica; insert into public.student_reports (reporter_id, reported_id, category, story_id, context, status) values ('$A','$F','Spam','00000000-0000-0000-0000-00000000c003','story','pending');"
+check "server lists only stories ended 48 h+ ago without an open report" "$(as_user '' "select string_agg(media_url, ',' order by media_url) from public.student_stories_to_clean(100);")" "$A/old.jpg"
+check "students can't call it" "$(as_user $A "select count(*) from public.student_stories_to_clean(100);")" "permission denied for function student_stories_to_clean"
+q "update public.student_reports set status = 'dismissed' where story_id = '00000000-0000-0000-0000-00000000c003';"
+check "after the report is closed, that story is cleaned too" "$(as_user '' "select count(*) from public.student_stories_to_clean(100);")" "2"
+check "server can delete the rows (no signed-in user)" "$(as_user '' "delete from public.student_stories where id in (select id from public.student_stories_to_clean(100)) returning 1;" | tail -1)" "1"
+check "recent ended story is kept" "$(q "select count(*) from public.student_stories where media_url = '$A/recent.jpg'")" "1"
+
 echo
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

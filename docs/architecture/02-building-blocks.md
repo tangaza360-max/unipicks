@@ -82,7 +82,7 @@ flowchart TB
 | `process-payment` | Website (student) | Itself (off) | Starts the MoMo payment for an accepted order | UmunotaPay, phone alerts |
 | `payment-webhook` | **UmunotaPay** | Signed callback (secret) | Marks the payment paid / failed, creates the pickup code, alerts the business | Phone alerts |
 | `create-group-order-payment` | Website (group host) | Supabase login check on | Turns a group into one order for the business | Phone alerts |
-| `expire-orders` | **cron-job.org**, every 60 s | Supabase check on + secret header | Closes orders not answered (business) or not paid (student), closes old groups | — |
+| `expire-orders` | **cron-job.org**, every 60 s | Supabase check on + secret header | Closes orders not answered (business) or not paid (student), closes old groups, deletes student stories ended 48 h+ ago (photo + row, not if reported) | Storage |
 | `reconcile-payments` | (timer, **switched off**) | Supabase check on + secret header | Asks UmunotaPay about payments we never heard back from | UmunotaPay, phone alerts |
 | `delete-my-account` | Website | Supabase check on | Deletes the account the safe way (keeps what accounting needs) | — |
 | `generate-deal` | Website (business) | Supabase check on | AI deal text and a photo suggestion | Gemini, Unsplash |
