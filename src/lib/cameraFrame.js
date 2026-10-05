@@ -27,11 +27,13 @@ export function visibleCrop(videoWidth, videoHeight, boxWidth, boxHeight, zoom =
   }
 }
 
-// Draw the crop onto a 2D context of size crop.sw × crop.sh (rounded),
-// mirrored when `mirror` is true (front camera, as seen on screen).
-export function drawCrop(ctx, source, crop, { mirror = false } = {}) {
-  const width = Math.round(crop.sw)
-  const height = Math.round(crop.sh)
+// Draw the crop onto a 2D context of size crop.sw × crop.sh (rounded), or
+// width × height when given (smaller, for GIF frames), mirrored when
+// `mirror` is true (front camera, as seen on screen).
+export function drawCrop(ctx, source, crop, options = {}) {
+  const { mirror = false } = options
+  const width = options.width || Math.round(crop.sw)
+  const height = options.height || Math.round(crop.sh)
   ctx.save()
   if (mirror) {
     ctx.translate(width, 0)

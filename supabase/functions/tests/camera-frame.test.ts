@@ -64,6 +64,14 @@ Deno.test('selfie (front camera) is mirrored like the preview', () => {
   ])
 })
 
+Deno.test('GIF frames: same crop drawn smaller', () => {
+  const { ctx, calls } = recordingCtx()
+  const size = drawCrop(ctx, 'video', { sx: 0, sy: 0, sw: 444, sh: 960 }, { mirror: true, width: 222, height: 480 })
+  assertEquals(size, { width: 222, height: 480 })
+  assertEquals(calls[1], ['translate', 222, 0])
+  assertEquals(calls[3], ['drawImage', 'video', 0, 0, 444, 960, 0, 0, 222, 480])
+})
+
 Deno.test('back camera is not mirrored', () => {
   const { ctx, calls } = recordingCtx()
   drawCrop(ctx, 'video', { sx: 0, sy: 0, sw: 100, sh: 100 })

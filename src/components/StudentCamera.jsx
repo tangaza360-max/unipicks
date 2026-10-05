@@ -5,20 +5,29 @@ import Button from './Button.jsx'
 import {
   STORY_CAPTION_MAX,
   STORY_POSTED_EVENT,
+  STORY_MAX_BYTES,
   STORY_TYPES,
   canvasToStoryFile,
   postStory,
   storyFileProblem,
 } from '../lib/studentStories.js'
 import { clampZoom, drawCrop, nextTimer, pinchZoom, visibleCrop } from '../lib/cameraFrame.js'
+import { BOOMERANG_SECONDS, GIF_FPS, GIF_MAX_SECONDS, gifSize, makeGif } from '../lib/gifMaker.js'
 
 // Camera: take a photo (or choose a photo or GIF from the phone), then post
 // it to your story (friends see it for 24 hours), save it, or share it to
 // another app. The photo is exactly what the screen showed (same crop and
 // zoom; selfies mirrored). Flash: the phone light on the back camera when the
 // phone allows it, otherwise a white screen. Timer: 3 or 10 seconds. Zoom:
-// pinch, or tap the 1× / 2× button.
+// pinch, or tap the 1× / 2× button. GIF: hold the shutter in Photo mode, or
+// choose GIF / Boomerang and tap (up to 3 s, silent, loops; no video).
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const HOLD_MS = 300
+const MODES = [
+  { id: 'photo', label: 'Photo' },
+  { id: 'gif', label: 'GIF' },
+  { id: 'boomerang', label: 'Boomerang' },
+]
 
 export default function StudentCamera({ onClose }) {
   const videoRef = useRef(null)
@@ -45,6 +54,12 @@ export default function StudentCamera({ onClose }) {
   const pinchRef = useRef(null)
   const countdownRef = useRef(null)
   const mirror = facingMode === 'user'
+  const [mode, setMode] = useState('photo')
+  const [recording, setRecording] = useState(null) // 'gif' | 'boomerang'
+  const [recordProgress, setRecordProgress] = useState(0)
+  const [makingGif, setMakingGif] = useState(false)
+  const recordRef = useRef(null) // { timer, frames, ctx, crop, size, kind, max }
+  const holdRef = useRef({ timer: null, started: false })
 
   useEffect(() => {
     let cancelled = false
@@ -96,16 +111,14 @@ export default function StudentCamera({ onClose }) {
     }
   }, [previewUrl])
 
-  useEffect(() => () => clearInterval(countdownRef.current), [])
-
-  // The video is removed while a photo is shown; reconnect the camera when it
-  // comes back (Retake). Without this the picture stayed black.
-  useEffect(() => {
-    const video = videoRef.current
-    if (video && streamRef.current && video.srcObject !== streamRef.current) {
-      video.srcObject = streamRef.current
-    }
-  }, [previewUrl, permissionDenied])
+  useEffect(
+    () => () => {
+      clearInterval(countdownRef.current)
+      clearInterval(recordRef.current?.timer)
+      clearTimeout(holdRef.current.timer)
+    },
+    []
+  )
 
   const handleToggleCamera = () => {
     setFacingMode((current) => (current === 'user' ? 'environment' : 'user'))
@@ -138,7 +151,10 @@ export default function StudentCamera({ onClose }) {
 
     const box = video.parentElement.getBoundingClientRect()
     const crop = visibleCrop(video.videoWidth, video.videoHeight, box.width, box.height, zoom)
-    if (!crop) return
+    if (!crop) {
+      setError('The camera is starting. Try again.')
+      return
+    }
 
     canvas.width = Math.round(crop.sw)
     canvas.height = Math.round(crop.sh)
@@ -183,15 +199,106 @@ export default function StudentCamera({ onClose }) {
     }
   }
 
+  // GIF: grab small frames 10 times a second (same crop, zoom and mirror as
+  // the screen), then turn them into a looping GIF.
+  const startRecording = async (kind) => {
+    const video = videoRef.current
+    if (!video || recordRef.current) return
+    const box = video.parentElement.getBoundingClientRect()
+    const crop = visibleCrop(video.videoWidth, video.videoHeight, box.width, box.height, zoom)
+    if (!crop) {
+      setError('The camera is starting. Try again.')
+      return
+    }
+
+    const size = gifSize(crop.sw, crop.sh)
+    const canvas = document.createElement('canvas')
+    canvas.width = size.width
+    canvas.height = size.height
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+    const max = GIF_FPS * (kind === 'boomerang' ? BOOMERANG_SECONDS : GIF_MAX_SECONDS)
+    const record = { frames: [], ctx, crop, size, kind, max, timer: null }
+    recordRef.current = record
+    setRecording(kind)
+    setRecordProgress(0)
+    setError('')
+    if (flashOn && !mirror && torchSupported) await setTorch(true)
+    haptic(15)
+
+    const grab = () => {
+      drawCrop(ctx, video, crop, { mirror, ...size })
+      record.frames.push(ctx.getImageData(0, 0, size.width, size.height).data)
+      setRecordProgress(record.frames.length / max)
+      if (record.frames.length >= max) stopRecording()
+    }
+    grab()
+    record.timer = setInterval(grab, 1000 / GIF_FPS)
+  }
+
+  const stopRecording = async () => {
+    const record = recordRef.current
+    if (!record) return
+    recordRef.current = null
+    clearInterval(record.timer)
+    setRecording(null)
+    if (flashOn && !mirror && torchSupported) setTorch(false)
+
+    if (record.frames.length < 5) {
+      setError('Hold the button a little longer to make a GIF.')
+      return
+    }
+    setMakingGif(true)
+    try {
+      const { bytes } = await makeGif(record.frames, record.size.width, record.size.height, {
+        boomerang: record.kind === 'boomerang',
+        maxBytes: STORY_MAX_BYTES,
+      })
+      showFile(new File([bytes], `unipicks-${Date.now()}.gif`, { type: 'image/gif' }))
+      haptic(20)
+    } catch (gifError) {
+      setError(gifError.message)
+    } finally {
+      setMakingGif(false)
+    }
+  }
+
+  // Photo mode: a quick tap takes a photo; holding records a GIF.
+  const handleShutterDown = () => {
+    if (mode !== 'photo' || countdown > 0 || capturing) return
+    holdRef.current.started = false
+    holdRef.current.timer = setTimeout(() => {
+      holdRef.current.started = true
+      startRecording('gif')
+    }, HOLD_MS)
+  }
+  const handleShutterUp = () => {
+    clearTimeout(holdRef.current.timer)
+    if (holdRef.current.started && recordRef.current) stopRecording()
+  }
+
+  const handleShutterClick = () => {
+    if (holdRef.current.started) {
+      holdRef.current.started = false
+      return
+    }
+    if (mode !== 'photo' && recordRef.current) {
+      stopRecording()
+      return
+    }
+    handleShutter()
+  }
+
+  const begin = () => (mode === 'photo' ? fire() : startRecording(mode))
+
   const handleShutter = () => {
-    if (capturing) return
+    if (capturing || makingGif) return
     if (countdown > 0) {
       clearInterval(countdownRef.current)
       setCountdown(0)
       return
     }
     if (!timerSeconds) {
-      fire()
+      begin()
       return
     }
     let left = timerSeconds
@@ -201,7 +308,7 @@ export default function StudentCamera({ onClose }) {
       if (left <= 0) {
         clearInterval(countdownRef.current)
         setCountdown(0)
-        fire()
+        begin()
       } else {
         setCountdown(left)
         haptic(5)
@@ -384,13 +491,8 @@ export default function StudentCamera({ onClose }) {
       />
 
       <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-black">
-        {previewUrl ? (
-          <img
-            src={previewUrl}
-            alt="Your photo"
-            className="h-full w-full object-contain"
-          />
-        ) : permissionDenied ? (
+        {/* The camera stays on under the photo preview, so Retake is instant. */}
+        {permissionDenied ? (
           <div className="flex max-w-sm flex-col items-center gap-4 px-6 text-center text-white">
             <CameraOff size={48} />
             <p className="text-base">
@@ -415,6 +517,13 @@ export default function StudentCamera({ onClose }) {
             style={{ transform: `scale(${mirror ? -zoom : zoom}, ${zoom})`, touchAction: 'none' }}
             className="h-full w-full object-cover"
             data-testid="camera-video"
+          />
+        )}
+        {previewUrl && (
+          <img
+            src={previewUrl}
+            alt="Your photo"
+            className="absolute inset-0 h-full w-full bg-black object-contain"
           />
         )}
       </div>
@@ -480,17 +589,74 @@ export default function StudentCamera({ onClose }) {
                 {zoom > 1 ? `${clampZoom(zoom).toFixed(1)}×` : '1×'}
               </button>
             )}
+            {!permissionDenied && !recording && (
+              <div role="radiogroup" aria-label="Camera mode" className="flex items-center gap-1">
+                {MODES.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={mode === item.id}
+                    onClick={() => setMode(item.id)}
+                    className={`min-h-11 rounded-full px-4 text-sm font-semibold transition ${
+                      mode === item.id ? 'bg-white text-black' : 'text-white/90 hover:bg-white/10'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {!permissionDenied && (
+              <p className="text-xs text-white/90" aria-live="polite">
+                {makingGif
+                  ? 'Making your GIF…'
+                  : recording
+                    ? 'Recording…'
+                    : mode === 'photo'
+                      ? 'Tap for a photo, hold for a GIF'
+                      : mode === 'gif'
+                        ? 'Tap to record up to 3 seconds'
+                        : 'Tap to record a Boomerang'}
+              </p>
+            )}
           <div className="flex w-full items-center justify-between">
             {permissionDenied ? <span className="h-12 w-12" /> : chooseButton}
 
             {!permissionDenied && (
               <button
                 type="button"
-                onClick={handleShutter}
-                aria-label={countdown > 0 ? 'Cancel timer' : 'Take photo'}
-                className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-white/20 p-1"
+                onClick={handleShutterClick}
+                onPointerDown={handleShutterDown}
+                onPointerUp={handleShutterUp}
+                onPointerLeave={handleShutterUp}
+                onContextMenu={(event) => event.preventDefault()}
+                disabled={makingGif}
+                aria-label={
+                  countdown > 0
+                    ? 'Cancel timer'
+                    : recording
+                      ? 'Stop recording'
+                      : mode === 'gif'
+                        ? 'Record GIF'
+                        : mode === 'boomerang'
+                          ? 'Record Boomerang'
+                          : 'Take photo'
+                }
+                className="flex h-20 w-20 select-none items-center justify-center rounded-full p-1"
+                style={{
+                  touchAction: 'none',
+                  background: recording
+                    ? `conic-gradient(#ef4444 ${recordProgress * 360}deg, rgba(255,255,255,0.35) 0deg)`
+                    : 'white',
+                }}
+                data-testid="shutter"
               >
-                <span className="h-full w-full rounded-full bg-white" />
+                <span
+                  className={`h-full w-full rounded-full border-4 border-black/10 ${
+                    recording || mode !== 'photo' ? 'bg-red-500' : 'bg-white'
+                  } ${recording ? 'scale-75' : ''} transition-transform`}
+                />
               </button>
             )}
 

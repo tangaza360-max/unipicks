@@ -2,6 +2,7 @@
   "imports": {
     "https://esm.sh/@supabase/supabase-js@2": "./fakes/supabase.ts",
     "npm:@supabase/supabase-js@2": "./fakes/supabase.ts",
-    "https://deno.land/std@0.224.0/http/server.ts": "./fakes/serve.ts"
+    "https://deno.land/std@0.224.0/http/server.ts": "./fakes/serve.ts",
+    "gifenc": "../../../node_modules/gifenc/dist/gifenc.esm.js"
   }
 }
