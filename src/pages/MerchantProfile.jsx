@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
-import { Store, Trash2 } from 'lucide-react'
+import { LogOut, Store, Trash2 } from 'lucide-react'
 import DeleteAccountDialog from '../components/DeleteAccountDialog.jsx'
 import PhoneAlertsCard from '../components/PhoneAlertsCard.jsx'
 import ConfirmModal from '../components/ConfirmModal.jsx'
+import Button from '../components/Button.jsx'
 
-export default function MerchantProfile({ merchantId, onBusinessNameChange }) {
+export default function MerchantProfile({ merchantId, onBusinessNameChange, onLogout }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -250,6 +251,12 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange }) {
             Permanently delete your business account. Orders stay as anonymised records.
           </p>
         </div>
+
+        {onLogout && (
+          <Button variant="secondary" className="w-full" onClick={onLogout}>
+            <LogOut size={16} aria-hidden="true" /> Log out
+          </Button>
+        )}
 
         {showDeleteAccount && (
           <DeleteAccountDialog role="merchant" onClose={() => setShowDeleteAccount(false)} />

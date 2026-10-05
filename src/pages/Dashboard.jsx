@@ -23,6 +23,7 @@ import AdminDisputes from './AdminDisputes.jsx'
 import AdminReports from './AdminReports.jsx'
 import StudentLayout from '../components/StudentLayout.jsx'
 import NotificationBell from '../components/NotificationBell.jsx'
+import BusinessBottomNav from '../components/BusinessBottomNav.jsx'
 import PhoneAlertsCard from '../components/PhoneAlertsCard.jsx'
 import { forgetThisPhone } from '../lib/pushNotifications.js'
 
@@ -352,8 +353,8 @@ return () => {
   } else if (role === 'merchant') {
     content = (
       <>
-        {/* --- Improved merchant tabs (pill style) --- */}
-        <div className="flex flex-wrap gap-2 border-b border-border pb-4 mb-4">
+        {/* Tabs on laptops; phones use BusinessBottomNav (style guide §7). */}
+        <div className="hidden md:flex flex-wrap gap-2 border-b border-border pb-4 mb-4">
           {[
             { id: 'deals', label: 'Deals', icon: ClipboardList },
             { id: 'orders', label: 'Orders', icon: ShoppingBag },
@@ -398,10 +399,17 @@ return () => {
         {dashboardTab === 'orders' && <MerchantOrders />}
         {dashboardTab === 'stats' && <MerchantAnalytics />}
         {dashboardTab === 'profile' && (
-          <MerchantProfile merchantId={user.id} onBusinessNameChange={setBusinessName} />
+          <MerchantProfile merchantId={user.id} onBusinessNameChange={setBusinessName} onLogout={handleLogout} />
         )}
         {dashboardTab === 'stories' && <MerchantStories />}
         {dashboardTab === 'messages' && <Messages />}
+
+        <BusinessBottomNav
+          activeTab={dashboardTab}
+          onNavigate={(tab) => navigate(`/dashboard/${tab}`)}
+          pendingOrders={pendingOrderCount}
+          unreadMessages={merchantUnreadCount}
+        />
       </>
     )
   } else if (role === 'delivery') {
@@ -472,7 +480,7 @@ return () => {
   }
 
   return (
-    <div className="min-h-screen px-4 py-10">
+    <div className={`min-h-screen px-4 pt-6 md:py-10 ${role === 'merchant' ? 'pb-28 md:pb-10' : 'pb-10'}`}>
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -497,7 +505,7 @@ return () => {
             <button
               onClick={toggleTheme}
               aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="flex items-center justify-center w-10 h-10 text-muted-foreground hover:text-foreground border border-border rounded-lg transition"
+              className="flex items-center justify-center w-11 h-11 text-muted-foreground hover:text-foreground border border-border rounded-lg transition"
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
@@ -505,7 +513,7 @@ return () => {
               <button
                 onClick={handleLogout}
                 aria-label="Log out"
-                className="flex items-center justify-center w-10 h-10 text-muted-foreground hover:text-foreground border border-border rounded-lg transition"
+                className={`${role === 'merchant' ? 'hidden md:flex' : 'flex'} items-center justify-center w-11 h-11 text-muted-foreground hover:text-foreground border border-border rounded-lg transition`}
               >
                 <LogOut size={18} />
               </button>
@@ -513,7 +521,7 @@ return () => {
           </div>
         </div>
 
-        <div className="bg-card/60 border border-border rounded-lg p-6">
+        <div className="md:bg-card/60 md:border md:border-border md:rounded-lg md:p-6">
           {content}
         </div>
       </div>
