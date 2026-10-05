@@ -11,8 +11,8 @@ import { formatMoney, formatDate, formatTime } from '../lib/format.js'
 
 const DECLINE_REASON_LABELS = {
   unavailable: 'Item unavailable',
-  too_busy: 'Merchant too busy',
-  closed: 'Merchant closed',
+  too_busy: 'Business too busy',
+  closed: 'Business closed',
   price_changed: 'Price changed',
   other: 'Other',
 }
@@ -404,7 +404,7 @@ function NormalOrderCard({ order, onRaiseDispute }) {
 
       {showWaiting && (
         <p className="mt-3 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
-          Waiting for the merchant to accept your order.
+          Waiting for the business to accept your order.
         </p>
       )}
 
@@ -434,7 +434,7 @@ function NormalOrderCard({ order, onRaiseDispute }) {
         <div className="mt-3 rounded-lg border border-green-400/30 bg-green-100/10 px-3 py-2">
           <p className="text-xs text-muted-foreground">Pickup code</p>
           <p className="font-mono font-semibold text-base tracking-wider">{redemption.code}</p>
-          <p className="text-xs text-muted-foreground mt-1">Show this to the merchant.</p>
+          <p className="text-xs text-muted-foreground mt-1">Show this to the business.</p>
           {order.merchant_phone && (
             <p className="text-xs mt-2">
               <MerchantPhone phone={order.merchant_phone} />

@@ -107,7 +107,7 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
           if (!profileError && profiles) {
             profiles.forEach(p => {
               merchantMap[p.id] = {
-                business_name: p.business_name || 'Merchant',
+                business_name: p.business_name || 'Business',
                 logo_url: p.logo_url || null,
               }
             })
@@ -134,7 +134,7 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
               if (!seen.has(d.merchant_id)) {
                 seen.add(d.merchant_id)
                 merchantMap[d.merchant_id] = {
-                  business_name: d.business_name || 'Merchant',
+                  business_name: d.business_name || 'Business',
                   logo_url: null,
                 }
               }
@@ -145,7 +145,7 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
         // 5. For any still missing, use placeholder
         merchantIds.forEach(id => {
           if (!merchantMap[id]) {
-            merchantMap[id] = { business_name: 'Merchant', logo_url: null }
+            merchantMap[id] = { business_name: 'Business', logo_url: null }
           }
         })
 
@@ -233,7 +233,7 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
     const map = {}
     for (const story of stories) {
       const merchantId = story.merchant_id
-      const data = merchantData[merchantId] || { business_name: 'Merchant', logo_url: null }
+      const data = merchantData[merchantId] || { business_name: 'Business', logo_url: null }
       if (!map[merchantId]) {
         map[merchantId] = {
           merchant_id: merchantId,

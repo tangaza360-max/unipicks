@@ -157,7 +157,7 @@ export default function AdminUsers() {
               : 'text-muted-foreground hover:text-foreground border border-border'
           }`}
         >
-          Merchants ({merchants.length})
+          Businesses ({merchants.length})
         </button>
       </div>
 
@@ -187,7 +187,7 @@ function UserTable({ users, type, onToggleBan, onDelete }) {
     return (
       <div className="bg-card border border-border rounded-lg p-8 text-center">
         <p className="text-muted-foreground">
-          No {type}s found{type === 'merchant' ? ' (including unapproved)' : ''}
+          {type === 'merchant' ? 'No businesses found (including unapproved)' : 'No students found'}
         </p>
       </div>
     )

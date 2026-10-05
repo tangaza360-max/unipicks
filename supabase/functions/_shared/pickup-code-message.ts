@@ -15,7 +15,7 @@ export type PickupOrder = {
 
 export function buildPickupCodeMessage(order: PickupOrder, code: string): string {
   const phoneLine = order.merchant_phone
-    ? `\n\n📞 Merchant contact: ${order.merchant_phone}\nCall them if you have any issue with this order.`
+    ? `\n\n📞 Business phone: ${order.merchant_phone}\nCall them if you have any issue with this order.`
     : ''
 
   return (

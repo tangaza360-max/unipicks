@@ -554,7 +554,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
               </p>
 
               <span className="text-xs capitalize px-2 py-0.5 rounded-lg bg-muted text-muted-foreground inline-block mt-1">
-                {role || 'user'}
+                {{ merchant: 'business' }[role] || role || 'user'}
               </span>
               {isStudent && verified.university && (
                 <span

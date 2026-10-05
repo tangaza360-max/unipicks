@@ -69,7 +69,7 @@ export default function StoryViewer({ stories, onClose, initialIndex = 0 }) {
         {/* Caption & merchant name */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
           <div className="text-white">
-            <p className="font-semibold">{currentStory.merchant?.business_name || 'Merchant'}</p>
+            <p className="font-semibold">{currentStory.merchant?.business_name || 'Business'}</p>
             {currentStory.caption && (
               <p className="text-sm opacity-80">{currentStory.caption}</p>
             )}

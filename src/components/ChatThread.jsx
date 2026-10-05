@@ -65,7 +65,7 @@ export default function ChatThread({
       const profiles = {}
       for (const merchant of merchantResult.data || []) {
         profiles[merchant.id] = {
-          displayName: merchant.business_name || 'Merchant',
+          displayName: merchant.business_name || 'Business',
           role: 'merchant',
         }
       }
@@ -242,7 +242,7 @@ export default function ChatThread({
               ? 'bg-green-100 text-green-700'
               : 'bg-blue-100 text-blue-700'
           }`}>
-            {headerRole === 'merchant' ? '🏪 Merchant' : '🎓 Student'}
+            {headerRole === 'merchant' ? '🏪 Business' : '🎓 Student'}
           </span>
         )}
         {!isGroup && !otherDeleted && otherUserId && (

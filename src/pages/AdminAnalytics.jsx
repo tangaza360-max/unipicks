@@ -175,7 +175,7 @@ export default function AdminAnalytics() {
           <p className="font-display text-3xl font-bold text-foreground">{totalUsers}</p>
           <div className="flex gap-2 text-xs text-muted-foreground mt-1">
             <span>Students: {totalStudents}</span>
-            <span>Merchants: {totalMerchants}</span>
+            <span>Businesses: {totalMerchants}</span>
           </div>
         </div>
         <div className="bg-card border border-border rounded-lg p-4">
@@ -191,7 +191,7 @@ export default function AdminAnalytics() {
           <p className="font-display text-3xl font-bold text-foreground">{totalRedemptions}</p>
         </div>
         <div className="bg-card border border-border rounded-lg p-4">
-          <p className="text-sm text-muted-foreground">Pending Merchants</p>
+          <p className="text-sm text-muted-foreground">Pending businesses</p>
           <p className="font-display text-3xl font-bold text-foreground">{pendingMerchants}</p>
         </div>
       </div>

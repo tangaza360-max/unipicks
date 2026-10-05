@@ -156,7 +156,7 @@ const [studentConversations, setStudentConversations] = useState([])
 
       const merchantList = (merchantProfiles || []).map((merchant) => ({
         id: merchant.id,
-        businessName: merchant.business_name || 'Merchant',
+        businessName: merchant.business_name || 'Business',
         logoUrl: merchant.logo_url,
         lastMessage: lastMessageByMerchant[merchant.id]?.lastMessage || null,
         createdAt: lastMessageByMerchant[merchant.id]?.createdAt || null,
@@ -597,12 +597,12 @@ const [studentConversations, setStudentConversations] = useState([])
       ) : (
         <div className="space-y-2">
           <p className="text-muted-foreground text-xs uppercase tracking-wide">
-            Merchants
+            Businesses
           </p>
 
           {merchants.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              No merchants available yet.
+              No businesses available yet.
             </p>
           ) : (
             merchants.map((merchant) => (

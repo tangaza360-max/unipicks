@@ -4,11 +4,11 @@ import BackLink from '../components/BackLink.jsx'
 
 const sections = [
   ['Using Unipicks', 'You must provide accurate account information, keep your credentials secure, and use the platform lawfully. Accounts are personal and may not be shared or used to impersonate another person or business.'],
-  ['Students', 'Students are responsible for presenting valid order codes, following deal conditions, and checking prices and availability with merchants. An order does not guarantee availability if a deal has expired or a merchant has reached its stated limits.'],
-  ['Merchants', 'Merchants must provide accurate deal descriptions, prices, expiry dates, images, and business information. Merchants are responsible for honoring active deals and handling orders fairly. Unipicks may review, pause, or remove deals that violate these terms.'],
+  ['Students', 'Students are responsible for presenting valid order codes, following deal conditions, and checking prices and availability with businesses. An order does not guarantee availability if a deal has expired or a business has reached its stated limits.'],
+  ['Businesses', 'Businesses must provide accurate deal descriptions, prices, expiry dates, images, and business information. Businesses are responsible for honoring active deals and handling orders fairly. Unipicks may review, pause, or remove deals that violate these terms.'],
   ['Reviews and content', 'Only students who have completed an eligible order may submit a rating. Reviews must be honest, relevant, and respectful. We may remove unlawful, abusive, deceptive, or otherwise inappropriate content.'],
-  ['Administrators and enforcement', 'Administrators may approve merchants, manage platform settings, moderate content, and suspend accounts when needed to protect users or the service. Administrative actions may be recorded in an audit log.'],
-  ['Disclaimer and liability', 'Unipicks provides a platform connecting students and merchants. Merchants are responsible for their goods, services, prices, and compliance obligations. To the extent permitted by law, Unipicks is not responsible for merchant conduct, unavailable deals, or indirect losses.'],
+  ['Administrators and enforcement', 'Administrators may approve businesses, manage platform settings, moderate content, and suspend accounts when needed to protect users or the service. Administrative actions may be recorded in an audit log.'],
+  ['Disclaimer and liability', 'Unipicks provides a platform connecting students and businesses. Businesses are responsible for their goods, services, prices, and compliance obligations. To the extent permitted by law, Unipicks is not responsible for business conduct, unavailable deals, or indirect losses.'],
   ['Changes and contact', `We may update these terms as the service evolves. Continued use after an update means you accept the revised terms. Questions: email ${SUPPORT_EMAIL}.`],
 ]
 

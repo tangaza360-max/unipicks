@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient.js'
 const DISPUTE_REASONS = [
   { value: 'item_not_received', label: 'Item not received' },
   { value: 'quality_issue', label: 'Quality issue' },
-  { value: 'merchant_unresponsive', label: 'Merchant unresponsive' },
+  { value: 'merchant_unresponsive', label: 'Business not responding' },
   { value: 'wrong_item', label: 'Wrong item received' },
   { value: 'other', label: 'Other' },
 ]

@@ -52,7 +52,7 @@ function RouteTitle() {
     const pageTitle = pathname.startsWith('/dashboard')
       ? dashboardTitles[dashboardTab] || 'Deals'
       : pathname === '/register/merchant'
-        ? 'Merchant Registration'
+        ? 'Business Registration'
         : pathname === '/register'
           ? 'Student Registration'
           : pathname === '/login'

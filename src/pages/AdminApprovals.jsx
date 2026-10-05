@@ -37,7 +37,7 @@ export default function AdminApprovals() {
   }
 
   async function handleReject(profile) {
-    if (window.confirm('Permanently delete this merchant profile? This cannot be undone.')) {
+    if (window.confirm('Permanently delete this business profile? This cannot be undone.')) {
       const { error: deleteError } = await supabase.from('merchant_profiles').delete().eq('id', profile.id)
       if (!deleteError) await supabase.rpc('log_admin_action', {
         action: 'reject_merchant', target_type: 'merchant', target_id: profile.id,
@@ -48,7 +48,7 @@ export default function AdminApprovals() {
   }
 
   async function handleDeactivate(profile) {
-    if (window.confirm('Deactivate this merchant? They will lose access until re-approved.')) {
+    if (window.confirm('Deactivate this business? They will lose access until re-approved.')) {
       const { error: updateError } = await supabase.from('merchant_profiles').update({ approved: false }).eq('id', profile.id)
       if (!updateError) await supabase.rpc('log_admin_action', {
         action: 'deactivate_merchant', target_type: 'merchant', target_id: profile.id,
@@ -63,15 +63,15 @@ export default function AdminApprovals() {
   }
 
   if (error) {
-    return <p className="text-sm text-red-400">Couldn't load merchants: {error}</p>
+    return <p className="text-sm text-red-400">Couldn't load businesses: {error}</p>
   }
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="font-display text-lg font-semibold mb-3">Pending merchants</h2>
+        <h2 className="font-display text-lg font-semibold mb-3">Pending businesses</h2>
         {pending.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No merchants waiting for approval.</p>
+          <p className="text-muted-foreground text-sm">No businesses waiting for approval.</p>
         ) : (
           <div className="space-y-2">
             {pending.map((profile) => (
@@ -101,7 +101,7 @@ export default function AdminApprovals() {
       </div>
 
       <div>
-        <h2 className="font-display text-lg font-semibold mb-3">Approved merchants</h2>
+        <h2 className="font-display text-lg font-semibold mb-3">Approved businesses</h2>
         {approved.length === 0 ? (
           <p className="text-muted-foreground text-sm">None yet.</p>
         ) : (

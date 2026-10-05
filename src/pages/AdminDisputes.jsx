@@ -12,7 +12,7 @@ const DISPUTE_STATUS_LABELS = {
 const DISPUTE_REASON_LABELS = {
   item_not_received: 'Item not received',
   quality_issue: 'Quality issue',
-  merchant_unresponsive: 'Merchant unresponsive',
+  merchant_unresponsive: 'Business not responding',
   wrong_item: 'Wrong item',
   other: 'Other',
 }

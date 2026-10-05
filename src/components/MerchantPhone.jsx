@@ -20,11 +20,11 @@ export default function MerchantPhone({ phone }) {
 
   return (
     <span className="inline-flex items-center gap-2 flex-wrap">
-      <span className="text-muted-foreground">Merchant contact:</span>
+      <span className="text-muted-foreground">Business phone:</span>
       <a
         href={telHref}
         className="font-mono text-accent underline underline-offset-2 hover:opacity-80 transition"
-        aria-label={`Call merchant at ${phone}`}
+        aria-label={`Call the business at ${phone}`}
       >
         {phone}
       </a>
