@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CameraOff, ImageUp, RefreshCw, Sparkles, Timer, X, Zap, ZapOff } from 'lucide-react'
+import { CameraOff, ImageUp, MapPin, RefreshCw, Sparkles, Timer, Type, X, Zap, ZapOff } from 'lucide-react'
 import { haptic } from '../lib/haptics.js'
 import Button from './Button.jsx'
 import {
@@ -14,6 +14,8 @@ import {
 import { clampZoom, drawCrop, nextTimer, pinchZoom, visibleCrop } from '../lib/cameraFrame.js'
 import { FILTERS, applyFilter, nextFilterIndex, svgMatrixValues } from '../lib/cameraFilters.js'
 import { BOOMERANG_SECONDS, GIF_FPS, GIF_MAX_SECONDS, gifSize, makeGif } from '../lib/gifMaker.js'
+import { composeStoryFile } from '../lib/storyCompose.js'
+import { OverlayLayer, PlacePicker, TextEditor } from './StoryOverlays.jsx'
 
 // Camera: take a photo (or choose a photo or GIF from the phone), then post
 // it to your story (friends see it for 24 hours), save it, or share it to
@@ -23,6 +25,8 @@ import { BOOMERANG_SECONDS, GIF_FPS, GIF_MAX_SECONDS, gifSize, makeGif } from '.
 // pinch, or tap the 1× / 2× button. GIF: hold the shutter in Photo mode, or
 // choose GIF / Boomerang and tap (up to 3 s, silent, loops; no video).
 // Filters: swipe sideways on the picture, or tap the Filter button.
+// Text and place: after taking it, tap Aa or the pin, then drag them anywhere.
+// They are drawn into the photo (or every GIF frame) when you post or save.
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const HOLD_MS = 300
 const MODES = [
@@ -75,6 +79,13 @@ export default function StudentCamera({ onClose }) {
   const [makingGif, setMakingGif] = useState(false)
   const recordRef = useRef(null) // { timer, frames, ctx, crop, size, kind, max }
   const holdRef = useRef({ timer: null, started: false })
+  const previewImgRef = useRef(null)
+  const gifSourceRef = useRef(null) // frames of a camera GIF, to draw text on
+  const [overlays, setOverlays] = useState([]) // at most one text and one place
+  const [editor, setEditor] = useState(null) // 'text' | 'place'
+  const [preparing, setPreparing] = useState(false)
+  const textOverlay = overlays.find((o) => o.kind === 'text')
+  const placeOverlay = overlays.find((o) => o.kind === 'place')
 
   useEffect(() => {
     let cancelled = false
@@ -153,7 +164,10 @@ export default function StudentCamera({ onClose }) {
     lastTapRef.current = now
   }
 
-  const showFile = (nextFile) => {
+  const showFile = (nextFile, gifSource = null) => {
+    gifSourceRef.current = gifSource
+    setOverlays([])
+    setEditor(null)
     setFile(nextFile)
     setPreviewUrl(URL.createObjectURL(nextFile))
     setError('')
@@ -274,7 +288,12 @@ export default function StudentCamera({ onClose }) {
         boomerang: record.kind === 'boomerang',
         maxBytes: STORY_MAX_BYTES,
       })
-      showFile(new File([bytes], `unipicks-${Date.now()}.gif`, { type: 'image/gif' }))
+      showFile(new File([bytes], `unipicks-${Date.now()}.gif`, { type: 'image/gif' }), {
+        frames: record.frames,
+        width: record.size.width,
+        height: record.size.height,
+        boomerang: record.kind === 'boomerang',
+      })
       haptic(20)
     } catch (gifError) {
       setError(gifError.message)
@@ -387,35 +406,76 @@ export default function StudentCamera({ onClose }) {
     showFile(chosen)
   }
 
-  const handleSave = () => {
-    if (!previewUrl || !file) return
+  // Text and place are drawn into the file only now, so the preview stays light.
+  const finalFile = () => composeStoryFile({ file, previewUrl, overlays, gifSource: gifSourceRef.current })
 
+  const saveFile = (out) => {
+    const url = URL.createObjectURL(out)
     const a = document.createElement('a')
-    a.href = previewUrl
-    a.download = `unipicks-${Date.now()}.${STORY_TYPES[file.type] || 'jpg'}`
+    a.href = url
+    a.download = `unipicks-${Date.now()}.${STORY_TYPES[out.type] || 'jpg'}`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
     haptic(10)
   }
 
-  const handleShare = async () => {
-    if (!file) return
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file] })
-      } catch (shareError) {
-        if (shareError.name !== 'AbortError') {
-          console.error(shareError)
-        }
-      }
-    } else {
-      handleSave()
+  // Save or share the photo with its text and place.
+  const withFinalFile = async (use) => {
+    if (!file || preparing) return
+    setPreparing(true)
+    setError('')
+    try {
+      await use(await finalFile())
+    } catch (prepareError) {
+      setError(prepareError.message)
+    } finally {
+      setPreparing(false)
     }
   }
 
+  const handleSave = () => withFinalFile(saveFile)
+
+  const handleShare = () =>
+    withFinalFile(async (out) => {
+      if (navigator.canShare && navigator.canShare({ files: [out] })) {
+        try {
+          await navigator.share({ files: [out] })
+        } catch (shareError) {
+          // Some phones refuse to share after a slow GIF: save it instead.
+          if (shareError.name === 'NotAllowedError') saveFile(out)
+          else if (shareError.name !== 'AbortError') console.error(shareError)
+        }
+      } else {
+        saveFile(out)
+      }
+    })
+
+  const canDecorate = file?.type !== 'image/gif' || Boolean(gifSourceRef.current)
+  const openEditor = (kind) => {
+    if (!canDecorate) {
+      setError("Text and places can't be added to a GIF from your phone.")
+      return
+    }
+    setError('')
+    setEditor(kind)
+  }
+  const putOverlay = (overlay) =>
+    setOverlays((list) => {
+      const old = list.find((o) => o.kind === overlay.kind)
+      // Editing keeps the spot where it was dragged.
+      const next = old ? { ...overlay, x: old.x, y: old.y } : overlay
+      return [...list.filter((o) => o.kind !== overlay.kind), next]
+    })
+  const dropOverlay = (kind) => setOverlays((list) => list.filter((o) => o.kind !== kind))
+  const moveOverlay = (index, x, y) =>
+    setOverlays((list) => list.map((o, i) => (i === index ? { ...o, x, y } : o)))
+
   const handleRetake = () => {
+    gifSourceRef.current = null
+    setOverlays([])
+    setEditor(null)
     setFile(null)
     setPreviewUrl(null)
     setCaption('')
@@ -424,12 +484,12 @@ export default function StudentCamera({ onClose }) {
   }
 
   const handlePost = async () => {
-    if (!file || posting) return
+    if (!file || posting || preparing) return
     setPosting(true)
     setError('')
 
     try {
-      await postStory({ file, caption })
+      await postStory({ file: await finalFile(), caption })
       haptic(20)
       setPosted(true)
       window.dispatchEvent(new CustomEvent(STORY_POSTED_EVENT))
@@ -466,6 +526,31 @@ export default function StudentCamera({ onClose }) {
         >
           <X size={24} />
         </button>
+
+        {previewUrl && !posted && (
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={() => openEditor('text')}
+              aria-label={textOverlay ? 'Edit text' : 'Add text'}
+              className={`flex h-11 w-11 items-center justify-center rounded-full backdrop-blur-md ${
+                textOverlay ? 'bg-white text-black' : 'bg-black/40 text-white'
+              }`}
+            >
+              <Type size={22} />
+            </button>
+            <button
+              type="button"
+              onClick={() => openEditor('place')}
+              aria-label={placeOverlay ? 'Change place' : 'Add place'}
+              className={`flex h-11 w-11 items-center justify-center rounded-full backdrop-blur-md ${
+                placeOverlay ? 'bg-white text-black' : 'bg-black/40 text-white'
+              }`}
+            >
+              <MapPin size={22} />
+            </button>
+          </div>
+        )}
 
         {!previewUrl && !permissionDenied && (
           <div className="flex flex-col gap-3">
@@ -584,12 +669,51 @@ export default function StudentCamera({ onClose }) {
         )}
         {previewUrl && (
           <img
+            ref={previewImgRef}
             src={previewUrl}
             alt="Your photo"
             className="absolute inset-0 h-full w-full bg-black object-contain"
           />
         )}
+        {previewUrl && !posted && (
+          <OverlayLayer
+            key={previewUrl}
+            imageRef={previewImgRef}
+            overlays={overlays}
+            onMove={moveOverlay}
+            onTapText={() => openEditor('text')}
+          />
+        )}
       </div>
+
+      {editor === 'text' && (
+        <TextEditor
+          initial={textOverlay}
+          onDone={({ text, color }) => {
+            putOverlay({ kind: 'text', text, color, x: 0.5, y: 0.4 })
+            setEditor(null)
+          }}
+          onRemove={() => {
+            dropOverlay('text')
+            setEditor(null)
+          }}
+          onCancel={() => setEditor(null)}
+        />
+      )}
+      {editor === 'place' && (
+        <PlacePicker
+          hasPlace={Boolean(placeOverlay)}
+          onPick={(text) => {
+            putOverlay({ kind: 'place', text, x: 0.5, y: 0.6 })
+            setEditor(null)
+          }}
+          onRemove={() => {
+            dropOverlay('place')
+            setEditor(null)
+          }}
+          onCancel={() => setEditor(null)}
+        />
+      )}
 
       <div
         className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center bg-gradient-to-t from-black/90 via-black/50 to-transparent px-4 pt-10"
@@ -620,13 +744,14 @@ export default function StudentCamera({ onClose }) {
             <p className="text-center text-xs text-white/90">
               Only your friends see your story. It disappears after 24 hours.
             </p>
-            <Button onClick={handlePost} disabled={posting} className="w-full">
+            <Button onClick={handlePost} disabled={posting || preparing} className="w-full">
               {posting ? 'Posting…' : 'Post to your story'}
             </Button>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={handleSave}
+                disabled={preparing}
                 className="min-h-11 rounded-lg border border-white/50 px-4 text-sm font-semibold text-white transition hover:bg-white/10"
               >
                 Save
@@ -634,6 +759,7 @@ export default function StudentCamera({ onClose }) {
               <button
                 type="button"
                 onClick={handleShare}
+                disabled={preparing}
                 className="min-h-11 rounded-lg border border-white/50 px-4 text-sm font-semibold text-white transition hover:bg-white/10"
               >
                 Share
