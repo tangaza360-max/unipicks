@@ -84,11 +84,12 @@ flowchart LR
 | University and student ID are set by the server from the email | Fake students |
 | Messages: receivers can only mark them read | Chats as dispute evidence |
 
-## Production-only code
+## The private schema
 
-Many social and role functions run from the `private` schema in production
-(page 2). Their rules were checked on 2026-10-06 only for the table-name fix;
-a full comparison with the migrations is still to do.
+Social and role functions keep their code in the `private` schema (page 2);
+only signed-in users may use it, and every function there is closed to
+visitors who are not logged in. Ten table rules call `private.is_admin()`,
+which gives the same answer as `public.is_admin()`.
 
 ## Photos (Storage)
 
