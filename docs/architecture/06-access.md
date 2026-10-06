@@ -84,6 +84,12 @@ flowchart LR
 | University and student ID are set by the server from the email | Fake students |
 | Messages: receivers can only mark them read | Chats as dispute evidence |
 
+## Production-only code
+
+Many social and role functions run from the `private` schema in production
+(page 2). Their rules were checked on 2026-10-06 only for the table-name fix;
+a full comparison with the migrations is still to do.
+
 ## Photos (Storage)
 
 See page 2. In short: deal photos, business stories and logos are **public

@@ -7,6 +7,10 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `perf`
 
 ---
 
+## 2026-10-06
+
+- 08:30 — `fix(db)`: 🔴 "Add Friend" showed `relation "public.social_notifications" does not exist` (founder report, two phones). Production keeps the real friend / message-request code in a `private` schema that is not in our migrations; the 3 Oct rename (`social_notifications` → `user_notifications`, 20261003210000) rewrote only the public copies. Broken since then: Add Friend, message requests, accepting either, and Social → Activity. The migration applies the same rename to the private functions (guarded; no effect where `private` does not exist). Architecture pages 2 and 6 now list the 20 production-only functions and the rule to read their production version before changing them — `supabase/migrations/20261006090000_fix_private_social_functions.sql`, `supabase/tests/private_social_functions.test.sh`, `docs/architecture/02-building-blocks.md`, `docs/architecture/06-access.md`, `docs/architecture/architecture.html`, `docs/CHANGELOG.md`
+
 ## 2026-10-05
 
 - 16:10 — `docs(architecture)`: architecture map, part 4 (map complete, 7 pages, 29 diagrams). Page 6 "Who can see and do what": how the database rules, server-function checks and admin actions protect everything; the roles; a table of who can read and change each main table; the 10 admin-only actions; the checks that run whoever writes (triggers). Page 7 "Running it": where each part lives, how a change goes live (database first, then functions, then website; which 4 functions keep `--no-verify-jwt`), going back, secret names and where they are set, a "where to look when something breaks" table, and the test commands. Checked against the live database (all 32 tables have rules switched on) — `docs/architecture/06-access.md`, `docs/architecture/07-running.md`, `docs/architecture/README.md`, `docs/architecture/architecture.html`, `docs/CHANGELOG.md`

@@ -90,6 +90,30 @@ flowchart TB
 Shared code: `_shared/` (phone alerts, alert texts, pickup-code message,
 business standing check).
 
+## ⚠️ Code that exists only in production: the `private` schema
+
+*Found 2026-10-06 while fixing Add Friend.*
+
+Production has a `private` schema that is **not in our migrations** (created
+by hand earlier). 20 functions live there; 18 `public` functions are thin
+wrappers that call them (e.g. `select private.send_friend_request(...)`):
+
+`accept_friend_request`, `accept_message_request`, `block_student`,
+`unblock_student`, `cancel_friend_request`, `cancel_message_request`,
+`decline_friend_request`, `decline_message_request`, `send_friend_request`,
+`send_message_request`, `get_social_activity`, `get_student_message_profiles`,
+`search_students`, `get_my_role`, `is_admin`, `get_setting`,
+`record_deal_search`, `record_deal_view` (plus private
+`create_group_order_with_host` and `find_open_group_order_by_code`, whose
+public versions are full copies).
+
+**Why it matters:** our tests build the database from the migrations, so they
+test the public copies, not what production runs. A change that edits only
+the public copy may not reach production. This caused the Add Friend error
+(fixed by `20261006090000_fix_private_social_functions.sql`).
+**Rule until this is cleaned up:** before changing one of these functions,
+read its production definition (`private.<name>`) first.
+
 ## Storage (photos)
 
 | Bucket | Who can see | Used for |
