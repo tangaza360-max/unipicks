@@ -84,6 +84,8 @@ export default function StudentCamera({ onClose }) {
   const [overlays, setOverlays] = useState([]) // at most one text and one place
   const [editor, setEditor] = useState(null) // 'text' | 'place'
   const [preparing, setPreparing] = useState(false)
+  const [notice, setNotice] = useState('')
+  const readyRef = useRef(null) // { key, file }: the finished file
   const textOverlay = overlays.find((o) => o.kind === 'text')
   const placeOverlay = overlays.find((o) => o.kind === 'place')
 
@@ -166,6 +168,8 @@ export default function StudentCamera({ onClose }) {
 
   const showFile = (nextFile, gifSource = null) => {
     gifSourceRef.current = gifSource
+    readyRef.current = null
+    setNotice('')
     setOverlays([])
     setEditor(null)
     setFile(nextFile)
@@ -407,7 +411,17 @@ export default function StudentCamera({ onClose }) {
   }
 
   // Text and place are drawn into the file only now, so the preview stays light.
-  const finalFile = () => composeStoryFile({ file, previewUrl, overlays, gifSource: gifSourceRef.current })
+  // The finished file is kept until the photo, text or place changes, so a
+  // second Share (or Post after Save) does not make it again.
+  const readyKey = previewUrl ? `${previewUrl}|${JSON.stringify(overlays)}` : ''
+  const readyFile = () => (readyRef.current?.key === readyKey ? readyRef.current.file : null)
+  const finalFile = async () => {
+    const ready = readyFile()
+    if (ready) return ready
+    const out = await composeStoryFile({ file, previewUrl, overlays, gifSource: gifSourceRef.current })
+    readyRef.current = { key: readyKey, file: out }
+    return out
+  }
 
   const saveFile = (out) => {
     const url = URL.createObjectURL(out)
@@ -437,20 +451,29 @@ export default function StudentCamera({ onClose }) {
 
   const handleSave = () => withFinalFile(saveFile)
 
-  const handleShare = () =>
-    withFinalFile(async (out) => {
-      if (navigator.canShare && navigator.canShare({ files: [out] })) {
-        try {
-          await navigator.share({ files: [out] })
-        } catch (shareError) {
-          // Some phones refuse to share after a slow GIF: save it instead.
-          if (shareError.name === 'NotAllowedError') saveFile(out)
-          else if (shareError.name !== 'AbortError') console.error(shareError)
-        }
-      } else {
-        saveFile(out)
-      }
-    })
+  const shareFile = async (out) => {
+    if (!(navigator.canShare && navigator.canShare({ files: [out] }))) {
+      saveFile(out)
+      return
+    }
+    try {
+      await navigator.share({ files: [out] })
+    } catch (shareError) {
+      // Phones may refuse Share when it does not come straight from a tap
+      // (making a GIF with text takes a few seconds). The file is ready
+      // now, so the next tap shares it at once.
+      if (shareError.name === 'NotAllowedError') setNotice('Your file is ready. Tap Share again.')
+      else if (shareError.name !== 'AbortError') console.error(shareError)
+    }
+  }
+
+  const handleShare = () => {
+    setNotice('')
+    const ready = readyFile()
+    // Already made: share straight away, inside the tap.
+    if (ready) return shareFile(ready)
+    return withFinalFile(shareFile)
+  }
 
   const canDecorate = file?.type !== 'image/gif' || Boolean(gifSourceRef.current)
   const openEditor = (kind) => {
@@ -475,6 +498,8 @@ export default function StudentCamera({ onClose }) {
 
   const handleRetake = () => {
     gifSourceRef.current = null
+    readyRef.current = null
+    setNotice('')
     setOverlays([])
     setEditor(null)
     setFile(null)
@@ -720,6 +745,11 @@ export default function StudentCamera({ onClose }) {
         className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center bg-gradient-to-t from-black/90 via-black/50 to-transparent px-4 pt-10"
         style={{ paddingBottom: 'calc(var(--safe-area-bottom) + 16px)' }}
       >
+        {notice && !error && readyFile() && (
+          <p role="status" className="mb-3 w-full max-w-md rounded-lg bg-black/70 px-3 py-2 text-center text-sm text-white">
+            {notice}
+          </p>
+        )}
         {error && (
           <p role="alert" className="mb-3 w-full max-w-md rounded-lg bg-black/70 px-3 py-2 text-center text-sm text-white">
             {error}
