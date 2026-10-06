@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CameraOff, ImageUp, RefreshCw, Timer, X, Zap, ZapOff } from 'lucide-react'
+import { CameraOff, ImageUp, RefreshCw, Sparkles, Timer, X, Zap, ZapOff } from 'lucide-react'
 import { haptic } from '../lib/haptics.js'
 import Button from './Button.jsx'
 import {
@@ -12,6 +12,7 @@ import {
   storyFileProblem,
 } from '../lib/studentStories.js'
 import { clampZoom, drawCrop, nextTimer, pinchZoom, visibleCrop } from '../lib/cameraFrame.js'
+import { FILTERS, applyFilter, nextFilterIndex, svgMatrixValues } from '../lib/cameraFilters.js'
 import { BOOMERANG_SECONDS, GIF_FPS, GIF_MAX_SECONDS, gifSize, makeGif } from '../lib/gifMaker.js'
 
 // Camera: take a photo (or choose a photo or GIF from the phone), then post
@@ -21,6 +22,7 @@ import { BOOMERANG_SECONDS, GIF_FPS, GIF_MAX_SECONDS, gifSize, makeGif } from '.
 // phone allows it, otherwise a white screen. Timer: 3 or 10 seconds. Zoom:
 // pinch, or tap the 1× / 2× button. GIF: hold the shutter in Photo mode, or
 // choose GIF / Boomerang and tap (up to 3 s, silent, loops; no video).
+// Filters: swipe sideways on the picture, or tap the Filter button.
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const HOLD_MS = 300
 const MODES = [
@@ -54,7 +56,20 @@ export default function StudentCamera({ onClose }) {
   const pinchRef = useRef(null)
   const countdownRef = useRef(null)
   const mirror = facingMode === 'user'
+
+  const changeFilter = (step) => {
+    setFilterIndex((index) => nextFilterIndex(index, step))
+    setFilterLabelShown(true)
+    clearTimeout(filterLabelTimer.current)
+    filterLabelTimer.current = setTimeout(() => setFilterLabelShown(false), 1200)
+    haptic(5)
+  }
   const [mode, setMode] = useState('photo')
+  const [filterIndex, setFilterIndex] = useState(0)
+  const filter = FILTERS[filterIndex]
+  const [filterLabelShown, setFilterLabelShown] = useState(false)
+  const swipeRef = useRef(null)
+  const filterLabelTimer = useRef(null)
   const [recording, setRecording] = useState(null) // 'gif' | 'boomerang'
   const [recordProgress, setRecordProgress] = useState(0)
   const [makingGif, setMakingGif] = useState(false)
@@ -116,6 +131,7 @@ export default function StudentCamera({ onClose }) {
       clearInterval(countdownRef.current)
       clearInterval(recordRef.current?.timer)
       clearTimeout(holdRef.current.timer)
+      clearTimeout(filterLabelTimer.current)
     },
     []
   )
@@ -161,6 +177,11 @@ export default function StudentCamera({ onClose }) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     drawCrop(ctx, video, crop, { mirror })
+    if (filter.matrix) {
+      const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      applyFilter(pixels.data, filter.matrix)
+      ctx.putImageData(pixels, 0, 0)
+    }
 
     const photo = await canvasToStoryFile(canvas)
     if (!photo) return
@@ -227,7 +248,7 @@ export default function StudentCamera({ onClose }) {
 
     const grab = () => {
       drawCrop(ctx, video, crop, { mirror, ...size })
-      record.frames.push(ctx.getImageData(0, 0, size.width, size.height).data)
+      record.frames.push(applyFilter(ctx.getImageData(0, 0, size.width, size.height).data, filter.matrix))
       setRecordProgress(record.frames.length / max)
       if (record.frames.length >= max) stopRecording()
     }
@@ -323,7 +344,11 @@ export default function StudentCamera({ onClose }) {
   }
   const handlePointerDown = (event) => {
     pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    if (pointersRef.current.size === 1) {
+      swipeRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY, at: Date.now() }
+    }
     if (pointersRef.current.size === 2) {
+      swipeRef.current = null // two fingers = pinch, not a swipe
       pinchRef.current = { zoom, distance: distanceBetween() }
     }
   }
@@ -335,6 +360,16 @@ export default function StudentCamera({ onClose }) {
     }
   }
   const handlePointerEnd = (event) => {
+    // One-finger swipe sideways changes the filter (left = next).
+    const swipe = swipeRef.current
+    if (swipe && swipe.id === event.pointerId && event.type === 'pointerup') {
+      const dx = event.clientX - swipe.x
+      const dy = event.clientY - swipe.y
+      if (Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy) && Date.now() - swipe.at < 800) {
+        changeFilter(dx < 0 ? 1 : -1)
+      }
+    }
+    if (swipe?.id === event.pointerId) swipeRef.current = null
     pointersRef.current.delete(event.pointerId)
     if (pointersRef.current.size < 2) pinchRef.current = null
   }
@@ -463,11 +498,35 @@ export default function StudentCamera({ onClose }) {
             >
               {timerSeconds ? <span className="text-sm font-bold">{timerSeconds}s</span> : <Timer size={22} />}
             </button>
+            <button
+              type="button"
+              onClick={() => changeFilter(1)}
+              aria-label={`Filter: ${filter.label}. Tap for the next filter`}
+              className={`flex h-11 w-11 items-center justify-center rounded-full backdrop-blur-md ${
+                filter.matrix ? 'bg-white text-black' : 'bg-black/40 text-white'
+              }`}
+            >
+              <Sparkles size={22} />
+            </button>
           </div>
         )}
       </div>
 
       <canvas ref={canvasRef} className="hidden" />
+      {/* The live preview uses the same colour matrix as the saved photo. */}
+      <svg width="0" height="0" className="absolute" aria-hidden="true" focusable="false">
+        <filter id="unipicks-camera-filter" colorInterpolationFilters="sRGB">
+          <feColorMatrix type="matrix" values={svgMatrixValues(filter.matrix)} />
+        </filter>
+      </svg>
+
+      {filterLabelShown && !previewUrl && (
+        <div className="pointer-events-none absolute inset-x-0 top-1/3 z-20 flex justify-center" aria-live="polite">
+          <span className="rounded-full bg-black/60 px-4 py-2 text-base font-semibold text-white" data-testid="filter-name">
+            {filter.label}
+          </span>
+        </div>
+      )}
 
       {screenFlash && <div className="fixed inset-0 z-[120] bg-white" aria-hidden="true" />}
 
@@ -514,7 +573,11 @@ export default function StudentCamera({ onClose }) {
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerEnd}
             onPointerCancel={handlePointerEnd}
-            style={{ transform: `scale(${mirror ? -zoom : zoom}, ${zoom})`, touchAction: 'none' }}
+            style={{
+              transform: `scale(${mirror ? -zoom : zoom}, ${zoom})`,
+              touchAction: 'none',
+              filter: filter.matrix ? 'url(#unipicks-camera-filter)' : 'none',
+            }}
             className="h-full w-full object-cover"
             data-testid="camera-video"
           />
