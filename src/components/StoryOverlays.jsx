@@ -1,14 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { MapPin, X } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
-import { TEXT_COLORS, TEXT_MAX, clampPosition, cleanText, containRect, fontSize } from '../lib/storyOverlays.js'
+import { SPOTS, TEXT_COLORS, TEXT_MAX, clampPosition, cleanText, containRect, fontSize, nearestSpot, nudge } from '../lib/storyOverlays.js'
 import Button from './Button.jsx'
 
 // Text and place stickers on the story preview. Positions are fractions of
 // the photo (see storyOverlays.js), so what you see is what gets posted.
 
 // Draggable stickers placed exactly over the photo (object-fit: contain).
-export function OverlayLayer({ imageRef, overlays, onMove, onTapText }) {
+export function OverlayLayer({ imageRef, overlays, onMove, onTap }) {
   const [rect, setRect] = useState(null)
   const dragRef = useRef(null)
 
@@ -49,7 +49,19 @@ export function OverlayLayer({ imageRef, overlays, onMove, onTapText }) {
   const end = () => {
     const drag = dragRef.current
     dragRef.current = null
-    if (drag && !drag.moved && overlays[drag.index]?.kind === 'text') onTapText()
+    if (drag && !drag.moved && overlays[drag.index]) onTap(overlays[drag.index].kind)
+  }
+  // Keyboard: arrow keys move the sticker; Enter / Space open its editor.
+  const key = (event, index) => {
+    const overlay = overlays[index]
+    const next = nudge(event.key, overlay.x, overlay.y)
+    if (next) {
+      event.preventDefault()
+      onMove(index, next.x, next.y)
+    } else if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      onTap(overlay.kind)
+    }
   }
 
   return (
@@ -69,7 +81,8 @@ export function OverlayLayer({ imageRef, overlays, onMove, onTapText }) {
             onPointerMove={move}
             onPointerUp={end}
             onPointerCancel={end}
-            aria-label={isPlace ? `Place: ${overlay.text}. Drag to move` : `Text: ${overlay.text}. Drag to move, tap to edit`}
+            onKeyDown={(event) => key(event, index)}
+            aria-label={`${isPlace ? 'Place' : 'Text'}: ${overlay.text}. Drag or use arrow keys to move, tap to ${isPlace ? 'change' : 'edit'}`}
             className={`pointer-events-auto absolute max-w-[90%] -translate-x-1/2 -translate-y-1/2 select-none whitespace-nowrap font-semibold ${
               isPlace ? 'rounded-full bg-white/90 text-[#111]' : ''
             }`}
@@ -93,9 +106,50 @@ export function OverlayLayer({ imageRef, overlays, onMove, onTapText }) {
   )
 }
 
+// One tap to put a sticker at the top, middle or bottom (no dragging needed).
+// The current spot is shown; the sticker only moves if you pick another one.
+function SpotPicker({ spot, onChange, dark }) {
+  return (
+    <div role="radiogroup" aria-label="Position" className="flex justify-center gap-2">
+      {SPOTS.map((item) => {
+        const on = spot === item.id
+        return (
+          <button
+            key={item.id}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            onClick={() => onChange(item.id)}
+            className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${
+              dark
+                ? on ? 'border-white bg-white text-black' : 'border-white/60 text-white'
+                : on ? 'border-foreground bg-foreground text-background' : 'border-border'
+            }`}
+          >
+            {item.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function useSpot(initialY) {
+  const [spot, setSpot] = useState(() => nearestSpot(initialY))
+  const [changed, setChanged] = useState(false)
+  const choose = (id) => {
+    setSpot(id)
+    setChanged(true)
+  }
+  // null = keep where it is (it may have been dragged)
+  const position = changed ? { x: 0.5, y: SPOTS.find((s) => s.id === spot).y } : null
+  return [spot, choose, position]
+}
+
 export function TextEditor({ initial, onDone, onRemove, onCancel }) {
   const [text, setText] = useState(initial?.text || '')
   const [color, setColor] = useState(initial?.color || 'white')
+  const [spot, chooseSpot, position] = useSpot(initial ? initial.y : 0.45)
   const inputRef = useRef(null)
   useEffect(() => inputRef.current?.focus(), [])
 
@@ -104,7 +158,7 @@ export function TextEditor({ initial, onDone, onRemove, onCancel }) {
       <form
         onSubmit={(event) => {
           event.preventDefault()
-          onDone({ text: cleanText(text), color })
+          onDone({ text: cleanText(text), color, position })
         }}
         className="mx-auto w-full max-w-md space-y-4"
       >
@@ -136,6 +190,7 @@ export function TextEditor({ initial, onDone, onRemove, onCancel }) {
             </button>
           ))}
         </div>
+        <SpotPicker spot={spot} onChange={chooseSpot} dark />
         <div className="grid grid-cols-2 gap-3">
           {initial ? (
             <button type="button" onClick={onRemove} className="min-h-11 rounded-lg border border-white/50 text-sm font-semibold text-white">
@@ -154,8 +209,10 @@ export function TextEditor({ initial, onDone, onRemove, onCancel }) {
 }
 
 // Places: your campus and the approved businesses on Unipicks. No GPS.
-export function PlacePicker({ hasPlace, onPick, onRemove, onCancel }) {
+export function PlacePicker({ initial, onPick, onRemove, onCancel }) {
   const [places, setPlaces] = useState(null)
+  const [spot, chooseSpot, position] = useSpot(initial ? initial.y : 0.65)
+  const hasPlace = Boolean(initial)
 
   useEffect(() => {
     let cancelled = false
@@ -196,6 +253,9 @@ export function PlacePicker({ hasPlace, onPick, onRemove, onCancel }) {
           </button>
         </div>
         <p className="mb-3 text-sm text-muted-foreground">Only the name is added. Your location is not used.</p>
+        <div className="mb-3">
+          <SpotPicker spot={spot} onChange={chooseSpot} />
+        </div>
         {places === null ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : (
@@ -204,7 +264,7 @@ export function PlacePicker({ hasPlace, onPick, onRemove, onCancel }) {
               <li key={place.text}>
                 <button
                   type="button"
-                  onClick={() => onPick(place.text)}
+                  onClick={() => onPick(place.text, position)}
                   className="flex min-h-11 w-full items-center gap-3 py-2 text-left hover:bg-muted/50"
                 >
                   <MapPin size={18} className="text-muted-foreground" />
@@ -214,6 +274,11 @@ export function PlacePicker({ hasPlace, onPick, onRemove, onCancel }) {
               </li>
             ))}
           </ul>
+        )}
+        {hasPlace && position && (
+          <Button onClick={() => onPick(initial.text, position)} className="mt-3 w-full">
+            Move place
+          </Button>
         )}
         {hasPlace && (
           <button type="button" onClick={onRemove} className="mt-3 min-h-11 w-full rounded-lg border border-border text-sm font-semibold">

@@ -2,7 +2,7 @@
 // the preview, the full photo and small GIF frames all match.
 import { assert, assertEquals } from 'jsr:@std/assert@1'
 // @ts-ignore: plain JS module from the web app
-import { clampPosition, cleanText, containRect, drawOverlays, fontSize, TEXT_MAX } from '../../../src/lib/storyOverlays.js'
+import { clampPosition, cleanText, containRect, drawOverlays, fontSize, nearestSpot, nudge, SPOTS, TEXT_MAX } from '../../../src/lib/storyOverlays.js'
 
 Deno.test('photo shown with object-fit: contain inside the screen box', () => {
   // tall photo in a taller box: full width, centred vertically
@@ -59,4 +59,16 @@ Deno.test('long text shrinks to fit 90% of the width', () => {
   const font = String(ctx.font)
   const size = Number(font.match(/(\d+)px/)![1])
   assert(size < fontSize('text', 400), font)
+})
+
+Deno.test('moving without dragging: nearest spot, and arrow keys', () => {
+  assertEquals(SPOTS.map((s) => s.id), ['top', 'middle', 'bottom'])
+  assertEquals(nearestSpot(0.1), 'top')
+  assertEquals(nearestSpot(0.4), 'middle')
+  assertEquals(nearestSpot(0.9), 'bottom')
+  assertEquals(nearestSpot(undefined), 'middle')
+  assertEquals(nudge('ArrowUp', 0.5, 0.5), { x: 0.5, y: 0.45 })
+  assertEquals(nudge('ArrowLeft', 0.5, 0.5), { x: 0.45, y: 0.5 })
+  assertEquals(nudge('ArrowDown', 0.5, 0.95), { x: 0.5, y: 0.95 }, 'stays on the photo')
+  assertEquals(nudge('Enter', 0.5, 0.5), null)
 })

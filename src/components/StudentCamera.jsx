@@ -461,11 +461,12 @@ export default function StudentCamera({ onClose }) {
     setError('')
     setEditor(kind)
   }
-  const putOverlay = (overlay) =>
+  // position: a spot picked in the editor; without one, editing keeps the
+  // place where it was dragged.
+  const putOverlay = (overlay, position) =>
     setOverlays((list) => {
       const old = list.find((o) => o.kind === overlay.kind)
-      // Editing keeps the spot where it was dragged.
-      const next = old ? { ...overlay, x: old.x, y: old.y } : overlay
+      const next = position ? { ...overlay, ...position } : old ? { ...overlay, x: old.x, y: old.y } : overlay
       return [...list.filter((o) => o.kind !== overlay.kind), next]
     })
   const dropOverlay = (kind) => setOverlays((list) => list.filter((o) => o.kind !== kind))
@@ -681,7 +682,7 @@ export default function StudentCamera({ onClose }) {
             imageRef={previewImgRef}
             overlays={overlays}
             onMove={moveOverlay}
-            onTapText={() => openEditor('text')}
+            onTap={openEditor}
           />
         )}
       </div>
@@ -689,8 +690,8 @@ export default function StudentCamera({ onClose }) {
       {editor === 'text' && (
         <TextEditor
           initial={textOverlay}
-          onDone={({ text, color }) => {
-            putOverlay({ kind: 'text', text, color, x: 0.5, y: 0.4 })
+          onDone={({ text, color, position }) => {
+            putOverlay({ kind: 'text', text, color, x: 0.5, y: 0.45 }, position)
             setEditor(null)
           }}
           onRemove={() => {
@@ -702,9 +703,9 @@ export default function StudentCamera({ onClose }) {
       )}
       {editor === 'place' && (
         <PlacePicker
-          hasPlace={Boolean(placeOverlay)}
-          onPick={(text) => {
-            putOverlay({ kind: 'place', text, x: 0.5, y: 0.6 })
+          initial={placeOverlay}
+          onPick={(text, position) => {
+            putOverlay({ kind: 'place', text, x: 0.5, y: 0.65 }, position)
             setEditor(null)
           }}
           onRemove={() => {

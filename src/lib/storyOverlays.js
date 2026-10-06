@@ -22,6 +22,28 @@ export function clampPosition(value) {
   return Math.min(0.95, Math.max(0.05, value))
 }
 
+// Moving without dragging (WCAG 2.5.7): three spots to pick with one tap,
+// and arrow keys move a sticker by small steps.
+export const SPOTS = [
+  { id: 'top', label: 'Top', y: 0.2 },
+  { id: 'middle', label: 'Middle', y: 0.45 },
+  { id: 'bottom', label: 'Bottom', y: 0.65 },
+]
+export const NUDGE = 0.05
+
+export function nearestSpot(y) {
+  if (!Number.isFinite(y)) return 'middle'
+  return SPOTS.reduce((best, spot) => (Math.abs(spot.y - y) < Math.abs(best.y - y) ? spot : best)).id
+}
+
+// Arrow key → new position, or null for other keys.
+export function nudge(key, x, y) {
+  const moves = { ArrowUp: [0, -NUDGE], ArrowDown: [0, NUDGE], ArrowLeft: [-NUDGE, 0], ArrowRight: [NUDGE, 0] }
+  const move = moves[key]
+  if (!move) return null
+  return { x: clampPosition(x + move[0]), y: clampPosition(y + move[1]) }
+}
+
 export function cleanText(text) {
   return String(text ?? '').replace(/\s+/g, ' ').trim().slice(0, TEXT_MAX)
 }
