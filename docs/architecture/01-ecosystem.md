@@ -61,7 +61,7 @@ flowchart LR
 |---|---|---|---|
 | **UmunotaPay** | Takes MoMo / Airtel payments | Server function `process-payment` → `api.umunotapay.com` (API key + signature); UmunotaPay → `payment-webhook` (callback, signed) | Students cannot pay; orders wait, then expire. Late payments are still accepted when the callback arrives. |
 | **MTN MoMo / Airtel** | The student's money | Only through UmunotaPay | Same as above |
-| **Phone alert services** (Google FCM, Apple, Mozilla) | Order alerts on phones ("New order", "Order accepted", "Payment received") | Server functions send Web Push (`_shared/web-push.ts`, VAPID keys) | Alerts don't arrive; the bell inside the app still shows them |
+| **Phone alert services** (Google FCM, Apple, Mozilla) | Order alerts on phones ("New order", "Order accepted", "Payment received", "Your food is ready") | Server functions send Web Push (`_shared/web-push.ts`, VAPID keys) | Alerts don't arrive; the bell inside the app still shows them |
 | **Sentry** (EU) | Tells us when the app crashes | Website sends error reports (`src/lib/monitoring.js`); no names, emails or phones | We stop seeing crashes; the app works |
 | **Google Gemini** | AI writes deal text for businesses | Server function `generate-deal` | "Generate with AI" fails; businesses can still type deals |
 | **Unsplash** | Suggests a photo for an AI deal | Server function `generate-deal` | No suggested photo |

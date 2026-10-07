@@ -52,6 +52,8 @@ export default function MerchantOrders() {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [readyBusy, setReadyBusy] = useState(null) // order id being marked ready
 
   const [declineOrder, setDeclineOrder] = useState(null)
   const [declineReason, setDeclineReason] = useState('')
@@ -67,7 +69,7 @@ export default function MerchantOrders() {
         await supabase.auth.getUser()
 
       if (userError || !userData.user) {
-        setError('Please sign in again.')
+        setLoadError('Please sign in again.')
         setLoading(false)
         return
       }
@@ -85,6 +87,7 @@ export default function MerchantOrders() {
           status,
           confirmation_deadline,
           created_at,
+          ready_at,
           dispute_status,
           dispute_reason,
           dispute_resolution_note,
@@ -97,7 +100,7 @@ export default function MerchantOrders() {
         .order('created_at', { ascending: false })
 
       if (ordersError) {
-        setError(ordersError.message)
+        setLoadError(ordersError.message)
         setLoading(false)
         return
       }
@@ -185,13 +188,21 @@ export default function MerchantOrders() {
       return false
     }
 
+    // The reply has no deal name: keep what the card already shows.
     setOrders((current) =>
       current.map((order) =>
-        order.id === orderId ? data.order : order
+        order.id === orderId ? { ...order, ...data.order } : order
       )
     )
 
     return true
+  }
+
+  async function markReady(orderId) {
+    if (readyBusy) return
+    setReadyBusy(orderId)
+    await updateOrderStatus(orderId, 'ready')
+    setReadyBusy(null)
   }
 
   function openDeclineDialog(order) {
@@ -254,10 +265,11 @@ export default function MerchantOrders() {
     )
   }
 
-  if (error && !declineOrder) {
+  // Only a failed load replaces the page; a failed button shows above the list.
+  if (loadError) {
     return (
       <div className="p-4 text-red-500">
-        {error}
+        {loadError}
       </div>
     )
   }
@@ -274,8 +286,8 @@ export default function MerchantOrders() {
         </p>
       </div>
 
-      {error && declineOrder && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+      {error && (
+        <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
           {error}
         </div>
       )}
@@ -302,7 +314,7 @@ export default function MerchantOrders() {
                   </p>
                 </div>
 
-                <StatusBadge status={order.status} audience="business" />
+                <StatusBadge status={order.status} audience="business" ready={Boolean(order.ready_at)} />
               </div>
 
               <div className="text-sm text-muted-foreground">
@@ -326,6 +338,23 @@ export default function MerchantOrders() {
                     </p>
                   )}
                 </div>
+              )}
+
+              {order.status === 'paid' && !order.ready_at && (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Paid. When the food is ready, tap Food ready so the student comes to pick it up.
+                  </p>
+                  <Button className="w-full" onClick={() => markReady(order.id)} disabled={readyBusy === order.id}>
+                    {readyBusy === order.id ? 'Sending…' : 'Food ready'}
+                  </Button>
+                </div>
+              )}
+
+              {order.status === 'paid' && order.ready_at && (
+                <p className="text-sm text-muted-foreground">
+                  Ready since {new Date(order.ready_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. The student was told to come. Ask for their pickup code.
+                </p>
               )}
 
               {order.status === 'pending_confirmation' && (

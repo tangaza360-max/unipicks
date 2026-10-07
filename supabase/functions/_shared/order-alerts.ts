@@ -9,6 +9,7 @@ type SupabaseClient = any
 
 const FIVE_MINUTES = 5 * 60
 const ONE_DAY = 24 * 60 * 60
+const TWO_HOURS = 2 * 60 * 60
 
 function shortId(orderId: string) {
   return orderId.slice(0, 8).toUpperCase()
@@ -85,5 +86,22 @@ export async function alertMerchantPaymentReceived(
     url: '/dashboard/orders',
     tag: `paid-${order.id}`,
     ttlSeconds: ONE_DAY,
+  })
+}
+
+// Student: the business marked the food ready (founder decision 2026-10-07).
+// No pickup code in the text: the student opens the order to see it.
+export async function alertStudentOrderReady(
+  supabaseAdmin: SupabaseClient,
+  order: { id: string; student_id: string; deal_id: string },
+): Promise<PushResult> {
+  const title = await dealTitle(supabaseAdmin, order.deal_id)
+  return sendPushToUser(supabaseAdmin, order.student_id, {
+    title: 'Your food is ready',
+    body: `${title}: go to the counter and show your pickup code.`,
+    url: '/dashboard/profile?view=orders',
+    tag: `order-${order.id}`,
+    ttlSeconds: TWO_HOURS,
+    urgency: 'high',
   })
 }

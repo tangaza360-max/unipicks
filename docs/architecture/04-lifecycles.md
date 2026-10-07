@@ -20,6 +20,7 @@ stateDiagram-v2
   confirmed --> payment_expired: 5 min, no payment (expire-orders)
   payment_processing --> paid: callback success (payment-webhook)
   payment_expired --> paid: late callback success (accepted)
+  paid --> paid: business taps Food ready (sets ready_at, alerts the student)
   paid --> redeemed: pickup code used (redeem_pickup_code)
   paid --> refunded: planned (refunds)
   declined --> [*]
@@ -32,7 +33,7 @@ stateDiagram-v2
 | `pending_confirmation` | Waiting for the business (5 min) | `update-order-status`, `expire-orders` |
 | `confirmed` | Accepted, student must pay within 5 min | `process-payment`, `expire-orders` |
 | `payment_processing` | MoMo prompt sent, waiting for UmunotaPay | `payment-webhook` (or `reconcile-payments`, switched off) |
-| `paid` | Money received, pickup code sent | Business enters the code |
+| `paid` | Money received, pickup code sent. `ready_at` is empty while the food is being made; the business's **Food ready** tap fills it (update-order-status, action `ready`) and alerts the student. The status stays `paid` | Business enters the code |
 | `redeemed` | Collected ✓ | — |
 | `declined`, `confirmation_expired`, `payment_expired` | Ended without food (late money still makes it `paid`) | — |
 | `refunded` | Allowed by the database, **not used yet** (refunds planned) | — |

@@ -78,7 +78,7 @@ flowchart TB
 | Function | Called by | Login check | What it does | Talks to |
 |---|---|---|---|---|
 | `create-order` | Website (student) | Checks the user itself (Supabase check off) | Prices the deal on the server, creates the order, alerts the business | Phone alerts |
-| `update-order-status` | Website (business) | Itself (off) | Accept / decline within the time limit; sends the student's message and alert | Phone alerts |
+| `update-order-status` | Website (business) | Itself (off) | Accept / decline within the time limit; **Food ready** on a paid order; sends the student's message and alert | Phone alerts |
 | `process-payment` | Website (student) | Itself (off) | Starts the MoMo payment for an accepted order | UmunotaPay, phone alerts |
 | `payment-webhook` | **UmunotaPay** | Signed callback (secret) | Marks the payment paid / failed, creates the pickup code, alerts the business | Phone alerts |
 | `create-group-order-payment` | Website (group host) | Supabase login check on | Turns a group into one order for the business | Phone alerts |

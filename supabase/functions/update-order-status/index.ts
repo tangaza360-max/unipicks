@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { merchantStanding } from '../_shared/merchant-standing.ts'
-import { alertStudentOrderAccepted, alertStudentOrderDeclined } from '../_shared/order-alerts.ts'
+import { alertStudentOrderAccepted, alertStudentOrderDeclined, alertStudentOrderReady } from '../_shared/order-alerts.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -101,9 +101,9 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'Missing order_id' }, 400)
     }
 
-    if (!['accept', 'decline'].includes(action ?? '')) {
+    if (!['accept', 'decline', 'ready'].includes(action ?? '')) {
       return jsonResponse(
-        { error: 'Action must be accept or decline' },
+        { error: 'Action must be accept, decline or ready' },
         400,
       )
     }
@@ -157,6 +157,67 @@ Deno.serve(async (req) => {
         { error: 'You are not allowed to update this order' },
         403,
       )
+    }
+
+    // Food ready (founder decision 2026-10-07): only for paid orders. The
+    // status stays 'paid' (pickup codes, refunds and disputes look for it);
+    // ready_at records the moment. Tapping twice sends one alert only.
+    if (action === 'ready') {
+      if (order.status !== 'paid') {
+        return jsonResponse(
+          { error: 'Only paid orders can be marked ready' },
+          409,
+        )
+      }
+
+      if (order.ready_at) {
+        return jsonResponse({ order })
+      }
+
+      const { data: readyOrder, error: readyError } = await supabaseAdmin
+        .from('orders')
+        .update({
+          ready_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', order.id)
+        .eq('status', 'paid')
+        .is('ready_at', null)
+        .select('*')
+        .single()
+
+      if (readyError || !readyOrder) {
+        console.error('Ready update failed:', readyError)
+        return jsonResponse(
+          { error: 'Order could not be updated' },
+          409,
+        )
+      }
+
+      const { error: messageError } = await supabaseAdmin
+        .from('chat_messages')
+        .insert({
+          sender_id: order.merchant_id,
+          receiver_id: order.student_id,
+          deal_id: order.deal_id,
+          message: [
+            'Your food is ready.',
+            '',
+            'Come to the counter and show your pickup code.',
+          ].join('\n'),
+          is_read: false,
+          link_path: '/dashboard/profile?view=orders',
+          link_label: 'Show my code',
+        })
+
+      if (messageError) {
+        // The order is already marked ready; the alert below still goes out.
+        console.error('Ready message creation failed:', messageError)
+      }
+
+      await alertStudentOrderReady(supabaseAdmin, readyOrder)
+
+      return jsonResponse({ order: readyOrder })
     }
 
     // Banned or deactivated merchants can't take on new orders. Declining is

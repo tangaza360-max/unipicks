@@ -25,7 +25,7 @@ const businessLabels = {
   pending_confirmation: 'Waiting for you',
   confirmed: 'Waiting for payment',
   payment_processing: 'Payment in progress',
-  paid: 'Paid · ready for pickup',
+  paid: 'Paid · prepare it',
   redeemed: 'Collected',
   completed: 'Collected',
   declined: 'Declined',
@@ -55,15 +55,18 @@ const statusMeaning = {
   payment_expired: 'bad',
 }
 
-export function statusLabel(status, audience = 'student') {
+// ready: the business tapped Food ready (orders.ready_at). The status stays
+// 'paid', so only the label changes.
+export function statusLabel(status, audience = 'student', ready = false) {
+  if (status === 'paid' && ready) return audience === 'business' ? 'Ready · waiting for pickup' : 'Ready for pickup'
   const labels = audience === 'business' ? { ...statusLabels, ...businessLabels } : statusLabels
   return labels[status] || 'Unknown'
 }
 
-export default function StatusBadge({ status, audience = 'student' }) {
+export default function StatusBadge({ status, audience = 'student', ready = false }) {
   return (
     <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap status-${statusMeaning[status] || 'neutral'}`}>
-      {statusLabel(status, audience)}
+      {statusLabel(status, audience, ready)}
     </span>
   )
 }
