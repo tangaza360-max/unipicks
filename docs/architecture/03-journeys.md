@@ -94,6 +94,9 @@ sequenceDiagram
   WH->>DB: transaction paid, order paid,<br/>pickup code (redemptions)
   WH-->>S: chat message with the pickup code + alert
   WH-->>B: alert "Payment received"
+  B->>US: Food ready (when the food is cooked)
+  US->>DB: order ready_at = now (status stays paid)
+  US-->>S: chat message "Your food is ready" + alert<br/>+ live update of the order steps
   S->>B: shows the pickup code at the counter
   B->>DB: VerifyCode.jsx → redeem_pickup_code
   DB-->>B: order collected ✓

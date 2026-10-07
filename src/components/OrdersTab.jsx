@@ -6,6 +6,9 @@ import RatingPrompt from './RatingPrompt.jsx'
 import StatusBadge from './StatusBadge.jsx'
 import RaiseDisputeModal from './RaiseDisputeModal.jsx'
 import MerchantPhone from './MerchantPhone.jsx'
+import OrderSteps from './OrderSteps.jsx'
+import { liveChannel } from '../lib/realtime.js'
+import { nowText, reachedStep } from '../lib/orderSteps.js'
 import { Package } from 'lucide-react'
 import { formatMoney, formatDate, formatTime } from '../lib/format.js'
 
@@ -24,7 +27,8 @@ const DISPUTE_STATUS_LABELS = {
   resolved: 'Resolved',
   rejected: 'Rejected',
 }
-const ACTIONABLE_ORDER_STATUSES = ['confirmed']
+// Needs the student: pay (confirmed) or go and collect (paid).
+const ACTIONABLE_ORDER_STATUSES = ['confirmed', 'paid']
 
 export default function OrdersTab() {
   const [hostedOrders, setHostedOrders] = useState([])
@@ -40,8 +44,28 @@ export default function OrdersTab() {
     loadOrders()
   }, [showAllOrders])
 
-  async function loadOrders() {
-    setLoading(true)
+  // Live: when the business accepts or taps Food ready, the steps move
+  // without a reload (orders is in the realtime publication; students only
+  // receive their own rows).
+  useEffect(() => {
+    let channel
+    let cancelled = false
+    supabase.auth.getUser().then(({ data }) => {
+      if (cancelled || !data.user) return
+      channel = liveChannel('student-orders')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `student_id=eq.${data.user.id}` }, () => loadOrders({ quiet: true }))
+        .subscribe()
+    })
+    return () => {
+      cancelled = true
+      channel?.unsubscribe()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showAllOrders])
+
+  // quiet: refresh in place, without the "Loading orders…" flash.
+  async function loadOrders({ quiet = false } = {}) {
+    if (!quiet) setLoading(true)
     setError('')
 
     const { data: userData } = await supabase.auth.getUser()
@@ -97,7 +121,7 @@ export default function OrdersTab() {
 
     const { data: normal, error: normalError } = await supabase
       .from('orders')
-      .select('id, deal_id, merchant_id, quantity, unit_price, total_price, status, decline_reason, decline_reason_note, dispute_status, dispute_reason, dispute_raised_at, dispute_resolution_note, created_at, payment_deadline, merchant_phone, deals(title, business_name), redemptions(code)')
+      .select('id, deal_id, merchant_id, quantity, unit_price, total_price, status, ready_at, decline_reason, decline_reason_note, dispute_status, dispute_reason, dispute_raised_at, dispute_resolution_note, created_at, payment_deadline, merchant_phone, deals(title, business_name), redemptions(code)')
       .eq('student_id', userId)
       .order('created_at', { ascending: false })
 
@@ -120,6 +144,7 @@ export default function OrdersTab() {
     if (!showAllOrders) {
       filteredNormal = filteredNormal.filter((order) => {
         if (!ACTIONABLE_ORDER_STATUSES.includes(order.status)) return false
+        if (order.status === 'paid') return true
         if (order.status === 'confirmed') {
           return (
             order.payment_deadline &&
@@ -376,9 +401,8 @@ function NormalOrderCard({ order, onRaiseDispute }) {
   const showPaymentExpired = status === 'confirmed' && !isPaymentWindowOpen
   const showPickupCode = (status === 'paid' || status === 'redeemed' || status === 'completed') && redemption?.code
   const showDecline = status === 'declined'
-  const showWaiting = status === 'pending_confirmation'
-  const showProcessing = status === 'payment_processing'
-  const showRedeemed = status === 'redeemed' || status === 'completed'
+  const reached = reachedStep(order)
+  const isReady = reached === 3
   const showExpired = INACTIVE_ORDER_STATUSES.includes(status)
   const canRaiseDispute =
     !order.dispute_status &&
@@ -399,19 +423,11 @@ function NormalOrderCard({ order, onRaiseDispute }) {
             {order.quantity} × {formatMoney(order.unit_price)} = {formatMoney(order.total_price)}
           </p>
         </div>
-        <StatusBadge status={status} />
+        <StatusBadge status={status} ready={Boolean(order.ready_at)} />
       </div>
 
-      {showWaiting && (
-        <p className="mt-3 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
-          Waiting for the business to accept your order.
-        </p>
-      )}
-
-      {showProcessing && (
-        <p className="mt-3 text-xs text-blue-400 bg-blue-100/10 rounded-lg px-3 py-2">
-          Payment is being processed. You'll receive a pickup code once it's confirmed.
-        </p>
+      {reached !== null && (
+        <OrderSteps reached={reached} text={nowText(order, deal?.business_name || 'the business')} highlight={isReady} />
       )}
 
       {showPaymentExpired && (
@@ -433,8 +449,10 @@ function NormalOrderCard({ order, onRaiseDispute }) {
       {showPickupCode && (
         <div className="mt-3 rounded-lg border border-green-400/30 bg-green-100/10 px-3 py-2">
           <p className="text-xs text-muted-foreground">Pickup code</p>
-          <p className="font-mono font-semibold text-base tracking-wider">{redemption.code}</p>
-          <p className="text-xs text-muted-foreground mt-1">Show this to the business.</p>
+          <p className={`font-mono font-semibold tracking-wider ${isReady ? 'text-2xl' : 'text-base'}`}>{redemption.code}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {isReady ? 'Show this code at the counter.' : 'You will show this code when your food is ready.'}
+          </p>
           {order.merchant_phone && (
             <p className="text-xs mt-2">
               <MerchantPhone phone={order.merchant_phone} />
@@ -450,10 +468,6 @@ function NormalOrderCard({ order, onRaiseDispute }) {
         >
           View receipt
         </Link>
-      )}
-
-      {showRedeemed && (
-        <p className="mt-3 text-xs text-green-400">Collected ✓</p>
       )}
 
       {showDecline && (

@@ -127,6 +127,10 @@ Switched on for: `chat_messages`, `deals`, `merchant_stories`,
 `notifications`, `orders`, `user_notifications`. Realtime applies each
 table's rules, so people only receive changes they may read.
 
+Who listens to `orders`: the business Orders screen (its own orders) and,
+since 2026-10-07, the student Orders screen (its own orders), so the steps
+Ordered → Accepted → Paid → Ready → Collected move without a reload.
+
 (`merchant_stories` was added on 2026-10-05, migration
 `20261005130000_merchant_stories_realtime.sql`: before, new business stories
 only showed after a reload.)
