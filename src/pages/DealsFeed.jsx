@@ -506,7 +506,8 @@ const getDiscoveryScore = (deal) => {
 
         <div className="relative">
           <input
-            type="text"
+            type="search"
+            aria-label="Search deals or restaurants"
             placeholder="Search deals or restaurants..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

@@ -63,8 +63,9 @@ export default function MerchantPromoCreator() {
         </div>
 
         <div className="bg-card-alt rounded-lg p-4">
-          <label className="field-label">Describe your deal</label>
+          <label htmlFor="promo-prompt" className="field-label">Describe your deal</label>
           <textarea
+            id="promo-prompt"
             className="field-input min-h-[120px]"
             placeholder="Example: 20% off all tacos every Tuesday. We are a cozy Mexican restaurant in town."
             value={prompt}

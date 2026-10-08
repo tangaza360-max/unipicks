@@ -285,8 +285,9 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
           </p>
         )}
         <div>
-          <label className="field-label">Business Name</label>
+          <label htmlFor="business-business-name" className="field-label">Business Name</label>
           <input
+            id="business-business-name"
             name="business_name"
             value={profile.business_name}
             onChange={handleChange}
@@ -297,8 +298,9 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="field-label">Phone</label>
+            <label htmlFor="business-phone" className="field-label">Phone</label>
             <input
+              id="business-phone"
               name="phone"
               value={profile.phone}
               onChange={handleChange}
@@ -307,8 +309,9 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
             />
           </div>
           <div>
-            <label className="field-label">RDB Number</label>
+            <label htmlFor="business-rdb-number" className="field-label">RDB Number</label>
             <input
+              id="business-rdb-number"
               name="rdb_number"
               value={profile.rdb_number}
               onChange={handleChange}
@@ -319,8 +322,9 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
         </div>
 
         <div>
-          <label className="field-label">MoMo Pay Code</label>
+          <label htmlFor="business-momo-pay-code" className="field-label">MoMo Pay Code</label>
           <input
+            id="business-momo-pay-code"
             name="momo_pay_code"
             value={profile.momo_pay_code}
             onChange={handleChange}
@@ -331,8 +335,9 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
         </div>
 
         <div>
-          <label className="field-label">Address</label>
+          <label htmlFor="business-address" className="field-label">Address</label>
           <input
+            id="business-address"
             name="address"
             value={profile.address}
             onChange={handleChange}
@@ -342,7 +347,7 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
         </div>
 
         <div>
-          <label className="field-label">Logo</label>
+          <label htmlFor="business-logo" className="field-label">Logo</label>
           {profile.logo_url && (
             <div className="mb-2">
               <img
@@ -354,6 +359,7 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
           )}
           <div className="flex items-center gap-3">
             <input
+              id="business-logo"
               ref={fileInputRef}
               type="file"
               accept="image/*"
@@ -369,8 +375,9 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
         </div>
 
         <div>
-          <label className="field-label">Logo URL (or upload above)</label>
+          <label htmlFor="business-logo-url" className="field-label">Logo URL (or upload above)</label>
           <input
+            id="business-logo-url"
             name="logo_url"
             value={profile.logo_url}
             onChange={handleChange}

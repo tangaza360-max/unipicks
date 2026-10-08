@@ -448,8 +448,9 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
       {editing ? (
         <div className="space-y-5 bg-card border border-border rounded-lg p-6 shadow-sm">
           <div>
-            <label className="field-label">Full name</label>
+            <label htmlFor="profile-full-name" className="field-label">Full name</label>
             <input
+              id="profile-full-name"
               className="field-input"
               value={formData.full_name}
               onChange={(e) =>
@@ -462,8 +463,9 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
           </div>
 
           <div>
-            <label className="field-label">Phone</label>
+            <label htmlFor="profile-phone" className="field-label">Phone</label>
             <input
+              id="profile-phone"
               className="field-input"
               value={formData.phone}
               onChange={(e) =>
@@ -485,8 +487,9 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
           {isMerchant && (
             <>
               <div>
-                <label className="field-label">Business name</label>
+                <label htmlFor="profile-business-name" className="field-label">Business name</label>
                 <input
+                  id="profile-business-name"
                   className="field-input"
                   value={formData.business_name}
                   onChange={(e) =>
@@ -499,8 +502,9 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
               </div>
 
               <div>
-                <label className="field-label">Address</label>
+                <label htmlFor="profile-address" className="field-label">Address</label>
                 <input
+                  id="profile-address"
                   className="field-input"
                   value={formData.address}
                   onChange={(e) =>
@@ -697,7 +701,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
           ) : editingSocial ? (
             <div className="space-y-5 bg-card border border-border rounded-lg p-6 shadow-sm">
               <div>
-                <label className="field-label">Username</label>
+                <label htmlFor="profile-username" className="field-label">Username</label>
 
                 <div className="flex items-center">
                   <span className="px-3 py-2.5 border border-r-0 border-border rounded-l-lg bg-muted text-muted-foreground text-sm">
@@ -705,6 +709,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
                   </span>
 
                   <input
+                    id="profile-username"
                     className="field-input rounded-l-none"
                     value={socialFormData.username}
                     onChange={(e) =>
@@ -724,9 +729,10 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
               </div>
 
               <div>
-                <label className="field-label">Display name</label>
+                <label htmlFor="profile-display-name" className="field-label">Display name</label>
 
                 <input
+                  id="profile-display-name"
                   className="field-input"
                   value={socialFormData.display_name}
                   onChange={(e) =>
@@ -739,9 +745,10 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
               </div>
 
               <div>
-                <label className="field-label">University</label>
+                <label htmlFor="profile-university" className="field-label">University</label>
 
                 <input
+                  id="profile-university"
                   className="field-input opacity-70"
                   value={verified.university || socialFormData.university}
                   readOnly
@@ -750,9 +757,10 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
               </div>
 
               <div>
-                <label className="field-label">Campus</label>
+                <label htmlFor="profile-campus" className="field-label">Campus</label>
 
                 <input
+                  id="profile-campus"
                   className="field-input"
                   value={socialFormData.campus}
                   onChange={(e) =>
@@ -765,11 +773,12 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
               </div>
 
               <div>
-                <label className="field-label">
+                <label htmlFor="profile-student-description" className="field-label">
                   Student description
                 </label>
 
                 <input
+                  id="profile-student-description"
                   className="field-input"
                   value={socialFormData.student_description}
                   onChange={(e) =>
@@ -783,9 +792,10 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
               </div>
 
               <div>
-                <label className="field-label">Short bio</label>
+                <label htmlFor="profile-short-bio" className="field-label">Short bio</label>
 
                 <textarea
+                  id="profile-short-bio"
                   className="field-input min-h-[90px] resize-y"
                   value={socialFormData.short_bio}
                   onChange={(e) =>

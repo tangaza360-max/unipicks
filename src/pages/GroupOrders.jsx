@@ -262,18 +262,20 @@ function JoinOrder({ initialCode = '', onJoined }) {
         </p>
 
         <div className="flex items-center gap-4">
-          <label className="field-label mb-0">How many?</label>
-          <div className="flex items-center gap-3">
+          <p id="group-quantity-label" className="field-label mb-0">How many?</p>
+          <div role="group" aria-labelledby="group-quantity-label" className="flex items-center gap-3">
             <button
               type="button"
+              aria-label="One less"
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               className="w-9 h-9 rounded-lg border border-border text-lg"
             >
               −
             </button>
-            <span className="font-display text-xl w-6 text-center">{quantity}</span>
+            <span className="font-display text-xl w-6 text-center" aria-live="polite">{quantity}</span>
             <button
               type="button"
+              aria-label="One more"
               onClick={() => setQuantity((q) => q + 1)}
               className="w-9 h-9 rounded-lg border border-border text-lg"
             >

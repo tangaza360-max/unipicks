@@ -155,6 +155,7 @@ export default function MerchantStories() {
           <div className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-6 hover:border-accent transition-colors">
             <input
               type="file"
+              aria-label="Choose a photo or video for your story"
               accept="image/*,video/*"
               onChange={handleFileChange}
               className="text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-accent file:text-background-foreground file:cursor-pointer hover:file:bg-accent-dim"
@@ -163,8 +164,9 @@ export default function MerchantStories() {
           </div>
 
           <div>
-            <label className="field-label">Caption (optional)</label>
+            <label htmlFor="story-caption" className="field-label">Caption (optional)</label>
             <input
+              id="story-caption"
               type="text"
               value={caption}
               onChange={(e) => setCaption(e.target.value)}

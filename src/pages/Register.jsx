@@ -134,8 +134,9 @@ export default function Register() {
         >
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="field-label">Full name</label>
+              <label htmlFor="register-fullname" className="field-label">Full name</label>
               <input
+                id="register-fullname"
                 className="field-input"
                 placeholder="Your name"
                 value={form.fullName}
@@ -143,8 +144,9 @@ export default function Register() {
               />
             </div>
             <div>
-              <label className="field-label">Phone</label>
+              <label htmlFor="register-phone" className="field-label">Phone</label>
               <input
+                id="register-phone"
                 className="field-input"
                 placeholder="0788..."
                 value={form.phone}
@@ -154,8 +156,9 @@ export default function Register() {
           </div>
 
           <div>
-            <label className="field-label">Student email</label>
+            <label htmlFor="register-email" className="field-label">Student email</label>
             <input
+              id="register-email"
               className="field-input"
               type="email"
               placeholder="Enter your student email"
@@ -166,8 +169,9 @@ export default function Register() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="field-label">Password</label>
+              <label htmlFor="register-password" className="field-label">Password</label>
               <input
+                id="register-password"
                 className="field-input"
                 type="password"
                 value={form.password}
@@ -175,8 +179,9 @@ export default function Register() {
               />
             </div>
             <div>
-              <label className="field-label">Confirm</label>
+              <label htmlFor="register-confirm" className="field-label">Confirm</label>
               <input
+                id="register-confirm"
                 className="field-input"
                 type="password"
                 value={form.confirm}
@@ -187,8 +192,9 @@ export default function Register() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="field-label">University</label>
+              <label htmlFor="register-university" className="field-label">University</label>
               <select
+                id="register-university"
                 className="field-input"
                 value={form.university}
                 onChange={(e) => update('university', e.target.value)}
@@ -201,8 +207,9 @@ export default function Register() {
               </select>
             </div>
             <div>
-              <label className="field-label">Student ID number</label>
+              <label htmlFor="register-studentid" className="field-label">Student ID number</label>
               <input
+                id="register-studentid"
                 className="field-input"
                 placeholder="UR12345"
                 value={form.studentId}

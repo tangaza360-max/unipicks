@@ -181,10 +181,11 @@ export default function OrdersTab() {
     return (
       <div className="space-y-4 animate-fadeIn">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-sm text-muted-foreground">Show all orders</span>
+          <span id="orders-show-all-label" className="text-sm text-muted-foreground">Show all orders</span>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
+              aria-labelledby="orders-show-all-label"
               checked={showAllOrders}
               onChange={(e) => setShowAllOrders(e.target.checked)}
               className="sr-only peer"
@@ -215,10 +216,11 @@ export default function OrdersTab() {
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm text-muted-foreground">Show all orders</span>
+        <span id="orders-show-all-label" className="text-sm text-muted-foreground">Show all orders</span>
         <label className="relative inline-flex items-center cursor-pointer">
           <input
             type="checkbox"
+            aria-labelledby="orders-show-all-label"
             checked={showAllOrders}
             onChange={(e) => setShowAllOrders(e.target.checked)}
             className="sr-only peer"

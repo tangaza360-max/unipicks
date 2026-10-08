@@ -130,8 +130,9 @@ export default function RegisterMerchant() {
         >
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="field-label">Full name</label>
+              <label htmlFor="register-business-fullname" className="field-label">Full name</label>
               <input
+                id="register-business-fullname"
                 className="field-input"
                 placeholder="Your name"
                 value={form.fullName}
@@ -139,8 +140,9 @@ export default function RegisterMerchant() {
               />
             </div>
             <div>
-              <label className="field-label">Phone</label>
+              <label htmlFor="register-business-phone" className="field-label">Phone</label>
               <input
+                id="register-business-phone"
                 className="field-input"
                 placeholder="0788..."
                 value={form.phone}
@@ -150,8 +152,9 @@ export default function RegisterMerchant() {
           </div>
 
           <div>
-            <label className="field-label">Email</label>
+            <label htmlFor="register-business-email" className="field-label">Email</label>
             <input
+              id="register-business-email"
               className="field-input"
               type="email"
               placeholder="you@example.com"
@@ -162,8 +165,9 @@ export default function RegisterMerchant() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="field-label">Password</label>
+              <label htmlFor="register-business-password" className="field-label">Password</label>
               <input
+                id="register-business-password"
                 className="field-input"
                 type="password"
                 value={form.password}
@@ -171,8 +175,9 @@ export default function RegisterMerchant() {
               />
             </div>
             <div>
-              <label className="field-label">Confirm</label>
+              <label htmlFor="register-business-confirm" className="field-label">Confirm</label>
               <input
+                id="register-business-confirm"
                 className="field-input"
                 type="password"
                 value={form.confirm}
@@ -182,8 +187,9 @@ export default function RegisterMerchant() {
           </div>
 
           <div>
-            <label className="field-label">Business name</label>
+            <label htmlFor="register-business-businessname" className="field-label">Business name</label>
             <input
+              id="register-business-businessname"
               className="field-input"
               placeholder="Kepler Bite House"
               value={form.businessName}
@@ -192,8 +198,9 @@ export default function RegisterMerchant() {
           </div>
 
           <div>
-            <label className="field-label">RDB number</label>
+            <label htmlFor="register-business-rdbnumber" className="field-label">RDB number</label>
             <input
+              id="register-business-rdbnumber"
               className="field-input"
               placeholder="RDB/..."
               value={form.rdbNumber}
@@ -202,8 +209,9 @@ export default function RegisterMerchant() {
           </div>
 
           <div>
-            <label className="field-label">Address</label>
+            <label htmlFor="register-business-address" className="field-label">Address</label>
             <input
+              id="register-business-address"
               className="field-input"
               placeholder="Street, building"
               value={form.address}

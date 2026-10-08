@@ -55,8 +55,9 @@ export default function RaiseDisputeModal({ order, onClose, onSuccess }) {
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
-            <label className="field-label">Reason</label>
+            <label htmlFor="dispute-reason" className="field-label">Reason</label>
             <select
+              id="dispute-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="field-input"
@@ -71,10 +72,11 @@ export default function RaiseDisputeModal({ order, onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="field-label">
+            <label htmlFor="dispute-note" className="field-label">
               Details {reason === 'other' ? '(required)' : '(optional)'}
             </label>
             <textarea
+              id="dispute-note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="field-input min-h-[90px] resize-y"

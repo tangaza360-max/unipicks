@@ -817,8 +817,9 @@ export default function MerchantDeals() {
                   </p>
                 </div>
                 <div>
-                  <label className="field-label">Deal title</label>
+                  <label htmlFor="deal-title" className="field-label">Deal title</label>
                   <input
+                    id="deal-title"
                     className="field-input"
                     placeholder="Tacos Tuesday"
                     value={title}
@@ -828,8 +829,9 @@ export default function MerchantDeals() {
               </div>
 
               <div>
-                <label className="field-label">Description</label>
+                <label htmlFor="deal-description" className="field-label">Description</label>
                 <textarea
+                  id="deal-description"
                   className="field-input"
                   rows={3}
                   placeholder="20% off all tacos, every Tuesday"
@@ -862,10 +864,11 @@ export default function MerchantDeals() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {offerType !== 'free_shipping' && (
                   <div>
-                    <label className="field-label">
+                    <label htmlFor="deal-price" className="field-label">
                       {offerType === 'bogo' ? 'Price per item (RWF)' : offerType === 'fixed_price' ? 'Original price (RWF, optional)' : 'Price before any discount (RWF)'}
                     </label>
                     <input
+                      id="deal-price"
                       className="field-input"
                       type="number"
                       min="0"
@@ -879,8 +882,9 @@ export default function MerchantDeals() {
 
                 {['percentage', 'group_buy'].includes(offerType) && (
                   <div>
-                    <label className="field-label">Discount (%) · optional</label>
+                    <label htmlFor="deal-discountpercent" className="field-label">Discount (%) · optional</label>
                     <input
+                      id="deal-discountpercent"
                       className="field-input"
                       type="number"
                       min="0"
@@ -895,8 +899,9 @@ export default function MerchantDeals() {
 
                 {offerType === 'fixed_amount' && (
                   <div>
-                    <label className="field-label">Discount amount (RWF)</label>
+                    <label htmlFor="deal-discountvalue" className="field-label">Discount amount (RWF)</label>
                     <input
+                      id="deal-discountvalue"
                       className="field-input"
                       type="number"
                       min="0"
@@ -910,8 +915,9 @@ export default function MerchantDeals() {
 
                 {offerType === 'fixed_price' && (
                   <div>
-                    <label className="field-label">Bundle price (RWF)</label>
+                    <label htmlFor="deal-discountvalue-2" className="field-label">Bundle price (RWF)</label>
                     <input
+                      id="deal-discountvalue-2"
                       className="field-input"
                       type="number"
                       min="0"
@@ -925,8 +931,9 @@ export default function MerchantDeals() {
 
                 {offerType === 'free_shipping' && (
                   <div>
-                    <label className="field-label">Minimum order (RWF)</label>
+                    <label htmlFor="deal-discountvalue-3" className="field-label">Minimum order (RWF)</label>
                     <input
+                      id="deal-discountvalue-3"
                       className="field-input"
                       type="number"
                       min="0"
@@ -941,8 +948,9 @@ export default function MerchantDeals() {
                 {offerType === 'bogo' && (
                   <>
                     <div>
-                      <label className="field-label">Buy quantity</label>
+                      <label htmlFor="deal-buyquantity" className="field-label">Buy quantity</label>
                       <input
+                        id="deal-buyquantity"
                         className="field-input"
                         type="number"
                         min="1"
@@ -952,8 +960,9 @@ export default function MerchantDeals() {
                       />
                     </div>
                     <div>
-                      <label className="field-label">Get quantity free</label>
+                      <label htmlFor="deal-getquantity" className="field-label">Get quantity free</label>
                       <input
+                        id="deal-getquantity"
                         className="field-input"
                         type="number"
                         min="1"
@@ -967,8 +976,9 @@ export default function MerchantDeals() {
 
                 {offerType === 'tiered' && (
                   <div className="sm:col-span-2">
-                    <label className="field-label">Tier rules</label>
+                    <label htmlFor="deal-tieredrules" className="field-label">Tier rules</label>
                     <input
+                      id="deal-tieredrules"
                       className="field-input"
                       type="text"
                       placeholder="1 for 5000, 2 for 8000"
@@ -980,8 +990,9 @@ export default function MerchantDeals() {
 
                 {offerType === 'group_buy' && (
                   <div>
-                    <label className="field-label">Minimum participants</label>
+                    <label htmlFor="deal-minparticipants" className="field-label">Minimum participants</label>
                     <input
+                      id="deal-minparticipants"
                       className="field-input"
                       type="number"
                       min="2"
@@ -993,8 +1004,9 @@ export default function MerchantDeals() {
                 )}
 
                 <div>
-                  <label className="field-label">Expires on</label>
+                  <label htmlFor="deal-expiresat" className="field-label">Expires on</label>
                   <input
+                    id="deal-expiresat"
                     className="field-input"
                     type="date"
                     value={expiresAt}
@@ -1004,8 +1016,8 @@ export default function MerchantDeals() {
               </div>
 
                         <div>
-              <label className="field-label">Available days</label>
-              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+              <p id="deal-days-label" className="field-label">Available days</p>
+              <div role="group" aria-labelledby="deal-days-label" className="grid grid-cols-4 sm:grid-cols-7 gap-2">
                 {[
                   ['monday', 'Mon'],
                   ['tuesday', 'Tue'],
@@ -1021,6 +1033,7 @@ export default function MerchantDeals() {
                     <button
                       key={day}
                       type="button"
+                      aria-pressed={selected}
                       onClick={() =>
                         setAvailableDays((current) =>
                           selected
@@ -1045,11 +1058,12 @@ export default function MerchantDeals() {
             </div>
 
           <div>
-            <label className="field-label">Available time</label>
-            <div className="grid grid-cols-2 gap-3">
+            <p id="deal-time-label" className="field-label">Available time</p>
+            <div role="group" aria-labelledby="deal-time-label" className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-muted-foreground">From</label>
+                <label htmlFor="deal-availablefrom" className="text-xs text-muted-foreground">From</label>
                 <input
+                  id="deal-availablefrom"
                   type="time"
                   value={availableFrom}
                   onChange={(e) => setAvailableFrom(e.target.value)}
@@ -1057,8 +1071,9 @@ export default function MerchantDeals() {
                 />
               </div>
               <div>
-                <label className="text-xs text-muted-foreground">Until</label>
+                <label htmlFor="deal-availableuntil" className="text-xs text-muted-foreground">Until</label>
                 <input
+                  id="deal-availableuntil"
                   type="time"
                   value={availableUntil}
                   onChange={(e) => setAvailableUntil(e.target.value)}
@@ -1072,7 +1087,7 @@ export default function MerchantDeals() {
           </div>
 
               <div>
-                <label className="field-label">Photo</label>
+                <label htmlFor="deal-photo" className="field-label">Photo</label>
                 {existingImageUrl && (
                   <div className="mb-2">
                     <img
@@ -1084,6 +1099,7 @@ export default function MerchantDeals() {
                   </div>
                 )}
                 <input
+                  id="deal-photo"
                   type="file"
                   accept="image/*"
                   onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
@@ -1181,8 +1197,9 @@ export default function MerchantDeals() {
             </p>
 
             <div>
-              <label className="field-label">Describe your deal</label>
+              <label htmlFor="deal-ai-aiprompt" className="field-label">Describe your deal</label>
               <textarea
+                id="deal-ai-aiprompt"
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
                 placeholder="e.g., Tacos Tuesday – 20% off all tacos, every Tuesday"
@@ -1193,8 +1210,9 @@ export default function MerchantDeals() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="field-label">Original Price (RWF)</label>
+                <label htmlFor="deal-ai-aiprice" className="field-label">Original Price (RWF)</label>
                 <input
+                  id="deal-ai-aiprice"
                   type="number"
                   value={aiPrice}
                   onChange={(e) => setAiPrice(e.target.value)}
@@ -1203,8 +1221,9 @@ export default function MerchantDeals() {
                 />
               </div>
               <div>
-                <label className="field-label">Discount (%)</label>
+                <label htmlFor="deal-ai-aidiscount" className="field-label">Discount (%)</label>
                 <input
+                  id="deal-ai-aidiscount"
                   type="number"
                   value={aiDiscount}
                   onChange={(e) => setAiDiscount(e.target.value)}

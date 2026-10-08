@@ -234,9 +234,10 @@ export default function SocialOnboarding({ onComplete }) {
             </div>
 
             <div>
-              <label className="field-label">Username</label>
+              <label htmlFor="social-username" className="field-label">Username</label>
 
               <input
+                id="social-username"
                 className="field-input"
                 placeholder="Choose your username"
                 value={form.username}
@@ -265,9 +266,10 @@ export default function SocialOnboarding({ onComplete }) {
             </div>
 
             <div>
-              <label className="field-label">Display name</label>
+              <label htmlFor="social-displayname" className="field-label">Display name</label>
 
               <input
+                id="social-displayname"
                 className="field-input"
                 placeholder="Your name"
                 value={form.displayName}
@@ -276,9 +278,10 @@ export default function SocialOnboarding({ onComplete }) {
             </div>
 
             <div>
-              <label className="field-label">University</label>
+              <label htmlFor="social-university" className="field-label">University</label>
 
               <input
+                id="social-university"
                 className="field-input"
                 placeholder="Your university"
                 value={form.university}
@@ -287,9 +290,10 @@ export default function SocialOnboarding({ onComplete }) {
             </div>
 
             <div>
-              <label className="field-label">Campus</label>
+              <label htmlFor="social-campus" className="field-label">Campus</label>
 
               <input
+                id="social-campus"
                 className="field-input"
                 placeholder="Your campus"
                 value={form.campus}
@@ -313,9 +317,10 @@ export default function SocialOnboarding({ onComplete }) {
             </div>
 
             <div>
-              <label className="field-label">Student description</label>
+              <label htmlFor="social-studentdescription" className="field-label">Student description</label>
 
               <input
+                id="social-studentdescription"
                 className="field-input"
                 placeholder="Business Analytics student"
                 value={form.studentDescription}
@@ -326,9 +331,10 @@ export default function SocialOnboarding({ onComplete }) {
             </div>
 
             <div>
-              <label className="field-label">Short bio</label>
+              <label htmlFor="social-shortbio" className="field-label">Short bio</label>
 
               <textarea
+                id="social-shortbio"
                 className="field-input min-h-[100px] resize-none"
                 placeholder="Building things and learning."
                 value={form.shortBio}

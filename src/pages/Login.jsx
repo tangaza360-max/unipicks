@@ -50,8 +50,9 @@ export default function Login() {
           className="bg-card/60 border border-border rounded-lg p-6 space-y-5"
         >
           <div>
-            <label className="field-label">Email</label>
+            <label htmlFor="login-email" className="field-label">Email</label>
             <input
+              id="login-email"
               className="field-input"
               type="email"
               placeholder="you@example.com"
@@ -61,8 +62,9 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="field-label">Password</label>
+            <label htmlFor="login-password" className="field-label">Password</label>
             <input
+              id="login-password"
               className="field-input"
               type="password"
               value={password}

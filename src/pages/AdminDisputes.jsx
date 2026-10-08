@@ -182,8 +182,9 @@ export default function AdminDisputes() {
             </div>
 
             <div>
-              <label className="field-label">Resolution note (optional)</label>
+              <label htmlFor="admin-dispute-note" className="field-label">Resolution note (optional)</label>
               <textarea
+                id="admin-dispute-note"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 className="field-input min-h-[90px] resize-y"

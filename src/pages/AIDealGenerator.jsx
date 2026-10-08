@@ -251,8 +251,9 @@ export default function AIDealGenerator({ onDealCreated }) {
 
       <form onSubmit={handleGenerate} className="space-y-3">
         <div>
-          <label className="field-label">Describe your deal</label>
+          <label htmlFor="ai-deal-prompt" className="field-label">Describe your deal</label>
           <textarea
+            id="ai-deal-prompt"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="e.g., Tacos Tuesday – 20% off all tacos, every Tuesday"
@@ -263,8 +264,9 @@ export default function AIDealGenerator({ onDealCreated }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="field-label">Original Price (RWF)</label>
+            <label htmlFor="ai-deal-originalprice" className="field-label">Original Price (RWF)</label>
             <input
+              id="ai-deal-originalprice"
               type="number"
               value={originalPrice}
               onChange={(e) => setOriginalPrice(e.target.value)}
@@ -274,8 +276,9 @@ export default function AIDealGenerator({ onDealCreated }) {
             />
           </div>
           <div>
-            <label className="field-label">Discount (%)</label>
+            <label htmlFor="ai-deal-discountpercent" className="field-label">Discount (%)</label>
             <input
+              id="ai-deal-discountpercent"
               type="number"
               value={discountPercent}
               onChange={(e) => setDiscountPercent(e.target.value)}
