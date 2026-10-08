@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { appUrl } from '../lib/authRedirect.js'
 import { UNIVERSITIES, domainForUniversity } from '../lib/universities.js'
 import Logo from '../components/Logo.jsx'
+import { PWNED_PASSWORD_MESSAGE, timesPwned } from '../lib/pwnedPassword.js'
 
 const initialForm = {
   fullName: '',
@@ -61,6 +62,12 @@ export default function Register() {
     }
 
     setLoading(true)
+
+    if ((await timesPwned(form.password)) > 0) {
+      setError(PWNED_PASSWORD_MESSAGE)
+      setLoading(false)
+      return
+    }
 
     const metadata = {
       full_name: form.fullName.trim(),

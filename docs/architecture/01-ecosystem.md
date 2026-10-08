@@ -25,6 +25,7 @@ flowchart LR
   UNS[Unsplash<br/>deal photos]:::outside
   CRON[cron-job.org<br/>timer, every 60 s]:::outside
   MAIL[Supabase Auth email<br/>sign-up, password reset]:::outside
+  HIBP[Have I Been Pwned<br/>leaked-password list]:::outside
 
   S -- "browse deals, order, pay,<br/>chat, stories" --> U
   B -- "deals, orders, stories,<br/>chat, stats" --> U
@@ -43,6 +44,7 @@ flowchart LR
   U -- "find a photo" --> UNS
   CRON -- "expire old orders" --> U
   U -- "confirm email, reset password" --> MAIL
+  U -- "is this new password leaked?<br/>(5 hash characters only)" --> HIBP
   MAIL -- "email" --> S
   MAIL -- "email" --> B
 ```
@@ -62,6 +64,7 @@ flowchart LR
 | **UmunotaPay** | Takes MoMo / Airtel payments | Server function `process-payment` → `api.umunotapay.com` (API key + signature); UmunotaPay → `payment-webhook` (callback, signed) | Students cannot pay; orders wait, then expire. Late payments are still accepted when the callback arrives. |
 | **MTN MoMo / Airtel** | The student's money | Only through UmunotaPay | Same as above |
 | **Phone alert services** (Google FCM, Apple, Mozilla) | Order alerts on phones ("New order", "Order accepted", "Payment received", "Your food is ready") | Server functions send Web Push (`_shared/web-push.ts`, VAPID keys) | Alerts don't arrive; the bell inside the app still shows them |
+| **Have I Been Pwned** (Pwned Passwords) | Refuses passwords already in public leaks at sign-up and password reset | The browser sends only the first 5 characters of the password's SHA-1 code (k-anonymity) to `api.pwnedpasswords.com/range/` (`src/lib/pwnedPassword.js`) | The check is skipped; sign-up still works (8-character minimum) |
 | **Sentry** (EU) | Tells us when the app crashes | Website sends error reports (`src/lib/monitoring.js`); no names, emails or phones | We stop seeing crashes; the app works |
 | **Google Gemini** | AI writes deal text for businesses | Server function `generate-deal` | "Generate with AI" fails; businesses can still type deals |
 | **Unsplash** | Suggests a photo for an AI deal | Server function `generate-deal` | No suggested photo |

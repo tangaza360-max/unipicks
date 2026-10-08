@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { PWNED_PASSWORD_MESSAGE, timesPwned } from '../lib/pwnedPassword.js'
 
 // Step 2 of password recovery: the email link opens this page with a
 // one-time recovery session (Supabase reads it from the URL). The student
@@ -46,6 +47,11 @@ export default function ResetPassword() {
     }
 
     setSaving(true)
+    if ((await timesPwned(password)) > 0) {
+      setError(PWNED_PASSWORD_MESSAGE)
+      setSaving(false)
+      return
+    }
     const { error: updateError } = await supabase.auth.updateUser({ password })
     if (updateError) {
       setSaving(false)
