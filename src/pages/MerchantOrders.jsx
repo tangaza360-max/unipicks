@@ -268,7 +268,7 @@ export default function MerchantOrders() {
   // Only a failed load replaces the page; a failed button shows above the list.
   if (loadError) {
     return (
-      <div className="p-4 text-red-500">
+      <div className="p-4 text-red-400">
         {loadError}
       </div>
     )
@@ -287,7 +287,7 @@ export default function MerchantOrders() {
       </div>
 
       {error && (
-        <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+        <div role="alert" className="rounded-lg border border-red-400/30 p-3 text-sm status-bad">
           {error}
         </div>
       )}

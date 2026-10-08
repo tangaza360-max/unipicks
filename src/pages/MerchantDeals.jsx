@@ -687,7 +687,7 @@ export default function MerchantDeals() {
                       className={`text-xs font-medium px-2 py-1 rounded-full ${
                         deal.active
                           ? 'bg-accent/15 text-accent'
-                          : 'bg-yellow-500/20 text-yellow-700'
+                          : 'status-wait'
                       }`}
                     >
                       {deal.active ? 'Active' : 'Paused'}
@@ -695,7 +695,7 @@ export default function MerchantDeals() {
                   </div>
 
                   {dealOfferType !== 'free_shipping' && !hasStudentPrice(deal) && (
-                    <p role="alert" className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-600">
+                    <p role="alert" className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
                       Missing price. Students can't order this deal. Tap Edit and add the price students pay.
                     </p>
                   )}

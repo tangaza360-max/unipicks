@@ -179,3 +179,23 @@ body {
 .status-neutral { color: var(--status-neutral-fg); background-color: var(--status-neutral-bg); }
 .status-good { color: var(--status-good-fg); background-color: var(--status-good-bg); }
 .status-bad { color: var(--status-bad-fg); background-color: var(--status-bad-bg); }
+
+/* Bright warning/error/success text (text-red-400 and friends) is made for
+   the dark theme. On the light background it is too pale (red-400 2.8:1,
+   amber-400 1.7:1, green-400 1.7:1; WCAG 1.4.3 needs 4.5:1), so the light
+   theme uses the same dark shades as the status labels above (≥ 5:1 on
+   white and on the pale red/amber boxes). Hover keeps the same colour. */
+[data-theme="light"] :is(.text-red-300, .text-red-400, .text-red-500, .hover\:text-red-300:hover, .hover\:text-red-400:hover) {
+  color: var(--status-bad-fg);
+}
+[data-theme="light"] :is(.text-amber-400, .text-amber-500, .text-amber-600, .hover\:text-amber-300:hover) {
+  color: var(--status-wait-fg);
+}
+[data-theme="light"] :is(.text-green-400, .text-green-500, .text-green-600) {
+  color: var(--status-good-fg);
+}
+/* Dark theme: red-400 drops to 4.3:1 on the red-tinted boxes; the softer
+   red of the status labels stays above 6:1 there. */
+[data-theme="dark"] :is(.text-red-400, .hover\:text-red-300:hover) {
+  color: var(--status-bad-fg);
+}

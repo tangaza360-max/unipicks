@@ -155,7 +155,7 @@ export default function StudentSearch() {
       </div>
 
       {error && (
-        <p className="text-sm text-red-500" role="alert">{error}</p>
+        <p className="text-sm text-red-400" role="alert">{error}</p>
       )}
 
       <div className="flex gap-2 border-b border-border pb-3" role="tablist" aria-label="Search categories">

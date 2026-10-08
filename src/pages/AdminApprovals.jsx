@@ -114,7 +114,7 @@ export default function AdminApprovals() {
                 <span className="text-muted-foreground">{profile.business_name || 'Unnamed business'}</span>
                 <button
                   onClick={() => handleDeactivate(profile)}
-                  className="text-sm border border-red-400/30 text-red-400/70 hover:text-red-400 rounded-lg px-3 py-1.5"
+                  className="text-sm border border-red-400/30 text-red-400 hover:text-red-300 rounded-lg px-3 py-1.5"
                 >
                   Deactivate
                 </button>

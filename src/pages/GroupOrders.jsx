@@ -436,7 +436,7 @@ function HostedOrderCard({ order, onChanged }) {
           <button
             type="button"
             onClick={handleCancel}
-            className="text-xs text-red-400/70 hover:text-red-400 border border-red-400/30 rounded-lg px-3 py-1.5"
+            className="text-xs text-red-400 hover:text-red-300 border border-red-400/30 rounded-lg px-3 py-1.5"
           >
             Cancel order
           </button>
