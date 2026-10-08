@@ -64,6 +64,32 @@ Today the build takes them from the `.env` file in the code, which holds
 🟡 Still open: some Vercel variables were found misnamed (`ITE_SUPABASE_*`);
 rename or delete them so nobody relies on them by mistake.
 
+## Website security headers (`vercel.json`)
+
+Every page is sent with a **Content Security Policy** and four more headers
+(added 2026-10-08, OWASP Secure Headers). The policy is an allow-list of the
+outside services the website may use:
+
+| Kind | Allowed |
+|---|---|
+| Data and live updates | our Supabase project (`https://` and `wss://`), Sentry (`*.sentry.io`) |
+| Styles and fonts | Google Fonts |
+| Pictures and videos | any `https:` site (deal photos, business logos), `data:`, `blob:` (camera) |
+| Scripts, phone helper, app manifest | only Unipicks itself |
+| Being shown inside another site | **never** (stops clickjacking) |
+
+Also: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+`Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`
+(camera for Unipicks only; microphone, location, payment and USB off).
+HTTPS-only (HSTS) is already sent by Vercel itself.
+
+⚠️ **Adding a new outside service** (another Supabase project, a payment
+page, analytics, a CDN for scripts) means adding it to the policy in
+`vercel.json` in the same commit, or the browser blocks it. If something
+stops loading after a deploy, open the browser console: a blocked request
+shows "Refused to … because it violates the following Content Security
+Policy directive".
+
 ## Where to look when something breaks
 
 | Symptom | Look first | Then |
@@ -76,6 +102,7 @@ rename or delete them so nobody relies on them by mistake.
 | Student sees "Price not set" | The deal has no student price | Business edits the deal |
 | Can't confirm email / reset password | Supabase → Auth → Logs | email sender (page 1) |
 | Screen crashes | Sentry | Vercel deployment logs |
+| Something no longer loads after a deploy (picture, live update, error reports) | Browser console: "violates the following Content Security Policy" | add that site to `vercel.json` (see Website security headers) |
 | A screen shows old data after a deploy | Phone helper not updated yet | close and reopen the app (it updates itself on reopen) |
 | Something is slow or failing in the database | Supabase → Logs → Postgres | Supabase → Advisors |
 
