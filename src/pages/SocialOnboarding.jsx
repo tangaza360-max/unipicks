@@ -238,6 +238,7 @@ export default function SocialOnboarding({ onComplete }) {
 
               <input
                 id="social-username"
+                autoComplete="off"
                 className="field-input"
                 placeholder="Choose your username"
                 value={form.username}
@@ -270,6 +271,7 @@ export default function SocialOnboarding({ onComplete }) {
 
               <input
                 id="social-displayname"
+                autoComplete="nickname"
                 className="field-input"
                 placeholder="Your name"
                 value={form.displayName}
@@ -294,6 +296,7 @@ export default function SocialOnboarding({ onComplete }) {
 
               <input
                 id="social-campus"
+                autoComplete="off"
                 className="field-input"
                 placeholder="Your campus"
                 value={form.campus}
@@ -321,6 +324,7 @@ export default function SocialOnboarding({ onComplete }) {
 
               <input
                 id="social-studentdescription"
+                autoComplete="off"
                 className="field-input"
                 placeholder="Business Analytics student"
                 value={form.studentDescription}

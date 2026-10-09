@@ -451,6 +451,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
             <label htmlFor="profile-full-name" className="field-label">Full name</label>
             <input
               id="profile-full-name"
+              autoComplete="name"
               className="field-input"
               value={formData.full_name}
               onChange={(e) =>
@@ -466,6 +467,8 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
             <label htmlFor="profile-phone" className="field-label">Phone</label>
             <input
               id="profile-phone"
+              autoComplete="tel"
+              type="tel"
               className="field-input"
               value={formData.phone}
               onChange={(e) =>
@@ -490,6 +493,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
                 <label htmlFor="profile-business-name" className="field-label">Business name</label>
                 <input
                   id="profile-business-name"
+                  autoComplete="organization"
                   className="field-input"
                   value={formData.business_name}
                   onChange={(e) =>
@@ -505,6 +509,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
                 <label htmlFor="profile-address" className="field-label">Address</label>
                 <input
                   id="profile-address"
+                  autoComplete="street-address"
                   className="field-input"
                   value={formData.address}
                   onChange={(e) =>
@@ -710,6 +715,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
 
                   <input
                     id="profile-username"
+                    autoComplete="off"
                     className="field-input rounded-l-none"
                     value={socialFormData.username}
                     onChange={(e) =>
@@ -733,6 +739,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
 
                 <input
                   id="profile-display-name"
+                  autoComplete="nickname"
                   className="field-input"
                   value={socialFormData.display_name}
                   onChange={(e) =>
@@ -761,6 +768,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
 
                 <input
                   id="profile-campus"
+                  autoComplete="off"
                   className="field-input"
                   value={socialFormData.campus}
                   onChange={(e) =>
@@ -779,6 +787,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
 
                 <input
                   id="profile-student-description"
+                  autoComplete="off"
                   className="field-input"
                   value={socialFormData.student_description}
                   onChange={(e) =>

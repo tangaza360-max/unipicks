@@ -288,6 +288,7 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
           <label htmlFor="business-business-name" className="field-label">Business Name</label>
           <input
             id="business-business-name"
+            autoComplete="organization"
             name="business_name"
             value={profile.business_name}
             onChange={handleChange}
@@ -301,6 +302,8 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
             <label htmlFor="business-phone" className="field-label">Phone</label>
             <input
               id="business-phone"
+              autoComplete="tel"
+              type="tel"
               name="phone"
               value={profile.phone}
               onChange={handleChange}
@@ -312,6 +315,7 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
             <label htmlFor="business-rdb-number" className="field-label">RDB Number</label>
             <input
               id="business-rdb-number"
+              autoComplete="off"
               name="rdb_number"
               value={profile.rdb_number}
               onChange={handleChange}
@@ -325,6 +329,7 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
           <label htmlFor="business-momo-pay-code" className="field-label">MoMo Pay Code</label>
           <input
             id="business-momo-pay-code"
+            autoComplete="off"
             name="momo_pay_code"
             value={profile.momo_pay_code}
             onChange={handleChange}
@@ -338,6 +343,7 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
           <label htmlFor="business-address" className="field-label">Address</label>
           <input
             id="business-address"
+            autoComplete="street-address"
             name="address"
             value={profile.address}
             onChange={handleChange}
@@ -378,6 +384,7 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
           <label htmlFor="business-logo-url" className="field-label">Logo URL (or upload above)</label>
           <input
             id="business-logo-url"
+            autoComplete="url"
             name="logo_url"
             value={profile.logo_url}
             onChange={handleChange}

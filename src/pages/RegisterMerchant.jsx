@@ -140,6 +140,7 @@ export default function RegisterMerchant() {
               <label htmlFor="register-business-fullname" className="field-label">Full name</label>
               <input
                 id="register-business-fullname"
+                autoComplete="name"
                 className="field-input"
                 placeholder="Your name"
                 value={form.fullName}
@@ -150,6 +151,8 @@ export default function RegisterMerchant() {
               <label htmlFor="register-business-phone" className="field-label">Phone</label>
               <input
                 id="register-business-phone"
+                autoComplete="tel"
+                type="tel"
                 className="field-input"
                 placeholder="0788..."
                 value={form.phone}
@@ -162,6 +165,7 @@ export default function RegisterMerchant() {
             <label htmlFor="register-business-email" className="field-label">Email</label>
             <input
               id="register-business-email"
+              autoComplete="email"
               className="field-input"
               type="email"
               placeholder="you@example.com"
@@ -175,6 +179,7 @@ export default function RegisterMerchant() {
               <label htmlFor="register-business-password" className="field-label">Password</label>
               <input
                 id="register-business-password"
+                autoComplete="new-password"
                 className="field-input"
                 type="password"
                 value={form.password}
@@ -185,6 +190,7 @@ export default function RegisterMerchant() {
               <label htmlFor="register-business-confirm" className="field-label">Confirm</label>
               <input
                 id="register-business-confirm"
+                autoComplete="new-password"
                 className="field-input"
                 type="password"
                 value={form.confirm}
@@ -197,6 +203,7 @@ export default function RegisterMerchant() {
             <label htmlFor="register-business-businessname" className="field-label">Business name</label>
             <input
               id="register-business-businessname"
+              autoComplete="organization"
               className="field-input"
               placeholder="Kepler Bite House"
               value={form.businessName}
@@ -208,6 +215,7 @@ export default function RegisterMerchant() {
             <label htmlFor="register-business-rdbnumber" className="field-label">RDB number</label>
             <input
               id="register-business-rdbnumber"
+              autoComplete="off"
               className="field-input"
               placeholder="RDB/..."
               value={form.rdbNumber}
@@ -219,6 +227,7 @@ export default function RegisterMerchant() {
             <label htmlFor="register-business-address" className="field-label">Address</label>
             <input
               id="register-business-address"
+              autoComplete="street-address"
               className="field-input"
               placeholder="Street, building"
               value={form.address}

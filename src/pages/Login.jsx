@@ -53,6 +53,7 @@ export default function Login() {
             <label htmlFor="login-email" className="field-label">Email</label>
             <input
               id="login-email"
+              autoComplete="email"
               className="field-input"
               type="email"
               placeholder="you@example.com"
@@ -65,6 +66,7 @@ export default function Login() {
             <label htmlFor="login-password" className="field-label">Password</label>
             <input
               id="login-password"
+              autoComplete="current-password"
               className="field-input"
               type="password"
               value={password}

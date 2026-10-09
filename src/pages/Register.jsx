@@ -144,6 +144,7 @@ export default function Register() {
               <label htmlFor="register-fullname" className="field-label">Full name</label>
               <input
                 id="register-fullname"
+                autoComplete="name"
                 className="field-input"
                 placeholder="Your name"
                 value={form.fullName}
@@ -154,6 +155,8 @@ export default function Register() {
               <label htmlFor="register-phone" className="field-label">Phone</label>
               <input
                 id="register-phone"
+                autoComplete="tel"
+                type="tel"
                 className="field-input"
                 placeholder="0788..."
                 value={form.phone}
@@ -166,6 +169,7 @@ export default function Register() {
             <label htmlFor="register-email" className="field-label">Student email</label>
             <input
               id="register-email"
+              autoComplete="email"
               className="field-input"
               type="email"
               placeholder="Enter your student email"
@@ -179,6 +183,7 @@ export default function Register() {
               <label htmlFor="register-password" className="field-label">Password</label>
               <input
                 id="register-password"
+                autoComplete="new-password"
                 className="field-input"
                 type="password"
                 value={form.password}
@@ -189,6 +194,7 @@ export default function Register() {
               <label htmlFor="register-confirm" className="field-label">Confirm</label>
               <input
                 id="register-confirm"
+                autoComplete="new-password"
                 className="field-input"
                 type="password"
                 value={form.confirm}
@@ -217,6 +223,7 @@ export default function Register() {
               <label htmlFor="register-studentid" className="field-label">Student ID number</label>
               <input
                 id="register-studentid"
+                autoComplete="off"
                 className="field-input"
                 placeholder="UR12345"
                 value={form.studentId}
