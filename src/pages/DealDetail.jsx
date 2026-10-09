@@ -18,6 +18,14 @@ function formatRelativeTime(isoString) {
   return `${days} day${days === 1 ? '' : 's'} ago`
 }
 
+// 6-letter code friends type to join a group order (no look-alike letters).
+function makeJoinCode() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+  let code = ''
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)]
+  return code
+}
+
 export default function DealDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -27,6 +35,26 @@ export default function DealDetail() {
   const [ratingStats, setRatingStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [startingGroup, setStartingGroup] = useState(false)
+  const [groupStartError, setGroupStartError] = useState('')
+
+  // Moved here from the home card: the home feed only opens deals now.
+  async function startGroupOrder() {
+    if (startingGroup) return
+    setStartingGroup(true)
+    setGroupStartError('')
+    const { error: createError } = await supabase.rpc('create_group_order_with_host', {
+      p_deal_id: deal.id,
+      p_join_code: makeJoinCode(),
+    })
+    if (createError) {
+      console.error('Failed to start group order:', createError)
+      setGroupStartError(createError.message || 'Unable to start group order')
+      setStartingGroup(false)
+      return
+    }
+    navigate('/dashboard/orders')
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -289,6 +317,20 @@ export default function DealDetail() {
               <p role="status" className="text-sm text-muted-foreground text-center">
                 This deal can't be ordered right now. It's available {dealHoursLabel(deal)} (Kigali time).
               </p>
+            )}
+            {deal.offer_type === 'group_buy' && (
+              <>
+                <button
+                  type="button"
+                  onClick={startGroupOrder}
+                  disabled={startingGroup || !priced}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-accent-dim disabled:opacity-50"
+                >
+                  <Users size={16} aria-hidden="true" />
+                  {startingGroup ? 'Starting…' : 'Start group order'}
+                </button>
+                {groupStartError && <p role="alert" className="text-sm text-destructive">{groupStartError}</p>}
+              </>
             )}
             <button
               onClick={() => navigate(`/deal/${deal.id}/confirm`)}

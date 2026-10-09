@@ -1,25 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
-import { hasStudentPrice, offerBadge, struckOutPrice, studentPrice } from '../lib/dealPricing.js'
+import { studentPrice } from '../lib/dealPricing.js'
 import { liveChannel } from '../lib/realtime.js'
 import { createOrder } from '../lib/orders.js'
 import GroupOrders from './GroupOrders.jsx'
 import StoryViewer from '../components/StoryViewer.jsx'
-import { Store, Search, X, Star, Smartphone, CheckCircle2, ShoppingCart, Users, ChevronRight } from 'lucide-react'
-import { formatMoney, formatDayMonth } from '../lib/format.js'
+import { Store, Search, X, Users, ChevronRight, LayoutGrid, Pizza, Utensils, Sandwich, CupSoda, IceCreamCone, Sparkles } from 'lucide-react'
+import DealTile, { isNewDeal } from '../components/DealTile.jsx'
+import { isDealOpenNow } from '../../supabase/functions/_shared/deal-availability.ts'
+import { formatMoney } from '../lib/format.js'
 
 function makeCode() {
   return String(Math.floor(1000 + Math.random() * 9000))
-}
-
-function makeJoinCode() {
-  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
-  let code = ''
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)]
-  }
-  return code
 }
 
 const finalPriceOf = studentPrice
@@ -32,11 +25,14 @@ function extractBudget(text) {
   return null
 }
 
-const getOfferBadge = offerBadge
+// Category circles: an icon until a business posts a photo in that category.
+const CATEGORY_ICONS = { all: LayoutGrid, Pizza, Tacos: Utensils, Burgers: Sandwich, Drinks: CupSoda, Desserts: IceCreamCone, Specials: Sparkles }
+const CHEAP = 3000 // RWF, the "Under 3,000 RWF" row
 
-function getOfferBadgeClass(type) {
-  // One brand green for every offer (style guide §1: no purple or blue).
-  return 'bg-accent text-background-foreground'
+function matchesCategory(deal, category) {
+  if (category === 'all') return true
+  const c = category.toLowerCase()
+  return deal.title.toLowerCase().includes(c) || (deal.description || '').toLowerCase().includes(c)
 }
 
 export default function DealsFeed({ advisorOpen = false } = {}) {
@@ -230,6 +226,18 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
     }
   }, [])
 
+  // Count a view once per deal per visit (the same deal can be in several rows).
+  const viewed = useRef(new Set())
+  useEffect(() => {
+    for (const deal of deals) {
+      if (viewed.current.has(deal.id)) continue
+      viewed.current.add(deal.id)
+      supabase.rpc('record_deal_view', { p_deal_id: deal.id }).then(({ error: viewError }) => {
+        if (viewError) console.warn('Could not record deal view:', viewError.message)
+      })
+    }
+  }, [deals])
+
   // --- Group stories by merchant with merchant data ---
   const groupedStories = useMemo(() => {
     const map = {}
@@ -274,10 +282,7 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
     }
 
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter((d) =>
-        d.title.toLowerCase().includes(selectedCategory.toLowerCase()) ||
-        (d.description && d.description.toLowerCase().includes(selectedCategory.toLowerCase()))
-      )
+      filtered = filtered.filter((d) => matchesCategory(d, selectedCategory))
     }
 
     // Smart Discovery v3:
@@ -421,6 +426,32 @@ const getDiscoveryScore = (deal) => {
     )
   }, [deals, budget, searchQuery, selectedCategory])
 
+  const filtering = budget != null || searchQuery.trim() !== '' || selectedCategory !== 'all'
+
+  // Rows that scroll sideways (shown when nothing is filtered). A row that
+  // would only repeat the full list, or is empty, is left out.
+  const rows = useMemo(() => {
+    if (filtering) return []
+    const now = Date.now()
+    const priced = (d) => finalPriceOf(d) != null
+    const candidates = [
+      ['Available now', visibleDeals.filter((d) => isDealOpenNow(d))],
+      [`Under ${formatMoney(CHEAP)}`, visibleDeals.filter((d) => priced(d) && finalPriceOf(d) <= CHEAP).sort((a, b) => finalPriceOf(a) - finalPriceOf(b))],
+      ['Group buys', visibleDeals.filter((d) => d.offer_type === 'group_buy')],
+      ['New this week', visibleDeals.filter((d) => isNewDeal(d, now))],
+    ]
+    return candidates.filter(([, list]) => list.length > 0 && list.length < visibleDeals.length)
+  }, [filtering, visibleDeals])
+
+  // First photo a business posted in each category, for its circle.
+  const categoryPhotos = useMemo(() => {
+    const photos = {}
+    for (const cat of categories) {
+      photos[cat] = deals.find((d) => d.image_url && matchesCategory(d, cat))?.image_url || null
+    }
+    return photos
+  }, [deals])
+
   if (loading) {
     return <p className="text-muted-foreground text-sm">Loading deals…</p>
   }
@@ -495,7 +526,7 @@ const getDiscoveryScore = (deal) => {
 
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <h2 className="font-display text-lg font-semibold">Your deals feed</h2>
+          <h2 className="sr-only">Find a deal</h2>
           {budget != null && (
             <button
               onClick={() => setBudget(null)}
@@ -527,20 +558,33 @@ const getDiscoveryScore = (deal) => {
           )}
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-1.5 rounded-lg text-sm whitespace-nowrap transition ${
-                selectedCategory === cat
-                  ? 'bg-primary text-primary-foreground font-medium'
-                  : 'bg-muted text-muted-foreground hover:text-foreground border border-border'
-              }`}
-            >
-              {cat === 'all' ? 'All' : cat}
-            </button>
-          ))}
+        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
+          {categories.map((cat) => {
+            const Icon = CATEGORY_ICONS[cat] || Utensils
+            const selected = selectedCategory === cat
+            const photo = cat === 'all' ? null : categoryPhotos[cat]
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                aria-pressed={selected}
+                className="flex w-16 shrink-0 flex-col items-center gap-1"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-full transition ${
+                    selected ? 'ring-2 ring-accent ring-offset-2 ring-offset-background' : ''
+                  } ${photo ? 'bg-muted' : selected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
+                >
+                  {photo ? <img src={photo} alt="" loading="lazy" className="h-full w-full object-cover" /> : <Icon size={24} />}
+                </span>
+                <span className={`max-w-16 truncate text-xs ${selected ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                  {cat === 'all' ? 'All' : cat}
+                </span>
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -551,18 +595,29 @@ const getDiscoveryScore = (deal) => {
       ) : visibleDeals.length === 0 ? (
         <p className="text-muted-foreground text-sm">Nothing fits that budget right now — try raising it.</p>
       ) : (
-        <div className="-mx-4 md:mx-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {visibleDeals.map((deal, index) => (
-              <div
-                key={deal.id}
-                className="animate-slideUp"
-                style={{ animationDelay: `${index * 80}ms` }}
-              >
-                <DealCard deal={deal} ratingStats={ratingStats[deal.id]} />
+        <div className="space-y-6">
+          {rows.map(([title, list], index) => (
+            // aria-labelledby takes a list of ids split by spaces: keep ids space-free.
+            <section key={title} aria-labelledby={`deal-row-${index}`}>
+              <h2 id={`deal-row-${index}`} className="mb-2 font-display text-lg font-semibold">{title}</h2>
+              <div className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:scroll-px-0 md:px-0">
+                {list.map((deal) => (
+                  <DealTile key={deal.id} deal={deal} ratingStats={ratingStats[deal.id]} className="w-[72%] max-w-[280px] shrink-0 snap-start" />
+                ))}
               </div>
-            ))}
-          </div>
+            </section>
+          ))}
+
+          <section aria-labelledby="row-all">
+            <h2 id="row-all" className="mb-2 font-display text-lg font-semibold">
+              {filtering ? `Results (${visibleDeals.length})` : 'All deals'}
+            </h2>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {visibleDeals.map((deal) => (
+                <DealTile key={deal.id} deal={deal} ratingStats={ratingStats[deal.id]} />
+              ))}
+            </div>
+          </section>
         </div>
       )}
 
@@ -575,218 +630,6 @@ const getDiscoveryScore = (deal) => {
           onOrder={handleOrderFromStory}
         />
       )}
-    </div>
-  )
-}
-
-// --- DealCard component (unchanged) ---
-function DealCard({ deal, ratingStats }) {
-  const navigate = useNavigate()
-  const [ordering, setOrdering] = useState(false)
-  const [startingGroup, setStartingGroup] = useState(false)
-  const [groupStartError, setGroupStartError] = useState('')
-  const [error, setError] = useState('')
-  const [transactionId, setTransactionId] = useState(null)
-  const [paymentStatus, setPaymentStatus] = useState(null)
-  const [orderId, setOrderId] = useState(null)
-  const [merchantPhone, setMerchantPhone] = useState(null)
-
-  const expiresLabel = deal.expires_at
-    ? formatDayMonth(deal.expires_at)
-    : null
-
-  useEffect(() => {
-    async function recordView() {
-      if (!deal?.id) return
-
-      const { error } = await supabase.rpc('record_deal_view', {
-        p_deal_id: deal.id,
-      })
-
-      if (error) {
-        console.warn('Could not record deal view:', error.message)
-      }
-    }
-
-    recordView()
-  }, [deal?.id])
-
-  useEffect(() => {
-    if (!orderId) return
-
-    let cancelled = false
-
-    const loadOrderStatus = async () => {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('status')
-        .eq('id', orderId)
-        .maybeSingle()
-
-      if (error) {
-        console.warn('Could not load order status:', error.message)
-        return
-      }
-
-      if (!cancelled && data?.status) {
-          setPaymentStatus(data.status === "pending_confirmation" ? "waiting_for_confirmation" : data.status)
-
-      }
-    }
-
-    loadOrderStatus()
-
-    const channel = liveChannel(`order-status-${orderId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders',
-          filter: `id=eq.${orderId}`,
-        },
-        () => {
-          loadOrderStatus()
-        }
-      )
-      .subscribe((status) => {
-        if (status === 'CHANNEL_ERROR') {
-          console.warn('Order status realtime subscription failed.')
-        }
-      })
-
-    return () => {
-      cancelled = true
-      supabase.removeChannel(channel)
-    }
-  }, [orderId])
-
-  const finalPrice = finalPriceOf(deal)
-  const originalPrice = struckOutPrice(deal)
-  const priced = hasStudentPrice(deal)
-
-  function handleOrder() {
-    navigate(`/deal/${deal.id}`)
-  }
-
-  async function handleStartGroupOrder() {
-    if (startingGroup) return
-    setStartingGroup(true)
-    setGroupStartError('')
-    try {
-      const code = makeJoinCode()
-      const { error: createError } = await supabase.rpc('create_group_order_with_host', {
-        p_deal_id: deal.id,
-        p_join_code: code,
-      })
-      if (createError) throw new Error(createError.message || 'Could not start group order')
-      navigate('/dashboard/orders')
-    } catch (err) {
-      console.error('Failed to start group order:', err)
-      setGroupStartError(err.message || 'Unable to start group order')
-      setStartingGroup(false)
-    }
-  }
-
-  return (
-    <div className="border border-border rounded-lg overflow-hidden bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md">
-      <div className="relative h-40 w-full">
-        {deal.image_url ? (
-          <img src={deal.image_url} alt={deal.title} className="h-full w-full object-cover" />
-        ) : (
-          <div className="h-full w-full bg-gradient-to-br from-accent/30 via-muted to-card flex items-center justify-center">
-            <ForkKnifeIcon />
-          </div>
-        )}
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/35 to-transparent" />
-        {getOfferBadge(deal) && (
-          <div className={`absolute top-3 right-3 font-display font-semibold text-sm rounded-lg px-3 py-1.5 shadow-lg ${getOfferBadgeClass(deal.offer_type || 'percentage')}`}>
-            {getOfferBadge(deal)}
-          </div>
-        )}
-      </div>
-
-      <div className="p-4 space-y-1">
-        <p className="text-muted-foreground text-xs uppercase tracking-wide">{deal.business_name}</p>
-        <h3 className="font-display font-semibold text-lg">{deal.title}</h3>
-        {deal.description && <p className="text-muted-foreground text-sm">{deal.description}</p>}
-        {ratingStats?.review_count > 0 && (
-          <p className="text-amber-500 text-sm flex items-center gap-1"><Star size={14} className="fill-amber-500" /> {ratingStats.average_rating} <span className="text-muted-foreground">({ratingStats.review_count} reviews)</span></p>
-        )}
-        <div className="flex items-center gap-2 text-xs pt-1">
-          {finalPrice != null ? (
-            <span className="flex items-center gap-2">
-              {originalPrice != null && (
-                <span className="line-through text-muted-foreground">{formatMoney(originalPrice)}</span>
-              )}
-              <span className="text-primary font-bold text-sm">{formatMoney(finalPrice)}</span>
-            </span>
-          ) : (
-            <span className="text-muted-foreground">Price not set</span>
-          )}
-          {expiresLabel && <span className="text-muted-foreground">Valid until {expiresLabel}</span>}
-        </div>
-
-        {paymentStatus === 'waiting_for_confirmation' ? (
-          <div className="mt-3 bg-accent/10 border border-accent/40 rounded-lg p-4 text-center space-y-2">
-            <p className="text-foreground text-sm font-medium flex items-center justify-center gap-2">
-              Waiting for business confirmation
-            </p>
-            <p className="text-muted-foreground text-xs">
-
-
-              The business has 5 minutes to confirm your order.
-            </p>
-          {merchantPhone && (
-            <a
-              href={`tel:${merchantPhone}`}
-              className="block w-full rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
-            >
-              Call Business
-            </a>
-          )}
-            <div className="mt-2 h-1 w-full bg-muted rounded-full overflow-hidden">
-              <div className="h-full w-1/2 bg-accent animate-pulse rounded-full" />
-            </div>
-          </div>
-        ) : paymentStatus === 'confirmed' ? (
-          <button
-            onClick={() => navigate(`/payment?order_id=${orderId}`)}
-            disabled={!orderId}
-            className="mt-3 w-full bg-primary hover:bg-accent-dim text-primary-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
-          >
-            Pay Now
-          </button>
-        ) : paymentStatus === 'paid' ? (
-          <div className="mt-3 bg-green-500/10 border border-green-500/40 rounded-lg p-4 text-center">
-            <p className="text-green-600 text-sm font-medium flex items-center justify-center gap-2">
-              <CheckCircle2 size={16} /> Payment confirmed
-            </p>
-          </div>
-        ) : (
-          deal.offer_type === 'group_buy' ? (
-            <button
-              onClick={handleStartGroupOrder}
-              disabled={startingGroup || !priced}
-              className="mt-3 w-full bg-primary hover:bg-accent-dim text-primary-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              <ShoppingCart size={16} />
-              {startingGroup ? 'Starting…' : 'Start group order'}
-            </button>
-          ) : (
-            <button
-              onClick={handleOrder}
-              disabled={ordering || !priced}
-              className="mt-3 w-full bg-primary hover:bg-accent-dim text-primary-foreground font-semibold rounded-lg py-2.5 transition disabled:opacity-50"
-            >
-              {ordering ? 'Processing...' : 'Order now'}
-            </button>
-          )
-        )}
-
-        {groupStartError && <p className="text-sm text-destructive mt-2">{groupStartError}</p>}
-        {error && <p className="text-sm text-destructive mt-2">{error}</p>}
-      </div>
     </div>
   )
 }
@@ -889,24 +732,6 @@ function SparkleIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 2l1.8 5.4L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.6L12 2z" />
-    </svg>
-  )
-}
-
-function ForkKnifeIcon() {
-  return (
-    <svg
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.4"
-      className="text-muted-foreground/40"
-    >
-      <path d="M6 2v7a2 2 0 0 0 2 2v11" />
-      <path d="M6 2v7M10 2v7" />
-      <path d="M18 2c-2 0-3 2-3 5v3c0 1 .5 1.5 1.5 1.5V22" />
     </svg>
   )
 }

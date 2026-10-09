@@ -77,7 +77,7 @@ sequenceDiagram
   participant DB as Database
   actor B as Business
 
-  S->>W: "Order now" on a deal
+  S->>W: taps a deal card on Home → deal page → "Continue to Order"
   W->>CO: deal, quantity
   CO->>DB: checks: student not banned, business approved,<br/>deal live, price set → order pending_confirmation<br/>(business has 5 min)
   CO-->>B: phone alert "New order" + live update
@@ -135,11 +135,11 @@ sequenceDiagram
   autonumber
   actor H as Host student
   actor F as Friends
-  participant W as Website<br/>DealsFeed / GroupOrders
+  participant W as Website<br/>DealDetail / GroupOrders
   participant DB as Database
   participant G as create-group-order-payment
   actor B as Business
-  H->>W: "Start a group" on a group-buy deal
+  H->>W: "Start group order" on a group-buy deal page
   W->>DB: create_group_order_with_host → join code (open 24 h)
   H-->>F: shares the code
   F->>DB: join with the code (group_order_members)
