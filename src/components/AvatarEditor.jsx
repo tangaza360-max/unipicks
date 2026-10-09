@@ -44,12 +44,16 @@ export default function AvatarEditor({ userId, name, avatarPath, onChange }) {
 
   return (
     <div className="flex flex-col items-center gap-2">
+      {/* Tapping the picture is a shortcut for the "Add photo" / "Change photo"
+          link below, so it is hidden from screen readers and the keyboard:
+          one clear control, named by its visible words (WCAG 2.5.3). */}
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={Boolean(busy)}
-        aria-label={avatarPath ? 'Change profile photo' : 'Add profile photo'}
-        className="group relative rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        aria-hidden="true"
+        tabIndex={-1}
+        className="group relative rounded-full"
       >
         <StudentAvatar src={avatarPath ? url : null} name={name} size="lg" alt="" />
         <span
@@ -59,7 +63,15 @@ export default function AvatarEditor({ userId, name, avatarPath, onChange }) {
           <Camera size={14} strokeWidth={2.5} />
         </span>
       </button>
-      <input ref={inputRef} type="file" accept="image/*" onChange={pick} className="hidden" data-testid="avatar-input" />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        onChange={pick}
+        aria-label="Choose a profile photo"
+        className="hidden"
+        data-testid="avatar-input"
+      />
       <div className="flex gap-4 whitespace-nowrap text-xs">
         <button
           type="button"
