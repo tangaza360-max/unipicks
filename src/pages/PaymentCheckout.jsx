@@ -237,7 +237,7 @@ export default function PaymentCheckout() {
           {status === 'confirmation_expired' && (
             <StatusPanel tone="bad" title="The business didn't respond in time">
               <p>Your order was cancelled. Nothing was charged.</p>
-              <Link to="/dashboard/deals" className="text-primary hover:underline">Browse other deals</Link>
+              <Link to="/dashboard/deals" className="text-primary underline underline-offset-2 hover:decoration-2">Browse other deals</Link>
             </StatusPanel>
           )}
 
@@ -246,7 +246,7 @@ export default function PaymentCheckout() {
               <p>{DECLINE_REASON_LABELS[order.decline_reason] || 'No reason was given.'}</p>
               {order.decline_reason_note && <p>“{order.decline_reason_note}”</p>}
               <p>Nothing was charged.</p>
-              <Link to="/dashboard/deals" className="text-primary hover:underline">Browse other deals</Link>
+              <Link to="/dashboard/deals" className="text-primary underline underline-offset-2 hover:decoration-2">Browse other deals</Link>
             </StatusPanel>
           )}
 
@@ -275,7 +275,7 @@ export default function PaymentCheckout() {
           {status === 'payment_expired' && (
             <StatusPanel tone="bad" title="Payment window expired">
               <p>This order wasn't paid within 5 minutes after the business accepted it.</p>
-              <Link to={`/deal/${order.deal_id}`} className="text-primary hover:underline">Order again</Link>
+              <Link to={`/deal/${order.deal_id}`} className="text-primary underline underline-offset-2 hover:decoration-2">Order again</Link>
             </StatusPanel>
           )}
 

@@ -244,11 +244,11 @@ export default function RegisterMerchant() {
             />
             <span>
               I agree to the{' '}
-              <a href="/terms" className="text-accent hover:underline">
+              <a href="/terms" className="text-accent underline underline-offset-2 hover:decoration-2">
                 Terms and Conditions
               </a>{' '}
               and{' '}
-              <a href="/privacy" className="text-accent hover:underline">
+              <a href="/privacy" className="text-accent underline underline-offset-2 hover:decoration-2">
                 Privacy Policy
               </a>
               .
@@ -259,7 +259,7 @@ export default function RegisterMerchant() {
           {alreadyRegistered && (
             <p role="alert" className="text-sm text-red-400">
               This email already has a Unipicks account.{' '}
-              <Link to="/login" className="text-accent hover:underline">
+              <Link to="/login" className="text-accent underline underline-offset-2 hover:decoration-2">
                 Log in instead
               </Link>
             </p>
@@ -276,14 +276,14 @@ export default function RegisterMerchant() {
 
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{' '}
-          <Link to="/login" className="text-accent hover:underline">
+          <Link to="/login" className="text-accent underline underline-offset-2 hover:decoration-2">
             Log in
           </Link>
         </p>
 
         <p className="text-center text-xs text-muted-foreground">
           Are you a student?{' '}
-          <Link to="/register" className="text-accent hover:underline">
+          <Link to="/register" className="text-accent underline underline-offset-2 hover:decoration-2">
             Sign up here
           </Link>
         </p>

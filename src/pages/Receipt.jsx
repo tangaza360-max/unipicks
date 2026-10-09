@@ -107,7 +107,7 @@ export default function Receipt() {
         <div role="alert" className="max-w-sm text-center space-y-4">
           <h1 className="font-display text-2xl font-semibold">No receipt</h1>
           <p className="text-muted-foreground text-sm">{error}</p>
-          <Link to="/dashboard/profile?view=orders" className="inline-block text-sm text-accent hover:underline">Back to my orders</Link>
+          <Link to="/dashboard/profile?view=orders" className="inline-block text-sm text-accent underline underline-offset-2 hover:decoration-2">Back to my orders</Link>
         </div>
       </div>
     )

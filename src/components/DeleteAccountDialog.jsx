@@ -123,7 +123,7 @@ export default function DeleteAccountDialog({ role, onClose }) {
             <p className="text-muted-foreground">
               You can't delete your account while you have active orders, an open dispute
               {isMerchant ? '' : ' or a group order you are hosting'}.{' '}
-              <Link to="/delete-account" className="text-primary hover:underline">
+              <Link to="/delete-account" className="text-primary underline underline-offset-2 hover:decoration-2">
                 Full details
               </Link>
             </p>

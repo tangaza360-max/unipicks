@@ -73,7 +73,7 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
             />
             <div className="mt-2 text-right">
-              <Link to="/forgot-password" className="text-xs text-accent hover:underline">
+              <Link to="/forgot-password" className="text-xs text-accent underline underline-offset-2 hover:decoration-2">
                 Forgot password?
               </Link>
             </div>
@@ -92,22 +92,22 @@ export default function Login() {
 
         <p className="text-center text-sm text-muted-foreground">
           New to Unipicks?{' '}
-          <Link to="/register" className="text-accent hover:underline">
+          <Link to="/register" className="text-accent underline underline-offset-2 hover:decoration-2">
             Create an account
           </Link>
         </p>
 
         <p className="text-center text-xs text-muted-foreground">
           Are you a business?{' '}
-          <Link to="/register/merchant" className="text-accent hover:underline">
+          <Link to="/register/merchant" className="text-accent underline underline-offset-2 hover:decoration-2">
             Sign up here
           </Link>
         </p>
 
         <p className="text-center text-xs text-muted-foreground">
-          <Link to="/terms" className="hover:text-foreground hover:underline">Terms</Link>
+          <Link to="/terms" className="hover:text-foreground underline underline-offset-2 hover:decoration-2">Terms</Link>
           {' · '}
-          <Link to="/privacy" className="hover:text-foreground hover:underline">Privacy</Link>
+          <Link to="/privacy" className="hover:text-foreground underline underline-offset-2 hover:decoration-2">Privacy</Link>
         </p>
       </div>
     </div>

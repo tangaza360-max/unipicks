@@ -76,7 +76,7 @@ export default function DeleteAccount() {
         <section className="space-y-2 border-t border-border pt-6">
           <h2 className="font-display text-xl font-semibold">Can't sign in?</h2>
           <p className="text-muted-foreground leading-7">
-            Email <a href={`mailto:${SUPPORT_EMAIL}?subject=Delete%20my%20Unipicks%20account`} className="text-primary hover:underline">{SUPPORT_EMAIL}</a> from
+            Email <a href={`mailto:${SUPPORT_EMAIL}?subject=Delete%20my%20Unipicks%20account`} className="text-primary underline underline-offset-2 hover:decoration-2">{SUPPORT_EMAIL}</a> from
             the email address on the account, with the subject “Delete my Unipicks account”. We'll confirm the request
             with you before deleting.
           </p>
@@ -127,8 +127,8 @@ export default function DeleteAccount() {
         </section>
 
         <footer className="space-y-2 border-t border-border pt-6 text-sm text-muted-foreground">
-          <p>Subject to change — see our <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link> for the current retention period.</p>
-          <p><Link to="/terms" className="text-primary hover:underline">Terms of Service</Link></p>
+          <p>Subject to change — see our <Link to="/privacy" className="text-primary underline underline-offset-2 hover:decoration-2">Privacy Policy</Link> for the current retention period.</p>
+          <p><Link to="/terms" className="text-primary underline underline-offset-2 hover:decoration-2">Terms of Service</Link></p>
         </footer>
       </article>
     </main>
