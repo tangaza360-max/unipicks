@@ -92,8 +92,9 @@ export default function DealDetail() {
         { target_deal_id: data.id }
       )
 
+      // The function returns a table: one row in a list.
       if (!cancelled && !ratingError) {
-        setRatingStats(ratingData)
+        setRatingStats(Array.isArray(ratingData) ? ratingData[0] ?? null : ratingData)
       }
 
       setLoading(false)

@@ -172,21 +172,23 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
 
       if (fetchError) {
         setError(fetchError.message)
-      } else {
-        setDeals(data || [])
-        if (data && data.length > 0) {
-          const stats = {}
-          for (const deal of data) {
-            const { data: ratingData, error: ratingError } = await supabase
-              .rpc('get_deal_rating_stats', { target_deal_id: deal.id })
-            if (!ratingError && ratingData) {
-              stats[deal.id] = ratingData
-            }
-          }
-          setRatingStats(stats)
-        }
+        setLoading(false)
+        return
       }
+
+      // Show the deals now; the stars follow in one request (not one per deal).
+      setDeals(data || [])
       setLoading(false)
+
+      const ids = (data || []).map((deal) => deal.id).slice(0, 200)
+      if (ids.length === 0) return
+      const { data: rows, error: ratingError } = await supabase.rpc('get_deals_rating_stats', { p_deal_ids: ids })
+      if (cancelled) return
+      if (ratingError) {
+        console.warn('Could not load star ratings:', ratingError.message)
+        return
+      }
+      setRatingStats(Object.fromEntries((rows || []).map((row) => [row.deal_id, row])))
     }
 
     loadDeals()
