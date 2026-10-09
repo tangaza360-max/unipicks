@@ -23,19 +23,6 @@ function getInitials(name = '') {
   return `${parts[0].slice(0, 1)}${parts[parts.length - 1].slice(0, 1)}`.toUpperCase()
 }
 
-function getGradientSeed(value = '') {
-  const normalized = value.trim().toLowerCase()
-
-  let hash = 0
-
-  for (let index = 0; index < normalized.length; index += 1) {
-    hash = (hash << 5) - hash + normalized.charCodeAt(index)
-    hash |= 0
-  }
-
-  return Math.abs(hash)
-}
-
 // userId: show that student's profile picture (if they have one and you
 // may see it); otherwise their initials.
 export default function StudentAvatar({
@@ -52,10 +39,6 @@ export default function StudentAvatar({
   const picture = src || fetched
   const [failed, setFailed] = useState(false)
   useEffect(() => setFailed(false), [picture])
-  const seed = useMemo(() => getGradientSeed(name), [name])
-
-  const gradientAngle = seed % 360
-  const secondAngle = (gradientAngle + 80) % 360
 
   return (
     <span
@@ -64,15 +47,14 @@ export default function StudentAvatar({
       aria-hidden={alt === '' ? 'true' : undefined}
       className={[
         'relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full',
-        'bg-gradient-to-br from-accent/80 via-accent/40 to-foreground/20',
-        'font-semibold text-foreground',
+        // Solid brand circle with dark initials (same pair as the main
+        // buttons, so the contrast is already checked). The old gradient had
+        // a colour stop in "deg", which browsers reject, so no circle showed.
+        'bg-primary font-semibold text-primary-foreground',
         avatarSizes[size] ?? avatarSizes.md,
         ring ? 'ring-2 ring-background' : '',
         className,
       ].join(' ')}
-      style={{
-        backgroundImage: `linear-gradient(${gradientAngle}deg, hsl(var(--color-primary)), hsl(var(--color-bg-interactive)) ${secondAngle}deg)`,
-      }}
     >
       {picture && !failed ? (
         <img
