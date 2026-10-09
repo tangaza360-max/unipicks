@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import { STORY_BUCKET } from '../lib/studentStories.js'
+import { AVATAR_BUCKET } from '../lib/studentAvatars.js'
 import { formatDateTime } from '../lib/format.js'
 
 // Admin → Reports (fix 8; social audit D5). Reports from students and
@@ -13,7 +14,7 @@ const STATUS_LABELS = {
   dismissed: 'Dismissed',
 }
 
-const CONTEXT_LABELS = { chat: 'from a chat', profile: 'from a profile', business: 'about a business', story: 'about a story' }
+const CONTEXT_LABELS = { chat: 'from a chat', profile: 'from a profile', business: 'about a business', story: 'about a story', avatar: 'about a profile photo' }
 
 const FILTERS = [
   ['open', 'Open'],
@@ -41,6 +42,7 @@ export default function AdminReports() {
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [storyUrls, setStoryUrls] = useState({}) // media path → private link
+  const [avatarUrls, setAvatarUrls] = useState({}) // photo path → private link
 
   useEffect(() => {
     loadReports()
@@ -61,6 +63,16 @@ export default function AdminReports() {
         .createSignedUrls(paths, 3600)
       if (linkError) console.error('Failed to open reported story photos:', linkError.message)
       setStoryUrls(Object.fromEntries((links || []).map((link) => [link.path, link.signedUrl])))
+    }
+
+    // Reported profile photos are private too. A removed photo gets no link.
+    const avatarPaths = [...new Set((data || []).map((r) => r.avatar_path).filter(Boolean))]
+    if (avatarPaths.length) {
+      const { data: links, error: linkError } = await supabase.storage
+        .from(AVATAR_BUCKET)
+        .createSignedUrls(avatarPaths, 3600)
+      if (linkError) console.error('Failed to open reported profile photos:', linkError.message)
+      setAvatarUrls(Object.fromEntries((links || []).filter((link) => link.signedUrl).map((link) => [link.path, link.signedUrl])))
     }
     setLoading(false)
   }
@@ -115,6 +127,22 @@ export default function AdminReports() {
     if (!removeError && path) {
       const { error: fileError } = await supabase.storage.from(STORY_BUCKET).remove([path])
       if (fileError) console.error('Story photo not removed:', fileError.message)
+    }
+    setSubmitting(false)
+    if (removeError) {
+      setError(removeError.message)
+      return
+    }
+    await loadReports()
+  }
+
+  async function removeAvatarPhoto(report) {
+    if (!window.confirm(`Remove the profile photo of ${report.reported_name || 'this student'}? Their initials will show instead.`)) return
+    setSubmitting(true)
+    const { data: path, error: removeError } = await supabase.rpc('admin_remove_avatar', { p_report_id: report.id })
+    if (!removeError && path) {
+      const { error: fileError } = await supabase.storage.from(AVATAR_BUCKET).remove([path])
+      if (fileError) console.error('Profile photo not removed:', fileError.message)
     }
     setSubmitting(false)
     if (removeError) {
@@ -232,6 +260,28 @@ export default function AdminReports() {
                   </div>
                 )}
 
+                {report.avatar_path && (
+                  <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                    {avatarUrls[report.avatar_path] ? (
+                      <img
+                        src={avatarUrls[report.avatar_path]}
+                        alt={`Reported profile photo of ${report.reported_name || 'this student'}`}
+                        className="h-24 w-24 flex-shrink-0 rounded-full bg-muted object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-full bg-muted text-center text-xs text-muted-foreground">
+                        No photo
+                      </div>
+                    )}
+                    <div className="min-w-0 space-y-1 text-sm">
+                      <p className="text-xs text-muted-foreground">Reported profile photo</p>
+                      {!avatarUrls[report.avatar_path] && (
+                        <p className="text-xs text-muted-foreground">This photo was removed.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {report.story_removed && (
                   <p className="text-xs text-muted-foreground">The reported story was removed.</p>
                 )}
@@ -276,6 +326,16 @@ export default function AdminReports() {
                         className="text-xs border border-[color:var(--status-bad-fg)] text-[color:var(--status-bad-fg)] hover:bg-[color:var(--status-bad-bg)] rounded-lg px-3 py-2 transition disabled:opacity-50"
                       >
                         Remove story
+                      </button>
+                    )}
+                    {report.avatar_path && avatarUrls[report.avatar_path] && (
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        onClick={() => removeAvatarPhoto(report)}
+                        className="text-xs border border-[color:var(--status-bad-fg)] text-[color:var(--status-bad-fg)] hover:bg-[color:var(--status-bad-bg)] rounded-lg px-3 py-2 transition disabled:opacity-50"
+                      >
+                        Remove photo
                       </button>
                     )}
                     {!report.reported_banned && !report.reported_deleted && (

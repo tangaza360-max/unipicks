@@ -138,6 +138,25 @@ echo " removing"
 check "a friend can't delete the picture" "$(as_user $F "delete from storage.objects where bucket_id = 'student-avatars' and name = '$PIC' returning 1;")" ""
 check "the owner can" "$(as_user $A "delete from storage.objects where bucket_id = 'student-avatars' and name = '$PIC' returning 1;")" "1"
 
+echo " reporting a profile photo (20261009120000)"
+PIC2="$A/55555555-5555-4555-8555-555555555555.jpg"
+q "insert into storage.objects (bucket_id, name) values ('student-avatars', '$PIC2'); update public.student_profiles set avatar_path = '$PIC2' where user_id = '$A';" >/dev/null
+rep() { as_user "$1" "insert into public.student_reports (reporter_id, reported_id, category, context, status${3:-}) values ('$1', '$2', 'Inappropriate behavior', 'avatar', 'pending'${4:-}) returning coalesce(avatar_path, 'none');"; }
+check "a student reports Aline's photo; the report keeps that photo" "$(rep $S $A)" "$PIC2"
+check "someone Aline blocked can't report it" "$(rep $K $A)" "You can only report a photo you can see."
+check "a student with no photo can't be reported for one" "$(rep $S $F)" "This student has no profile photo."
+check "the phone can't choose the photo for other report types" "$(as_user $S "insert into public.student_reports (reporter_id, reported_id, category, context, status, avatar_path) values ('$S', '$A', 'Spam', 'profile', 'pending', 'x/y.jpg') returning coalesce(avatar_path, 'none');")" "none"
+check "while the report is open, Aline can't delete that file" "$(as_user $A "delete from storage.objects where bucket_id = 'student-avatars' and name = '$PIC2' returning 1;")" ""
+check "she can still take it off her profile" "$(as_user $A "update public.student_profiles set avatar_path = null where user_id = '$A' returning 1;")" "1"
+q "update public.student_profiles set avatar_path = '$PIC2' where user_id = '$A';" >/dev/null
+R=$(q "select id from public.student_reports where context = 'avatar' and reporter_id = '$S' limit 1")
+check "admin sees the reported photo in the report list" "$(as_user $AD "select avatar_path from public.get_admin_reports() where id = '$R';")" "$PIC2"
+check "a student can't use the admin remove" "$(as_user $S "select public.admin_remove_avatar('$R');")" "Only admins can remove profile photos"
+check "admin removes it: returns the file to delete" "$(as_user $AD "select public.admin_remove_avatar('$R');")" "$PIC2"
+check "the photo is off Aline's profile" "$(q "select coalesce(avatar_path, 'none') from public.student_profiles where user_id = '$A'")" "none"
+check "the action is in the admin log" "$(q "select count(*) from public.activity_logs where action = 'remove_avatar' and target_id = '$A'")" "1"
+check "admin can delete the file" "$(as_user $AD "delete from storage.objects where bucket_id = 'student-avatars' and name = '$PIC2' returning 1;")" "1"
+
 echo " deleting the account empties the picture folder"
 TOMB=$(as_user '' "select public.tombstone_user('$A', null)::text;")
 check "student-avatars folder is on the clean-up list" "$(echo "$TOMB" | grep -o "\"bucket\": \"student-avatars\", \"prefix\": \"$A\"")" "\"bucket\": \"student-avatars\", \"prefix\": \"$A\""

@@ -19,6 +19,7 @@ import Button from '../components/Button.jsx'
 import { STORY_POSTED_EVENT, openStoryCamera } from '../lib/studentStories.js'
 import StudentStoryViewer from '../components/StudentStoryViewer.jsx'
 import StudentAvatar from '../components/StudentAvatar.jsx'
+import { useStudentAvatar } from '../lib/studentAvatars.js'
 
 export default function Social() {
   const searchInputRef = useRef(null)
@@ -60,7 +61,8 @@ export default function Social() {
   const [relationshipLoading, setRelationshipLoading] = useState(false)
   const [relationshipActionLoading, setRelationshipActionLoading] = useState(false)
   const [relationshipError, setRelationshipError] = useState('')
-  const [showReport, setShowReport] = useState(false)
+  const [showReport, setShowReport] = useState(null) // null, 'profile' or 'avatar'
+  const selectedAvatarUrl = useStudentAvatar(selectedStudent?.user_id)
   const [relationshipMessage, setRelationshipMessage] = useState('')
 
   useEffect(() => {
@@ -487,11 +489,21 @@ export default function Social() {
               {relationship !== 'blocked-me' && relationship !== 'self' && (
                 <button
                   type="button"
-                  onClick={() => setShowReport(true)}
+                  onClick={() => setShowReport('profile')}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-red-400 hover:bg-muted"
                 >
                   <Flag size={16} />
                   Report
+                </button>
+              )}
+              {relationship !== 'blocked-me' && relationship !== 'self' && selectedAvatarUrl && (
+                <button
+                  type="button"
+                  onClick={() => setShowReport('avatar')}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-red-400 hover:bg-muted"
+                >
+                  <Flag size={16} />
+                  Report photo
                 </button>
               )}
             </div>
@@ -500,8 +512,8 @@ export default function Social() {
               <ReportDialog
                 reportedId={selectedStudent.user_id}
                 reportedName={selectedStudent.display_name || selectedStudent.username}
-                context="profile"
-                onClose={() => setShowReport(false)}
+                context={showReport}
+                onClose={() => setShowReport(null)}
               />
             )}
 
