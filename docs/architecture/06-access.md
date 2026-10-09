@@ -49,6 +49,11 @@ flowchart LR
 
 ## Who can read and change each main table
 
+Every rule that checks "is this the signed-in user?" writes it as
+`(SELECT auth.uid())`, so Postgres works out the user once per query, not once
+per row (migration `20261009090000`, Supabase advisor `auth_rls_initplan`).
+Write new rules the same way.
+
 | Table | Not logged in | Student | Business | Admin | Changed by |
 |---|---|---|---|---|---|
 | `deals` | live deals of approved businesses | same | own deals (all), add/edit/delete own if approved | — | business; price and seller name checked by triggers |
