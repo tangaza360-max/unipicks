@@ -6,6 +6,7 @@ import { STORY_BUCKET } from '../lib/studentStories.js'
 import { formatTime } from '../lib/format.js'
 import Button from './Button.jsx'
 import ReportDialog from './ReportDialog.jsx'
+import StudentAvatar from './StudentAvatar.jsx'
 
 const STORY_MS = 5000
 const TAP_MS = 250
@@ -267,9 +268,7 @@ export default function StudentStoryViewer({ owners, startIndex = 0, onClose }) 
         </div>
 
         <div className="mt-2 flex items-center gap-2">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-sm font-semibold">
-            {(owner?.display_name || 'S').charAt(0).toUpperCase()}
-          </div>
+          <StudentAvatar userId={owner?.student_id} name={owner?.display_name || 'S'} size="xs" alt="" className="!h-9 !w-9 text-white" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{ownerName}</p>
             {story && (

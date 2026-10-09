@@ -18,6 +18,7 @@ import BackLink from '../components/BackLink.jsx'
 import Button from '../components/Button.jsx'
 import { STORY_POSTED_EVENT, openStoryCamera } from '../lib/studentStories.js'
 import StudentStoryViewer from '../components/StudentStoryViewer.jsx'
+import StudentAvatar from '../components/StudentAvatar.jsx'
 
 export default function Social() {
   const searchInputRef = useRef(null)
@@ -343,11 +344,13 @@ export default function Social() {
 
           <div className="px-5 py-8">
             <div className="flex flex-col items-center text-center">
-              <div className="w-24 h-24 rounded-full bg-muted border border-border flex items-center justify-center">
-                <span className="text-3xl font-semibold">
-                  {selectedStudent.display_name?.charAt(0)?.toUpperCase() || '?'}
-                </span>
-              </div>
+              <StudentAvatar
+                userId={selectedStudent.user_id}
+                name={selectedStudent.display_name || '?'}
+                size="xl"
+                alt=""
+                className="border border-border"
+              />
 
               <h1 className="mt-4 text-xl font-semibold">
                 {selectedStudent.display_name}
@@ -610,11 +613,13 @@ export default function Social() {
                             className="w-full text-left px-4 py-4 hover:bg-muted/50 transition"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-11 h-11 rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0">
-                                <span className="text-sm font-semibold">
-                                  {student.display_name?.charAt(0)?.toUpperCase() || '?'}
-                                </span>
-                              </div>
+                              <StudentAvatar
+                                userId={student.user_id}
+                                name={student.display_name || '?'}
+                                size="sm"
+                                alt=""
+                                className="!h-11 !w-11 border border-border"
+                              />
 
                               <div className="min-w-0">
                                 <p className="font-medium truncate">
@@ -656,9 +661,7 @@ export default function Social() {
                       }`}
                     >
                       {myStoryCount > 0 ? (
-                        <span className="text-lg font-semibold">
-                          {(myStory.display_name || 'Y').charAt(0).toUpperCase()}
-                        </span>
+                        <StudentAvatar userId={myStory.student_id} name={myStory.display_name || 'You'} size="lg" alt="" className="!h-[54px] !w-[54px]" />
                       ) : (
                         <Plus size={22} className="text-muted-foreground" />
                       )}
@@ -696,7 +699,7 @@ export default function Social() {
                                   friend.has_unseen ? 'border-[3px] border-accent' : 'border-2 border-border'
                                 }`}
                               >
-                                {(friend.display_name || 'S').charAt(0).toUpperCase()}
+                                <StudentAvatar userId={friend.student_id} name={friend.display_name || 'S'} size="lg" alt="" className="!h-[54px] !w-[54px]" />
                               </span>
                               <span className="w-full truncate text-center text-xs">
                                 {friend.display_name}

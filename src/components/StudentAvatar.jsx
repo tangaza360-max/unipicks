@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useStudentAvatar } from '../lib/studentAvatars.js'
 
 const avatarSizes = {
   xs: 'h-8 w-8 text-xs',
@@ -35,8 +36,11 @@ function getGradientSeed(value = '') {
   return Math.abs(hash)
 }
 
+// userId: show that student's profile picture (if they have one and you
+// may see it); otherwise their initials.
 export default function StudentAvatar({
   src,
+  userId,
   name = '',
   size = 'md',
   alt,
@@ -44,6 +48,10 @@ export default function StudentAvatar({
   ring = false,
 }) {
   const initials = useMemo(() => getInitials(name), [name])
+  const fetched = useStudentAvatar(src ? null : userId)
+  const picture = src || fetched
+  const [failed, setFailed] = useState(false)
+  useEffect(() => setFailed(false), [picture])
   const seed = useMemo(() => getGradientSeed(name), [name])
 
   const gradientAngle = seed % 360
@@ -63,12 +71,13 @@ export default function StudentAvatar({
         backgroundImage: `linear-gradient(${gradientAngle}deg, hsl(var(--color-primary)), hsl(var(--color-bg-interactive)) ${secondAngle}deg)`,
       }}
     >
-      {src ? (
+      {picture && !failed ? (
         <img
-          src={src}
+          src={picture}
           alt={alt ?? name}
           className="h-full w-full object-cover"
           loading="lazy"
+          onError={() => setFailed(true)}
         />
       ) : (
         <span aria-hidden="true">{initials}</span>

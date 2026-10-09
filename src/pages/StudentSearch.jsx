@@ -198,7 +198,7 @@ export default function StudentSearch() {
             const isRequesting = Boolean(requestingIds[person.user_id])
             return (
               <article key={person.user_id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 sm:p-4">
-                <StudentAvatar name={person.display_name || 'Student'} size="md" />
+                <StudentAvatar userId={person.user_id} name={person.display_name || 'Student'} size="md" alt="" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{person.display_name || 'Student'}</p>
                   <p className="truncate text-xs text-muted-foreground">

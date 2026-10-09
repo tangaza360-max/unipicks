@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { formatDate, formatDayMonth } from '../lib/format.js'
+import StudentAvatar from './StudentAvatar.jsx'
 
 const TABS = [
   { id: 'notifications', label: 'Notifications' },
@@ -323,9 +324,12 @@ export default function SocialActivity() {
                       key={request.id}
                       className="flex items-center gap-3 rounded-xl border border-border p-4"
                     >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted font-semibold">
-                        {request.display_name?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
+                      <StudentAvatar
+                        userId={request.direction === 'outgoing' ? request.receiver_id : request.sender_id}
+                        name={request.display_name || '?'}
+                        size="sm"
+                        alt=""
+                      />
 
                       <div className="min-w-0 flex-1">
                         <p className="font-medium">{request.display_name}</p>
@@ -418,9 +422,12 @@ export default function SocialActivity() {
                       key={request.id}
                       className="flex items-center gap-3 rounded-xl border border-border p-4"
                     >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted font-semibold">
-                        {request.display_name?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
+                      <StudentAvatar
+                        userId={request.direction === 'outgoing' ? request.receiver_id : request.sender_id}
+                        name={request.display_name || '?'}
+                        size="sm"
+                        alt=""
+                      />
 
                       <div className="min-w-0 flex-1">
                         <p className="font-medium">{request.display_name}</p>
