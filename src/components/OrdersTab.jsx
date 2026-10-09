@@ -119,6 +119,13 @@ export default function OrdersTab() {
       return
     }
 
+    // Collected orders already rated don't ask again.
+    const { data: myRatings } = await supabase
+      .from('ratings')
+      .select('redemption_id')
+      .eq('student_id', userId)
+    const rated = new Set((myRatings || []).map((r) => r.redemption_id))
+
     const { data: normal, error: normalError } = await supabase
       .from('orders')
       .select('id, deal_id, merchant_id, quantity, unit_price, total_price, status, ready_at, decline_reason, decline_reason_note, dispute_status, dispute_reason, dispute_raised_at, dispute_resolution_note, created_at, payment_deadline, merchant_phone, deals(title, business_name), redemptions(code)')
@@ -139,7 +146,8 @@ export default function OrdersTab() {
     // rules) comes back with group_orders = null; skip it instead of crashing.
     let filteredJoined = (joined || []).filter((membership) => membership.group_orders)
     let filteredNormal = normal || []
-    let filteredRedemptions = redeemed || []
+    // "Rate your food" shows in both views: it is something to do.
+    const filteredRedemptions = (redeemed || []).filter((r) => !rated.has(r.id))
 
     if (!showAllOrders) {
       filteredNormal = filteredNormal.filter((order) => {
@@ -157,7 +165,6 @@ export default function OrdersTab() {
       filteredJoined = filteredJoined.filter(
         (membership) => membership.group_orders?.status === 'open'
       )
-      filteredRedemptions = []
     }
 
     setHostedOrders(filteredHosted)
@@ -293,7 +300,7 @@ export default function OrdersTab() {
       {redemptions.length > 0 && (
         <div>
           <h3 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-3">
-            Ordered deals
+            Rate your food
           </h3>
           <div className="space-y-3">
             {redemptions.map((redemption) => (
