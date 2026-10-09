@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { liveChannel } from '../lib/realtime.js'
 import ChatThread from '../components/ChatThread.jsx'
 import { Store, Users } from 'lucide-react'
+import StudentAvatar from '../components/StudentAvatar.jsx'
 
 export default function Messages({
   initialConversation = null,
@@ -516,9 +517,7 @@ const [studentConversations, setStudentConversations] = useState([])
               }
               className="w-full text-left border border-border rounded-lg p-3 hover:border-accent/50 transition flex items-center gap-3"
             >
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0">
-                <Users size={18} />
-              </div>
+              <StudentAvatar userId={student.id} name={student.displayName || 'Student'} size="sm" alt="" />
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">

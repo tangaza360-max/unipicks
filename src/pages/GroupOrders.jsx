@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Check, Copy, ShoppingCart, Users } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { formatMoney } from '../lib/format.js'
+import StudentAvatar from '../components/StudentAvatar.jsx'
 
 // Groups stay open for 24 hours (fix 7); show how long is left.
 function closesIn(expiresAt) {
@@ -421,7 +422,8 @@ function HostedOrderCard({ order, onChanged }) {
           )}
         </>
       )}
-      expanded={expanded}
+      // The host always sees who joined while the group is open.
+      expanded={expanded || order.status === 'open'}
       error={submitError}
     >
       {order.status === 'open' && (
@@ -546,8 +548,11 @@ function GroupOrderCard({ order, hostLabel, actions, expanded, error, children }
         {expanded && members.length > 0 && (
           <div className="space-y-1 border-t border-border pt-2 text-xs text-muted-foreground">
             {members.map((member) => (
-              <div key={member.id} className="flex justify-between gap-2">
-                <span className="truncate">{member.student_name || 'Student'} × {member.quantity}</span>
+              <div key={member.id} className="flex items-center justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-2">
+                  <StudentAvatar userId={member.student_id} name={member.student_name || 'Student'} size="xs" alt="" className="!h-6 !w-6 text-[10px]" />
+                  <span className="truncate">{member.student_name || 'Student'} × {member.quantity}</span>
+                </span>
                 {unitPrice != null && <span>{formatMoney(Number(member.quantity || 0) * unitPrice)}</span>}
               </div>
             ))}

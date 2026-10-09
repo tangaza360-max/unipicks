@@ -7,6 +7,7 @@ import { Flag } from 'lucide-react'
 import ReportDialog from './ReportDialog.jsx'
 import { formatDate, formatTime } from '../lib/format.js'
 import BackLink from './BackLink.jsx'
+import StudentAvatar from './StudentAvatar.jsx'
 
 
 function dayKey(iso) {
@@ -235,6 +236,9 @@ export default function ChatThread({
     <div className="flex flex-col h-[calc(100dvh-10rem)] md:h-[70vh] bg-card">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
         <BackLink onClick={onBack} />
+        {!isGroup && headerRole === 'student' && otherUserId && (
+          <StudentAvatar userId={otherUserId} name={headerName} size="xs" alt="" />
+        )}
         <p className="font-display font-semibold text-sm">{headerName}</p>
         {headerRole && headerRole !== 'deleted' && (
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
@@ -276,8 +280,17 @@ export default function ChatThread({
                   </div>
                 )}
                 <div
-                  className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
+                  className={`flex items-end gap-2 ${isMine ? 'justify-end' : 'justify-start'}`}
                 >
+                  {isGroup && !isMine && (
+                    <StudentAvatar
+                      userId={m.sender_id}
+                      name={senderProfiles[m.sender_id]?.displayName || 'Student'}
+                      size="xs"
+                      alt=""
+                      className="mb-1"
+                    />
+                  )}
                   <div
                     className={`flex max-w-[75%] flex-col ${isMine ? 'items-end' : 'items-start'}`}
                   >

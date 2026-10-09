@@ -42,6 +42,12 @@ export default function Social() {
   }, [loadStoryTray])
 
   const myStory = storyTray.find((row) => row.is_me)
+  const [me, setMe] = useState(null) // { id, name } for the "Your story" circle
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setMe({ id: data.user.id, name: data.user.user_metadata?.full_name || 'You' })
+    })
+  }, [])
   const myStoryCount = myStory?.story_count || 0
   const friendStories = storyTray.filter((row) => !row.is_me)
   const [showActivity, setShowActivity] = useState(false)
@@ -654,16 +660,26 @@ export default function Social() {
                           : openStoryCamera()
                       }
                       aria-label={myStoryCount > 0 ? 'View your story' : 'Add to your story'}
-                      className={`flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full ${
+                      className={`relative flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full ${
                         myStoryCount > 0
                           ? 'border-[3px] border-accent bg-muted'
                           : 'border-2 border-dashed border-border'
                       }`}
                     >
-                      {myStoryCount > 0 ? (
-                        <StudentAvatar userId={myStory.student_id} name={myStory.display_name || 'You'} size="lg" alt="" className="!h-[54px] !w-[54px]" />
-                      ) : (
-                        <Plus size={22} className="text-muted-foreground" />
+                      <StudentAvatar
+                        userId={myStory?.student_id || me?.id}
+                        name={myStory?.display_name || me?.name || 'You'}
+                        size="lg"
+                        alt=""
+                        className="!h-[54px] !w-[54px]"
+                      />
+                      {myStoryCount === 0 && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-accent text-background"
+                        >
+                          <Plus size={14} strokeWidth={3} />
+                        </span>
                       )}
                     </button>
                     <div className="min-w-0 flex-1">
