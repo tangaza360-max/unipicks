@@ -199,7 +199,9 @@ echo " self-service deletion of student S"
 q "insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values
   ('$S','https://push.example/s','k','a'), ('$B','https://push.example/b','k','a')"
 CHATS_BEFORE=$(q "select count(*) from public.chat_messages")
-check "tombstone_user returns deleted" "$(tomb $S null)" "deleted"
+TOMB_S=$(as_user '' "select public.tombstone_user('$S', null)::text;")
+check "tombstone_user returns deleted" "$(echo "$TOMB_S" | grep -o '"status": "deleted"')" '"status": "deleted"'
+check "the student's story photos folder is emptied too (20261009100000)" "$(echo "$TOMB_S" | grep -o "\"bucket\": \"student-stories\", \"prefix\": \"$S\"")" "\"bucket\": \"student-stories\", \"prefix\": \"$S\""
 
 echo "  deleted (personal / social)"
 for t in "student_profiles:user_id" "friend_requests:sender_id" "friendships:student_a" "message_requests:receiver_id" \
