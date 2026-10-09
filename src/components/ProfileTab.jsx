@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
+  ChevronRight,
+  History,
   Mail,
   MapPin,
   Moon,
   Phone,
+  Settings,
   Sun,
   GraduationCap,
   IdCard,
   Star,
   LogOut,
   UserRound,
+  Users,
   ShieldCheck,
   Trash2,
 } from 'lucide-react'
@@ -28,6 +32,8 @@ import { useStudentAvatar } from '../lib/studentAvatars.js'
 // University and student ID are set server-side from the verified email
 // domain (auth app_metadata, which the client cannot write). user_metadata
 // is user-editable, so it is never used for verified identity.
+const VIEWS = ['orders', 'details', 'social', 'settings']
+
 function verifiedIdentityOf(user) {
   const app = user?.app_metadata || {}
   return {
@@ -79,16 +85,36 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
     loadUser()
   }, [])
 
-  const [showOrderHistory, setShowOrderHistory] = useState(false)
   const [showDeleteAccount, setShowDeleteAccount] = useState(false)
   const location = useLocation()
 
-  // Dispute notifications link to /dashboard/profile?view=orders.
+  // The profile is a short menu (like the main food apps); each row opens a
+  // page: ?view=orders | details | social | settings. In the address, so the
+  // phone's Back button closes it. Dispute notifications and receipts link to
+  // ?view=orders.
+  const view = VIEWS.includes(new URLSearchParams(location.search).get('view'))
+    ? new URLSearchParams(location.search).get('view')
+    : null
+  const showOrderHistory = view === 'orders'
+
+  function openView(next) {
+    navigate(`/dashboard/profile?view=${next}`, { state: { fromMenu: true } })
+  }
+
+  function closeView() {
+    if (location.state?.fromMenu) navigate(-1)
+    else navigate('/dashboard/profile', { replace: true })
+  }
+
+  // Leaving a page drops unsaved edits, like pressing Cancel.
   useEffect(() => {
-    if (new URLSearchParams(location.search).get('view') === 'orders') {
-      setShowOrderHistory(true)
-    }
-  }, [location.search])
+    setEditing(false)
+    setEditingSocial(false)
+    setError('')
+    setSuccess('')
+    setSocialError('')
+    setSocialSuccess('')
+  }, [view])
 
   // Opening Order History is where dispute updates are shown (OrdersTab),
   // so mark the student's unread dispute notifications as read then.
@@ -418,36 +444,48 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
   const verified = verifiedIdentityOf(user)
   const isMerchant = role === 'merchant'
 
-  if (showOrderHistory) {
+  const ordersHint =
+    needsActionCount > 0
+      ? `${needsActionCount} order${needsActionCount === 1 ? '' : 's'} accepted — pay before the deadline`
+      : disputeUnreadCount > 0
+        ? 'Your dispute has an update'
+        : 'Your past and current orders'
+
+  if (view) {
+    const titles = { orders: 'My orders', details: 'My details', social: 'Social profile', settings: 'Settings' }
+    const canEdit =
+      (view === 'details' && !editing) ||
+      (view === 'social' && !socialProfileLoading && socialProfile && !editingSocial)
     return (
       <div className="space-y-4">
-        <BackLink onClick={() => setShowOrderHistory(false)} />
-        <h2 className="font-display text-xl font-semibold">Order History</h2>
-        <OrdersTab />
-      </div>
-    )
-  }
+        <BackLink onClick={closeView} />
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-display text-xl font-semibold">{titles[view]}</h2>
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => {
+                if (view === 'details') {
+                  setEditing(true)
+                  setError('')
+                  setSuccess('')
+                } else {
+                  setEditingSocial(true)
+                  setSocialError('')
+                  setSocialSuccess('')
+                }
+              }}
+              className="min-h-11 px-1 text-sm text-accent hover:underline"
+            >
+              Edit
+            </button>
+          )}
+        </div>
 
-  return (
-    <div className="space-y-6">
-      {/* Main Profile */}
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-xl font-semibold">Account Information</h2>
+        {view === 'orders' && <OrdersTab />}
 
-        {!editing && (
-          <button
-            onClick={() => {
-              setEditing(true)
-              setError('')
-              setSuccess('')
-            }}
-            className="text-sm text-accent hover:underline"
-          >
-            Edit
-          </button>
-        )}
-      </div>
-
+        {view === 'details' && (
+          <>
       {editing ? (
         <div className="space-y-5 bg-card border border-border rounded-lg p-6 shadow-sm">
           <div>
@@ -652,36 +690,14 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
         </div>
       )}
 
-      {/* Social Profile */}
-      {isStudent && (
-        <section className="space-y-4 border-t border-border pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-display text-lg font-semibold">
-                Social Profile
-              </h3>
+          </>
+        )}
 
-              <p className="text-sm text-muted-foreground mt-1">
-                Your profile for connecting with other Unipicks students.
-              </p>
-            </div>
-
-            {!socialProfileLoading &&
-              socialProfile &&
-              !editingSocial && (
-                <button
-                  onClick={() => {
-                    setEditingSocial(true)
-                    setSocialError('')
-                    setSocialSuccess('')
-                  }}
-                  className="text-sm text-accent hover:underline"
-                >
-                  Edit
-                </button>
-              )}
-          </div>
-
+        {view === 'social' && (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Your profile for connecting with other Unipicks students.
+            </p>
           {socialProfileLoading ? (
             <div className="bg-card border border-border rounded-lg p-6">
               <p className="text-sm text-muted-foreground">
@@ -870,12 +886,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
           ) : (
             <div className="space-y-5 bg-card border border-border rounded-lg p-6 shadow-sm">
               <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:text-left">
-                <AvatarEditor
-                  userId={socialProfile.user_id}
-                  name={socialProfile.display_name}
-                  avatarPath={socialProfile.avatar_path}
-                  onChange={(path) => setSocialProfile((current) => ({ ...current, avatar_path: path }))}
-                />
+                <OwnAvatar userId={socialProfile.user_id} name={socialProfile.display_name} />
 
                 <div className="min-w-0">
                   <p className="font-display text-lg font-semibold">
@@ -952,50 +963,11 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
               )}
             </div>
           )}
-        </section>
-      )}
+          </>
+        )}
 
-      {/* Order History link */}
-      <div className="border-t border-border pt-5">
-        <button
-          onClick={() => setShowOrderHistory(true)}
-          className="w-full flex items-center justify-between text-left group"
-        >
-          {/* The name is the visible text (WCAG 2.5.3 Label in Name); hidden
-              text only adds what the screen doesn't show. */}
-          <div>
-            <p className="font-display text-lg font-semibold">Order History</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              {needsActionCount > 0
-                ? `${needsActionCount} order${needsActionCount === 1 ? '' : 's'} accepted — pay before the deadline`
-                : disputeUnreadCount > 0
-                  ? 'Your dispute has an update'
-                  : 'View all your past orders'}
-              {needsActionCount > 0 && disputeUnreadCount > 0 && (
-                <span className="sr-only">
-                  , {disputeUnreadCount} dispute update{disputeUnreadCount === 1 ? '' : 's'}
-                </span>
-              )}
-            </p>
-          </div>
-          <span className="flex items-center gap-2">
-            {needsActionCount + disputeUnreadCount > 0 && (
-              <span
-                aria-hidden="true"
-                className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
-              >
-                {needsActionCount + disputeUnreadCount > 99 ? '99+' : needsActionCount + disputeUnreadCount}
-              </span>
-            )}
-            <span aria-hidden="true" className="text-muted-foreground group-hover:text-accent transition">&rarr;</span>
-          </span>
-        </button>
-      </div>
-
-      {/* Settings */}
-     <section className="border-t border-border pt-5 space-y-4">
-       <h3 className="font-display text-lg font-semibold">Settings</h3>
-
+        {view === 'settings' && (
+          <div className="space-y-4">
        {/* Appearance */}
        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
          <div>
@@ -1097,24 +1069,80 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
            Privacy Policy
          </button>
 
-         <div className="border-t border-border pt-3 flex items-center justify-between">
-           <span className="text-sm">App version</span>
-           <span className="text-xs text-muted-foreground">0.1.0</span>
-         </div>
        </div>
-     </section>
+          </div>
+        )}
 
-     {/* Logout */}
-      <button
-        onClick={handleLogout}
-        className="w-full flex items-center justify-center gap-2 border border-red-400/30 text-red-400 hover:text-red-300 hover:border-red-400/50 rounded-lg py-2.5 transition text-sm font-medium"
-      >
-        <LogOut size={16} /> Log out
-      </button>
+        {showDeleteAccount && (
+          <DeleteAccountDialog role={role} onClose={() => setShowDeleteAccount(false)} />
+        )}
+      </div>
+    )
+  }
 
-      {showDeleteAccount && (
-        <DeleteAccountDialog role={role} onClose={() => setShowDeleteAccount(false)} />
-      )}
+  const displayName = (isStudent && socialProfile?.display_name) || formData.full_name
+
+  return (
+    <div className="space-y-5">
+      {/* Who you are: photo, name, how to reach you. Nothing else. */}
+      <header className="flex flex-col items-center gap-1 pt-2 text-center">
+        {isStudent && socialProfile ? (
+          <AvatarEditor
+            size="xl"
+            userId={socialProfile.user_id}
+            name={displayName}
+            avatarPath={socialProfile.avatar_path}
+            onChange={(path) => setSocialProfile((current) => ({ ...current, avatar_path: path }))}
+          />
+        ) : (
+          <div
+            aria-hidden="true"
+            className="w-24 h-24 shrink-0 rounded-full bg-accent/15 ring-4 ring-accent/10 flex items-center justify-center text-accent text-3xl font-semibold"
+          >
+            {displayName?.charAt(0) || '?'}
+          </div>
+        )}
+        <h2 className="mt-2 font-display text-2xl font-semibold">{displayName || 'No name set'}</h2>
+        {isStudent && verified.university && (
+          <span
+            className="text-xs px-2 py-0.5 rounded-lg status-good font-medium"
+            title={`Verified via @${verified.emailDomain}`}
+          >
+            ✓ Verified student
+          </span>
+        )}
+        <p className="text-sm text-muted-foreground break-all">{user?.email}</p>
+        {formData.phone && <p className="text-sm text-muted-foreground">{formData.phone}</p>}
+      </header>
+
+      <MenuGroup>
+        <MenuRow
+          icon={History}
+          label="My orders"
+          hint={ordersHint}
+          badge={needsActionCount + disputeUnreadCount}
+          srExtra={
+            needsActionCount > 0 && disputeUnreadCount > 0
+              ? `, ${disputeUnreadCount} dispute update${disputeUnreadCount === 1 ? '' : 's'}`
+              : ''
+          }
+          onClick={() => openView('orders')}
+        />
+        <MenuRow icon={UserRound} label="My details" hint="Name, phone, university" onClick={() => openView('details')} />
+        {isStudent && (
+          <MenuRow icon={Users} label="Social profile" hint="Username, bio, who can find you" onClick={() => openView('social')} />
+        )}
+      </MenuGroup>
+
+      <MenuGroup>
+        <MenuRow icon={Settings} label="Settings" hint="Dark mode, alerts, privacy, account" onClick={() => openView('settings')} />
+      </MenuGroup>
+
+      <MenuGroup>
+        <MenuRow icon={LogOut} label="Log out" danger onClick={handleLogout} />
+      </MenuGroup>
+
+      <p className="text-center text-xs text-muted-foreground">App version 0.1.0</p>
     </div>
   )
 }
@@ -1123,4 +1151,41 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
 function OwnAvatar({ userId, name }) {
   const url = useStudentAvatar(userId)
   return <StudentAvatar src={url} name={name} size="xl" alt="" className="!h-20 !w-20 ring-4 ring-accent/10" />
+}
+
+// Ando-style menu: white rounded groups of rows, a soft round icon on the left.
+function MenuGroup({ children }) {
+  return <div className="overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border/60">{children}</div>
+}
+
+function MenuRow({ icon: Icon, label, hint, badge = 0, srExtra = '', danger = false, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex w-full min-h-16 items-center gap-3 px-4 py-3 text-left transition hover:bg-muted/50"
+    >
+      <span
+        aria-hidden="true"
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${danger ? 'bg-red-500/10 text-red-400' : 'bg-accent/15 text-accent'}`}
+      >
+        <Icon size={20} />
+      </span>
+      {/* The name starts with the visible label (WCAG 2.5.3 Label in Name). */}
+      <span className="min-w-0 flex-1">
+        <span className={`block font-medium ${danger ? 'text-red-400' : ''}`}>{label}</span>
+        {hint && <span className="block truncate text-xs text-muted-foreground">{hint}</span>}
+        {srExtra && <span className="sr-only">{srExtra}</span>}
+      </span>
+      {badge > 0 && (
+        <span
+          aria-hidden="true"
+          className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
+        >
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
+      {!danger && <ChevronRight size={18} aria-hidden="true" className="shrink-0 text-muted-foreground group-hover:text-accent" />}
+    </button>
+  )
 }

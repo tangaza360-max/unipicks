@@ -6,7 +6,7 @@ import { removeAvatar, saveAvatar, useStudentAvatar } from '../lib/studentAvatar
 
 // The student's own profile picture with Add / Change / Remove.
 // Who sees it: signed-in students (not businesses, not people you blocked).
-export default function AvatarEditor({ userId, name, avatarPath, onChange }) {
+export default function AvatarEditor({ userId, name, avatarPath, onChange, size = 'lg' }) {
   const url = useStudentAvatar(userId)
   const inputRef = useRef(null)
   const [busy, setBusy] = useState('')
@@ -55,7 +55,7 @@ export default function AvatarEditor({ userId, name, avatarPath, onChange }) {
         tabIndex={-1}
         className="group relative rounded-full"
       >
-        <StudentAvatar src={avatarPath ? url : null} name={name} size="lg" alt="" />
+        <StudentAvatar src={avatarPath ? url : null} name={name} size={size} alt="" />
         <span
           aria-hidden="true"
           className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-card bg-accent text-background"
@@ -92,7 +92,9 @@ export default function AvatarEditor({ userId, name, avatarPath, onChange }) {
           </button>
         )}
       </div>
-      <p className="text-xs text-muted-foreground">Students on Unipicks can see it. Businesses can't.</p>
+      {/* Said before the first photo is chosen (when it matters), then kept
+          out of the way. */}
+      {!avatarPath && <p className="text-xs text-muted-foreground">Students on Unipicks can see it. Businesses can't.</p>}
       {busy && <p role="status" className="text-xs text-muted-foreground">{busy}</p>}
       {error && <p role="alert" className="max-w-[12rem] text-center text-xs text-red-400">{error}</p>}
     </div>
