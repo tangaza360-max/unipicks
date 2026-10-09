@@ -8,6 +8,8 @@ import GroupOrders from './GroupOrders.jsx'
 import StoryViewer from '../components/StoryViewer.jsx'
 import { Store, Search, X, Users, ChevronRight, LayoutGrid, Pizza, Utensils, Sandwich, CupSoda, IceCreamCone, Sparkles } from 'lucide-react'
 import DealTile, { isNewDeal } from '../components/DealTile.jsx'
+import DealActions from '../components/DealActions.jsx'
+import { haptic } from '../lib/haptics.js'
 import { isDealOpenNow } from '../../supabase/functions/_shared/deal-availability.ts'
 import { formatMoney } from '../lib/format.js'
 
@@ -43,6 +45,9 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [ratingStats, setRatingStats] = useState({})
+  const [social, setSocial] = useState({}) // deal id → { like_count, liked_by_me, saved_by_me }
+  const [socialBusy, setSocialBusy] = useState(() => new Set())
+  const [socialNotice, setSocialNotice] = useState('')
   const [stories, setStories] = useState([])
   const [merchantData, setMerchantData] = useState({})
   const [storyViewerOpen, setStoryViewerOpen] = useState(false)
@@ -178,13 +183,16 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
 
       const ids = (data || []).map((deal) => deal.id).slice(0, 200)
       if (ids.length === 0) return
-      const { data: rows, error: ratingError } = await supabase.rpc('get_deals_rating_stats', { p_deal_ids: ids })
+      // Stars and likes/saves: two requests for the whole feed, side by side.
+      const [stars, socialRes] = await Promise.all([
+        supabase.rpc('get_deals_rating_stats', { p_deal_ids: ids }),
+        supabase.rpc('get_deals_social', { p_deal_ids: ids }),
+      ])
       if (cancelled) return
-      if (ratingError) {
-        console.warn('Could not load star ratings:', ratingError.message)
-        return
-      }
-      setRatingStats(Object.fromEntries((rows || []).map((row) => [row.deal_id, row])))
+      if (stars.error) console.warn('Could not load star ratings:', stars.error.message)
+      else setRatingStats(Object.fromEntries((stars.data || []).map((row) => [row.deal_id, row])))
+      if (socialRes.error) console.warn('Could not load likes:', socialRes.error.message)
+      else setSocial(Object.fromEntries((socialRes.data || []).map((row) => [row.deal_id, row])))
     }
 
     loadDeals()
@@ -225,6 +233,67 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
       storiesChannel.unsubscribe()
     }
   }, [])
+
+  // ❤️ and 🔖: change the screen at once, then save; put it back if refused.
+  async function toggleSocial(deal, kind) {
+    if (socialBusy.has(deal.id)) return
+    const before = social[deal.id] || { like_count: 0, liked_by_me: false, saved_by_me: false }
+    const on = kind === 'like' ? !before.liked_by_me : !before.saved_by_me
+    const after =
+      kind === 'like'
+        ? { ...before, liked_by_me: on, like_count: Math.max(0, Number(before.like_count || 0) + (on ? 1 : -1)) }
+        : { ...before, saved_by_me: on }
+    setSocial((current) => ({ ...current, [deal.id]: after }))
+    setSocialBusy((current) => new Set(current).add(deal.id))
+    setSocialNotice('')
+    if (on) haptic(12)
+
+    const { data: { user } } = await supabase.auth.getUser()
+    let result
+    if (kind === 'like') {
+      result = on
+        ? await supabase.from('deal_likes').insert({ student_id: user?.id, deal_id: deal.id })
+        : await supabase.from('deal_likes').delete().eq('student_id', user?.id).eq('deal_id', deal.id)
+    } else {
+      result = on
+        ? await supabase.from('student_saved_items').insert({ student_id: user?.id, item_type: 'deal', item_id: deal.id })
+        : await supabase.from('student_saved_items').delete().eq('student_id', user?.id).eq('item_type', 'deal').eq('item_id', deal.id)
+    }
+
+    setSocialBusy((current) => {
+      const next = new Set(current)
+      next.delete(deal.id)
+      return next
+    })
+    // Already liked / saved on another phone: the screen is right as it is.
+    if (result.error && result.error.code !== '23505') {
+      console.warn(`Could not ${kind} the deal:`, result.error.message)
+      setSocial((current) => ({ ...current, [deal.id]: before }))
+      setSocialNotice(kind === 'like' ? "Your like wasn't saved. Please try again." : "That wasn't saved. Please try again.")
+    } else if (kind === 'save') {
+      setSocialNotice(on ? `Saved: ${deal.title}` : `Removed from saved: ${deal.title}`)
+    }
+  }
+
+  function tile(deal, className = '') {
+    return (
+      <DealTile
+        key={deal.id}
+        deal={deal}
+        ratingStats={ratingStats[deal.id]}
+        className={className}
+        overlay={
+          <DealActions
+            deal={deal}
+            social={social[deal.id]}
+            busy={socialBusy.has(deal.id)}
+            onLike={(d) => toggleSocial(d, 'like')}
+            onSave={(d) => toggleSocial(d, 'save')}
+          />
+        }
+      />
+    )
+  }
 
   // Count a view once per deal per visit (the same deal can be in several rows).
   const viewed = useRef(new Set())
@@ -440,8 +509,13 @@ const getDiscoveryScore = (deal) => {
       ['Group buys', visibleDeals.filter((d) => d.offer_type === 'group_buy')],
       ['New this week', visibleDeals.filter((d) => isNewDeal(d, now))],
     ]
-    return candidates.filter(([, list]) => list.length > 0 && list.length < visibleDeals.length)
-  }, [filtering, visibleDeals])
+    const saved = visibleDeals.filter((d) => social[d.id]?.saved_by_me)
+    return [
+      // Your saved deals come first and always show (like Instagram's Saved).
+      ...(saved.length > 0 ? [['Saved', saved]] : []),
+      ...candidates.filter(([, list]) => list.length > 0 && list.length < visibleDeals.length),
+    ]
+  }, [filtering, visibleDeals, social])
 
   // First photo a business posted in each category, for its circle.
   const categoryPhotos = useMemo(() => {
@@ -588,6 +662,11 @@ const getDiscoveryScore = (deal) => {
         </div>
       </div>
 
+      {/* Read out after a save, or when a like/save fails. */}
+      <p role="status" aria-live="polite" className={socialNotice ? 'text-sm text-muted-foreground' : 'sr-only'}>
+        {socialNotice}
+      </p>
+
       {deals.length === 0 ? (
         <p className="text-muted-foreground text-sm">
           No deals yet — check back once local businesses start posting.
@@ -602,7 +681,7 @@ const getDiscoveryScore = (deal) => {
               <h2 id={`deal-row-${index}`} className="mb-2 font-display text-lg font-semibold">{title}</h2>
               <div className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:scroll-px-0 md:px-0">
                 {list.map((deal) => (
-                  <DealTile key={deal.id} deal={deal} ratingStats={ratingStats[deal.id]} className="w-[72%] max-w-[280px] shrink-0 snap-start" />
+                  tile(deal, 'w-[72%] max-w-[280px] shrink-0 snap-start')
                 ))}
               </div>
             </section>
@@ -614,7 +693,7 @@ const getDiscoveryScore = (deal) => {
             </h2>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {visibleDeals.map((deal) => (
-                <DealTile key={deal.id} deal={deal} ratingStats={ratingStats[deal.id]} />
+                tile(deal)
               ))}
             </div>
           </section>
