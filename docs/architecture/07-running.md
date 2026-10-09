@@ -73,7 +73,7 @@ outside services the website may use:
 | Kind | Allowed |
 |---|---|
 | Data and live updates | our Supabase project (`https://` and `wss://`), Sentry (`*.sentry.io`), the leaked-password check (`api.pwnedpasswords.com`) |
-| Styles and fonts | Google Fonts |
+| Styles and fonts | only Unipicks itself (fonts are self-hosted since 2026-10-09) |
 | Pictures and videos | any `https:` site (deal photos, business logos), `data:`, `blob:` (camera) |
 | Scripts, phone helper, app manifest | only Unipicks itself |
 | Being shown inside another site | **never** (stops clickjacking) |
