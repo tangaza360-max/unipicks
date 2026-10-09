@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/d/:id",
+      "destination": "/api/deal-preview?id=:id"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

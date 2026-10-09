@@ -62,7 +62,10 @@ Today the build takes them from the `.env` file in the code, which holds
 **public values only** (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
 `VITE_SENTRY_DSN`, `VITE_VAPID_PUBLIC_KEY`; checked 2026-10-05).
 🟡 Still open: some Vercel variables were found misnamed (`ITE_SUPABASE_*`);
-rename or delete them so nobody relies on them by mistake.
+rename them to `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (same public
+values as `.env`). Since 2026-10-09 the link-preview function
+(`api/deal-preview.js`, `/d/<deal>`) reads them **at run time** — it can't
+read `.env` — so until then shared links open the deal without a preview card.
 
 ## Website security headers (`vercel.json`)
 

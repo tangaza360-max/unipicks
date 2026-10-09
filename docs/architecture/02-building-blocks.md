@@ -16,7 +16,9 @@ flowchart TB
 
   subgraph VERCEL["Vercel (hosting)"]
     WEB["Website<br/>React + Vite, one app for all roles<br/>unipicks.vercel.app"]:::ours
+    PREV["Link preview (api/deal-preview)<br/>/d/&lt;deal&gt;: title, photo, price"]:::ours
   end
+  SOC[WhatsApp · Instagram · X · Facebook]:::outside
   SW["Phone helper (service worker sw.js)<br/>shows alerts, keeps the app fresh"]:::ours
 
   subgraph SUPA["Supabase project dylgephsnywowxxasifs"]
@@ -48,6 +50,8 @@ flowchart TB
   CRON -- "every 60 s" --> EF
   EF --> AI
   WEB -- "crashes" --> SEN
+  SOC -- "read a shared link" --> PREV
+  PREV -- "one live deal, public key<br/>(visitor rules)" --> DB
 ```
 
 ## Why the work is split this way
