@@ -453,7 +453,7 @@ const [studentConversations, setStudentConversations] = useState([])
         </h2>
 
         {totalUnread > 0 && (
-          <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-semibold flex items-center justify-center">
+          <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-600 text-white text-xs font-semibold flex items-center justify-center">
             {totalUnread > 99 ? '99+' : totalUnread}
           </span>
         )}
@@ -534,7 +534,7 @@ const [studentConversations, setStudentConversations] = useState([])
                   </div>
 
                   {student.unreadCount > 0 && (
-                    <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                    <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-600 text-white text-xs font-semibold flex items-center justify-center shrink-0">
                       {student.unreadCount > 99 ? '99+' : student.unreadCount}
                     </span>
                   )}
@@ -577,7 +577,7 @@ const [studentConversations, setStudentConversations] = useState([])
                     </p>
 
                     {conversation.unreadCount > 0 && (
-                      <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                      <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-600 text-white text-xs font-semibold flex items-center justify-center shrink-0">
                         {conversation.unreadCount > 99
                           ? '99+'
                           : conversation.unreadCount}
@@ -634,7 +634,7 @@ const [studentConversations, setStudentConversations] = useState([])
                     </p>
 
                     {merchant.unreadCount > 0 && (
-                      <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                      <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-600 text-white text-xs font-semibold flex items-center justify-center shrink-0">
                         {merchant.unreadCount > 99
                           ? '99+'
                           : merchant.unreadCount}

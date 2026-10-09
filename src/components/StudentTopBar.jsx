@@ -40,7 +40,7 @@ export default function StudentTopBar({
             {unreadCount > 0 && (
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-background"
+                className="pointer-events-none absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-background"
               >
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>

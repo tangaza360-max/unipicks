@@ -381,12 +381,12 @@ return () => {
                 <Icon size={16} />
                 <span>{tab.label}</span>
                 {tab.id === 'orders' && pendingOrderCount > 0 && (
-                  <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+                  <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white">
                     {pendingOrderCount > 99 ? '99+' : pendingOrderCount}
                   </span>
                 )}
                 {tab.id === 'messages' && merchantUnreadCount > 0 && (
-                  <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+                  <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white">
                     {merchantUnreadCount > 99 ? '99+' : merchantUnreadCount}
                   </span>
                 )}
@@ -448,7 +448,7 @@ return () => {
                 <span>{tab.label}</span>
                 {tab.id === 'disputes' && openDisputeCount > 0 && (
                   <span
-                    className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
+                    className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white"
                     aria-label={`${openDisputeCount} open dispute${openDisputeCount === 1 ? '' : 's'}`}
                   >
                     {openDisputeCount > 99 ? '99+' : openDisputeCount}
@@ -456,7 +456,7 @@ return () => {
                 )}
                 {tab.id === 'reports' && openReportCount > 0 && (
                   <span
-                    className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
+                    className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white"
                     aria-label={`${openReportCount} open report${openReportCount === 1 ? '' : 's'}`}
                   >
                     {openReportCount > 99 ? '99+' : openReportCount}

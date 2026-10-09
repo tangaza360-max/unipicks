@@ -132,7 +132,7 @@ function NavItem({ item, active, onClick, badgeCount = 0, badgeLabel }) {
         {showBadge && (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute -right-2.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold leading-none text-white"
+            className="pointer-events-none absolute -right-2.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold leading-none text-white"
           >
             {badgeCount > 99 ? '99+' : badgeCount}
           </span>

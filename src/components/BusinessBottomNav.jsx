@@ -21,7 +21,7 @@ function Badge({ count }) {
   return (
     <span
       aria-hidden="true"
-      className="absolute -right-2 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold leading-none text-white"
+      className="absolute -right-2 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold leading-none text-white"
     >
       {count > 99 ? '99+' : count}
     </span>

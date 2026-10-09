@@ -1180,7 +1180,7 @@ function MenuRow({ icon: Icon, label, hint, badge = 0, srExtra = '', danger = fa
       {badge > 0 && (
         <span
           aria-hidden="true"
-          className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
+          className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white"
         >
           {badge > 99 ? '99+' : badge}
         </span>
