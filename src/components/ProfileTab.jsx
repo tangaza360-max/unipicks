@@ -21,6 +21,9 @@ import DeleteAccountDialog from './DeleteAccountDialog.jsx'
 import PhoneAlertsCard from './PhoneAlertsCard.jsx'
 import { forgetThisPhone } from '../lib/pushNotifications.js'
 import BackLink from './BackLink.jsx'
+import AvatarEditor from './AvatarEditor.jsx'
+import StudentAvatar from './StudentAvatar.jsx'
+import { useStudentAvatar } from '../lib/studentAvatars.js'
 
 // University and student ID are set server-side from the verified email
 // domain (auth app_metadata, which the client cannot write). user_metadata
@@ -176,7 +179,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
       const { data: studentProfile, error: socialError } = await supabase
         .from('student_profiles')
         .select(
-          'user_id, username, display_name, university, campus, student_description, short_bio, is_18_plus, discoverable'
+          'user_id, username, display_name, university, campus, student_description, short_bio, is_18_plus, discoverable, avatar_path'
         )
         .eq('user_id', data.user.id)
         .maybeSingle()
@@ -292,7 +295,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
       })
       .eq('user_id', user.id)
       .select(
-        'user_id, username, display_name, university, campus, student_description, short_bio, is_18_plus, discoverable'
+        'user_id, username, display_name, university, campus, student_description, short_bio, is_18_plus, discoverable, avatar_path'
       )
       .single()
 
@@ -342,7 +345,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
       })
       .eq('user_id', user.id)
       .select(
-        'user_id, username, display_name, university, campus, student_description, short_bio, is_18_plus, discoverable'
+        'user_id, username, display_name, university, campus, student_description, short_bio, is_18_plus, discoverable, avatar_path'
       )
       .single()
 
@@ -549,9 +552,13 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
       ) : (
         <div className="space-y-5 bg-card border border-border rounded-lg p-6 shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 shrink-0 rounded-full bg-accent/15 ring-4 ring-accent/10 flex items-center justify-center text-accent text-3xl font-semibold">
-              {formData.full_name?.charAt(0) || '?'}
-            </div>
+            {isStudent && socialProfile?.avatar_path ? (
+              <OwnAvatar userId={user?.id} name={formData.full_name} />
+            ) : (
+              <div className="w-20 h-20 shrink-0 rounded-full bg-accent/15 ring-4 ring-accent/10 flex items-center justify-center text-accent text-3xl font-semibold">
+                {formData.full_name?.charAt(0) || '?'}
+              </div>
+            )}
 
             <div className="min-w-0 flex-1">
               <p className="font-display text-lg font-semibold truncate">
@@ -862,10 +869,13 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
             </div>
           ) : (
             <div className="space-y-5 bg-card border border-border rounded-lg p-6 shadow-sm">
-              <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-full bg-accent/15 ring-4 ring-accent/10 flex items-center justify-center text-accent text-2xl font-semibold flex-shrink-0">
-                  {socialProfile.display_name?.charAt(0) || '?'}
-                </div>
+              <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:text-left">
+                <AvatarEditor
+                  userId={socialProfile.user_id}
+                  name={socialProfile.display_name}
+                  avatarPath={socialProfile.avatar_path}
+                  onChange={(path) => setSocialProfile((current) => ({ ...current, avatar_path: path }))}
+                />
 
                 <div className="min-w-0">
                   <p className="font-display text-lg font-semibold">
@@ -1107,4 +1117,10 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
       )}
     </div>
   )
+}
+
+// The student's photo on the Account card (changed in the Social profile card).
+function OwnAvatar({ userId, name }) {
+  const url = useStudentAvatar(userId)
+  return <StudentAvatar src={url} name={name} size="xl" alt="" className="!h-20 !w-20 ring-4 ring-accent/10" />
 }
