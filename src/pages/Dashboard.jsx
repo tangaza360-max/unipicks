@@ -1,31 +1,35 @@
-import { useState, useEffect, useRef } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { liveChannel } from '../lib/realtime.js'
 import { useTheme } from '../context/ThemeContext.jsx'
 import DealsFeed from './DealsFeed.jsx'
-import MerchantDeals from './MerchantDeals.jsx'
-import MerchantOrders from './MerchantOrders.jsx'
-import MerchantAnalytics from './MerchantAnalytics.jsx'
-import MerchantProfile from './MerchantProfile.jsx'
-import MerchantStories from './MerchantStories.jsx'
-import Messages from './Messages.jsx'
 import { ClipboardCheck, ClipboardList, GraduationCap, BarChart3, Users, Settings, FileClock, FileText, Camera, MessageCircle, ShoppingBag, Sun, Moon, LogOut, AlertCircle, Flag } from 'lucide-react'
 import Logo from '../components/Logo.jsx'
-import AdminAnalytics from './AdminAnalytics.jsx'
-import AdminApprovals from './AdminApprovals.jsx'
-import AdminStudentView from './AdminStudentView.jsx'
-import AdminUsers from './AdminUsers.jsx'
-import AdminSettings from './AdminSettings.jsx'
-import AdminActivityLogs from './AdminActivityLogs.jsx'
-import AdminReviews from './AdminReviews.jsx'
-import AdminDisputes from './AdminDisputes.jsx'
-import AdminReports from './AdminReports.jsx'
 import StudentLayout from '../components/StudentLayout.jsx'
 import NotificationBell from '../components/NotificationBell.jsx'
 import BusinessBottomNav from '../components/BusinessBottomNav.jsx'
 import PhoneAlertsCard from '../components/PhoneAlertsCard.jsx'
 import { forgetThisPhone } from '../lib/pushNotifications.js'
+import { lazyPage } from '../lib/lazyPage.js'
+import PageLoading from '../components/PageLoading.jsx'
+
+// Loaded only when opened, so they stay out of the first download.
+const MerchantDeals = lazyPage(() => import('./MerchantDeals.jsx'))
+const MerchantOrders = lazyPage(() => import('./MerchantOrders.jsx'))
+const MerchantAnalytics = lazyPage(() => import('./MerchantAnalytics.jsx'))
+const MerchantProfile = lazyPage(() => import('./MerchantProfile.jsx'))
+const MerchantStories = lazyPage(() => import('./MerchantStories.jsx'))
+const Messages = lazyPage(() => import('./Messages.jsx'))
+const AdminAnalytics = lazyPage(() => import('./AdminAnalytics.jsx'))
+const AdminApprovals = lazyPage(() => import('./AdminApprovals.jsx'))
+const AdminStudentView = lazyPage(() => import('./AdminStudentView.jsx'))
+const AdminUsers = lazyPage(() => import('./AdminUsers.jsx'))
+const AdminSettings = lazyPage(() => import('./AdminSettings.jsx'))
+const AdminActivityLogs = lazyPage(() => import('./AdminActivityLogs.jsx'))
+const AdminReviews = lazyPage(() => import('./AdminReviews.jsx'))
+const AdminDisputes = lazyPage(() => import('./AdminDisputes.jsx'))
+const AdminReports = lazyPage(() => import('./AdminReports.jsx'))
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -522,7 +526,7 @@ return () => {
         </div>
 
         <div className="md:bg-card/60 md:border md:border-border md:rounded-lg md:p-6">
-          {content}
+          <Suspense fallback={<PageLoading />}>{content}</Suspense>
         </div>
       </div>
     </div>

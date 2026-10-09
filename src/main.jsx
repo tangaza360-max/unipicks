@@ -1,27 +1,31 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import './index.css'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import { registerServiceWorker } from './lib/serviceWorker.js'
 import Register from './pages/Register.jsx'
-import RegisterMerchant from './pages/RegisterMerchant.jsx'
 import Login from './pages/Login.jsx'
-import ForgotPassword from './pages/ForgotPassword.jsx'
-import ResetPassword from './pages/ResetPassword.jsx'
-import Receipt from './pages/Receipt.jsx'
-import Dashboard from './pages/Dashboard.jsx'
-import AdminStudentView from './pages/AdminStudentView.jsx'
-import Privacy from './pages/Privacy.jsx'
-import Terms from './pages/Terms.jsx'
-import DeleteAccount from './pages/DeleteAccount.jsx'
-import PaymentCheckout from './pages/PaymentCheckout.jsx'
-import DealDetail from './pages/DealDetail.jsx'
-import OrderConfirmation from './pages/OrderConfirmation.jsx'
 import { readAuthLinkError } from './lib/authLinkError.js'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { initMonitoring } from './lib/monitoring.js'
+import { lazyPage } from './lib/lazyPage.js'
+import PageLoading from './components/PageLoading.jsx'
+
+// Screens load when opened (only Login and Register come with the first file).
+const RegisterMerchant = lazyPage(() => import('./pages/RegisterMerchant.jsx'))
+const ForgotPassword = lazyPage(() => import('./pages/ForgotPassword.jsx'))
+const ResetPassword = lazyPage(() => import('./pages/ResetPassword.jsx'))
+const Receipt = lazyPage(() => import('./pages/Receipt.jsx'))
+const Dashboard = lazyPage(() => import('./pages/Dashboard.jsx'))
+const AdminStudentView = lazyPage(() => import('./pages/AdminStudentView.jsx'))
+const Privacy = lazyPage(() => import('./pages/Privacy.jsx'))
+const Terms = lazyPage(() => import('./pages/Terms.jsx'))
+const DeleteAccount = lazyPage(() => import('./pages/DeleteAccount.jsx'))
+const PaymentCheckout = lazyPage(() => import('./pages/PaymentCheckout.jsx'))
+const DealDetail = lazyPage(() => import('./pages/DealDetail.jsx'))
+const OrderConfirmation = lazyPage(() => import('./pages/OrderConfirmation.jsx'))
 
 function RouteTitle() {
   const { pathname } = useLocation()
@@ -102,6 +106,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <ErrorBoundary>
       <BrowserRouter>
         <RouteTitle />
+        <Suspense fallback={<PageLoading />}>
         <Routes>
           <Route path="/register" element={<Register />} />
           <Route path="/register/merchant" element={<RegisterMerchant />} />
@@ -119,6 +124,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/deal/:id/confirm" element={<OrderConfirmation />} />
           <Route path="*" element={<Navigate to="/register" replace />} />
         </Routes>
+        </Suspense>
       </BrowserRouter>
       </ErrorBoundary>
     </ThemeProvider>

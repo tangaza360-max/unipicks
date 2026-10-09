@@ -104,6 +104,7 @@ Policy directive".
 | Screen crashes | Sentry | Vercel deployment logs |
 | Something no longer loads after a deploy (picture, live update, error reports) | Browser console: "violates the following Content Security Policy" | add that site to `vercel.json` (see Website security headers) |
 | A screen shows old data after a deploy | Phone helper not updated yet | close and reopen the app (it updates itself on reopen) |
+| A screen says "Something went wrong" right after a deploy | Screens load in parts since 2026-10-09; the app already reloads once by itself when a part is missing | Vercel → the deployment is READY; ask the person to reload; Sentry for the real error |
 | Something is slow or failing in the database | Supabase → Logs → Postgres | Supabase → Advisors |
 
 ## Tests (run before every push)

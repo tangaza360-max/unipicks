@@ -1,18 +1,22 @@
-import StudentCamera from './StudentCamera.jsx'
-import { useEffect, useState, cloneElement } from 'react'
+import { Suspense, useEffect, useState, cloneElement } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { liveChannel } from '../lib/realtime.js'
-import GroupOrders from '../pages/GroupOrders.jsx'
-import Social from '../pages/Social.jsx'
-import SocialOnboarding from '../pages/SocialOnboarding.jsx'
-import ProfileTab from './ProfileTab.jsx'
 import DesktopNav from './DesktopNav.jsx'
-import Messages from '../pages/Messages.jsx'
-import StudentSearch from '../pages/StudentSearch.jsx'
 import StudentTopBar from './StudentTopBar.jsx'
 import StudentBottomNav from './StudentBottomNav.jsx'
 import { OPEN_CAMERA_EVENT } from '../lib/studentStories.js'
+import { lazyPage } from '../lib/lazyPage.js'
+import PageLoading from './PageLoading.jsx'
+
+// Loaded only when opened, so they stay out of the first download.
+const StudentCamera = lazyPage(() => import('./StudentCamera.jsx'))
+const GroupOrders = lazyPage(() => import('../pages/GroupOrders.jsx'))
+const Social = lazyPage(() => import('../pages/Social.jsx'))
+const SocialOnboarding = lazyPage(() => import('../pages/SocialOnboarding.jsx'))
+const ProfileTab = lazyPage(() => import('./ProfileTab.jsx'))
+const Messages = lazyPage(() => import('../pages/Messages.jsx'))
+const StudentSearch = lazyPage(() => import('../pages/StudentSearch.jsx'))
 
 export default function StudentLayout({ children, onLogout }) {
   const navigate = useNavigate()
@@ -364,7 +368,7 @@ export default function StudentLayout({ children, onLogout }) {
         }}
       >
         <div className="animate-fadeIn">
-          {renderContent()}
+          <Suspense fallback={<PageLoading />}>{renderContent()}</Suspense>
         </div>
       </main>
 
@@ -379,7 +383,11 @@ export default function StudentLayout({ children, onLogout }) {
         badges={{ profile: needsActionCount + disputeUnreadCount }}
         className="md:hidden"
       />
-          {cameraOpen && <StudentCamera onClose={() => setCameraOpen(false)} />}
+          {cameraOpen && (
+            <Suspense fallback={<div className="fixed inset-0 z-[100] bg-black"><PageLoading /></div>}>
+              <StudentCamera onClose={() => setCameraOpen(false)} />
+            </Suspense>
+          )}
     </div>
   )
 }
