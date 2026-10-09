@@ -69,7 +69,7 @@ Write new rules the same way.
 | `user_notifications` | — | own; mark read | own; mark read | own | triggers and server |
 | `push_subscriptions` | — | own phones | own phones | own | `save_push_subscription` |
 | `activity_logs` | — | — | — | read | admin actions, server |
-| `ratings` | all | rate own collected order (edit 24 h) | — | delete | student |
+| `ratings` | all (written reviews via `get_deal_reviews`: text for visitors, photo for signed-in people, the reviewer's name only for students they haven't blocked and admins) | rate own collected order, with an optional photo from their own folder (edit 24 h) | — | delete | student |
 | `deal_likes` | — | own likes only; like live deals (not banned); remove own | — | — | student; others see counts only via `get_deals_social` |
 | `student_saved_items` | — | own only (save / unsave) | — | — | student |
 

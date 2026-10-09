@@ -25,7 +25,7 @@ flowchart TB
     AUTH["Auth<br/>accounts, log-in, email"]:::ours
     DB[("Database (Postgres)<br/>32 tables · 82 rules · 25 triggers<br/>75 functions (RPC)")]:::ours
     RT["Realtime<br/>live updates of 6 tables"]:::ours
-    ST["Storage<br/>4 photo buckets"]:::ours
+    ST["Storage<br/>6 photo buckets"]:::ours
     EF["Server functions (9)<br/>orders, payments, timers,<br/>account deletion, AI"]:::ours
   end
 
@@ -125,6 +125,7 @@ is how the Add Friend bug got past the tests (fixed in `20261006090000`).
 | `merchant-logos` | Everyone (public links) | Business logos |
 | `student-stories` | **Private**: only friends while the story is live, the owner, admins | Student stories (photos and GIFs, 5 MB) |
 | `student-avatars` | **Private**: signed-in students and admins, not businesses or visitors; hidden from people the owner blocked (`can_see_student_avatar`) | Student profile pictures (small square JPEG, 1 MB); looked up in bulk with `get_student_avatars`. While a report about a photo is open, its owner can't delete the file (evidence); admins can |
+| `review-photos` | **Private**: anyone signed in (students, the business, admins) through 1-hour links; visitors see stars and text only | Food photos on reviews (JPEG, 1 MB), one per review, in the student's own folder; listed with `get_deal_reviews` |
 
 ## Live updates (Realtime)
 
