@@ -120,6 +120,7 @@ is how the Add Friend bug got past the tests (fixed in `20261006090000`).
 | `story-images` | Everyone (public links) | **Business** stories |
 | `merchant-logos` | Everyone (public links) | Business logos |
 | `student-stories` | **Private**: only friends while the story is live, the owner, admins | Student stories (photos and GIFs, 5 MB) |
+| `student-avatars` | **Private**: signed-in students and admins, not businesses or visitors; hidden from people the owner blocked (`can_see_student_avatar`) | Student profile pictures (small square JPEG, 1 MB); looked up in bulk with `get_student_avatars` |
 
 ## Live updates (Realtime)
 
