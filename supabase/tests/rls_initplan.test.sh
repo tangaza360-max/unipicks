@@ -71,8 +71,9 @@ SQL
 # --- Every migration, in order (MAINTAIN is a Postgres 17 privilege; local is 16) -
 NEW="$REPO/supabase/migrations/20261009090000_rls_initplan_and_fk_indexes.sql"
 # Every earlier migration, in order (MAINTAIN is a Postgres 17 privilege; local is 16).
+# (Stop there: later migrations are already written in the fast form.)
 for f in "$REPO"/supabase/migrations/*.sql; do
-  [ "$f" = "$NEW" ] && continue
+  [ "$f" = "$NEW" ] && break
   sed 's/MAINTAIN, //' "$f" | "${PSQL[@]}" >/dev/null 2>&1 || { echo "migration failed: $(basename "$f")"; exit 1; }
 done
 

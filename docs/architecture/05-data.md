@@ -46,6 +46,8 @@ erDiagram
   deals ||--o{ chat_messages : "order messages"
   deals ||--o{ notifications : "business alerts (old bell)"
   deals ||--o{ deal_views : "unused"
+  deals ||--o{ deal_likes : "liked by students"
+  users ||--o{ deal_likes : "student likes (via user_roles)"
   orders {
     text status "see page 4"
     numeric total_price
@@ -127,7 +129,7 @@ the user, so these links never break:
 
 | Kept (accounting, disputes, the other person) | Changed | Removed |
 |---|---|---|
-| orders, transactions, pickup codes, ratings, chat messages, reports, deals (switched off), activity log, blocks **against** them | phones on orders set to empty; names → "Deleted user"; rating texts emptied; deal photos removed | role (so they can't log in), student / business profile, friendships, friend and message requests, their own blocks, stories and views, business stories, notifications, group memberships, saved items, interests, views, searches; phones with alerts on (trigger) |
+| orders, transactions, pickup codes, ratings, chat messages, reports, deals (switched off), activity log, blocks **against** them | phones on orders set to empty; names → "Deleted user"; rating texts emptied; deal photos removed | role (so they can't log in), student / business profile, friendships, friend and message requests, likes (removed with the role), their own blocks, stories and views, business stories, notifications, group memberships, saved items, interests, views, searches; phones with alerts on (trigger) |
 
 *(From `tombstone_user_core`, `20261003240000_fix_tombstone_transactions_payload.sql`.)*
 

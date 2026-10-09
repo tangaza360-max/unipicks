@@ -70,6 +70,8 @@ Write new rules the same way.
 | `push_subscriptions` | — | own phones | own phones | own | `save_push_subscription` |
 | `activity_logs` | — | — | — | read | admin actions, server |
 | `ratings` | all | rate own collected order (edit 24 h) | — | delete | student |
+| `deal_likes` | — | own likes only; like live deals (not banned); remove own | — | — | student; others see counts only via `get_deals_social` |
+| `student_saved_items` | — | own only (save / unsave) | — | — | student |
 
 ## Admin-only actions (each checks the admin role itself)
 
