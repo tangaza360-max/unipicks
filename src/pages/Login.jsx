@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { authLinkErrorMessage } from '../lib/authLinkError.js'
+import { safeNext, withNext } from '../lib/safeNext.js'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -28,7 +29,8 @@ export default function Login() {
       setError(signInError.message)
       return
     }
-    navigate('/dashboard/deals', { replace: true })
+    // Back to the shared deal they opened, if any (checked list only).
+    navigate(safeNext(searchParams.get('next')), { replace: true })
   }
 
   return (
@@ -92,7 +94,7 @@ export default function Login() {
 
         <p className="text-center text-sm text-muted-foreground">
           New to Unipicks?{' '}
-          <Link to="/register" className="text-accent underline underline-offset-2 hover:decoration-2">
+          <Link to={withNext('/register', searchParams.get('next'))} className="text-accent underline underline-offset-2 hover:decoration-2">
             Create an account
           </Link>
         </p>

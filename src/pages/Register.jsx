@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { appUrl } from '../lib/authRedirect.js'
 import { UNIVERSITIES, domainForUniversity } from '../lib/universities.js'
 import Logo from '../components/Logo.jsx'
+import { safeNext, withNext } from '../lib/safeNext.js'
 import { PWNED_PASSWORD_MESSAGE, timesPwned } from '../lib/pwnedPassword.js'
 
 const initialForm = {
@@ -19,6 +20,7 @@ const initialForm = {
 
 export default function Register() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [form, setForm] = useState(initialForm)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -102,7 +104,7 @@ export default function Register() {
     // the dashboard instead of telling them to check an email that was never
     // required.
     if (signUpData.session) {
-      navigate('/dashboard/deals', { replace: true })
+      navigate(safeNext(searchParams.get('next')), { replace: true })
       return
     }
 
@@ -256,7 +258,7 @@ export default function Register() {
           {alreadyRegistered && (
             <p role="alert" className="text-sm text-red-400">
               This email already has a Unipicks account.{' '}
-              <Link to="/login" className="text-accent underline underline-offset-2 hover:decoration-2">
+              <Link to={withNext('/login', searchParams.get('next'))} className="text-accent underline underline-offset-2 hover:decoration-2">
                 Log in instead
               </Link>
             </p>
@@ -273,7 +275,7 @@ export default function Register() {
 
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{' '}
-          <Link to="/login" className="text-accent underline underline-offset-2 hover:decoration-2">
+          <Link to={withNext('/login', searchParams.get('next'))} className="text-accent underline underline-offset-2 hover:decoration-2">
             Log in
           </Link>
         </p>

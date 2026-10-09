@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Star, Store, Users } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { dealHoursLabel, hasDealHours, isDealOpenNow } from '../../supabase/functions/_shared/deal-availability.ts'
 import { hasStudentPrice, offerBadge, struckOutPrice, studentPrice } from '../lib/dealPricing.js'
 import { formatMoney, formatDate } from '../lib/format.js'
 import BackLink from '../components/BackLink.jsx'
+import { withNext } from '../lib/safeNext.js'
 
 function formatRelativeTime(isoString) {
   const diff = Date.now() - new Date(isoString).getTime()
@@ -37,6 +38,12 @@ export default function DealDetail() {
   const [error, setError] = useState('')
   const [startingGroup, setStartingGroup] = useState(false)
   const [groupStartError, setGroupStartError] = useState('')
+  // null = still checking. Shared links are opened by people without an account.
+  const [signedIn, setSignedIn] = useState(null)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)))
+  }, [])
 
   // Moved here from the home card: the home feed only opens deals now.
   async function startGroupOrder() {
@@ -177,7 +184,7 @@ export default function DealDetail() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto px-4 py-5 md:py-8 space-y-5">
-        <BackLink to="/dashboard/deals" />
+        <BackLink to={signedIn === false ? '/register' : '/dashboard/deals'} />
 
         <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
           <div className="relative h-56 w-full sm:h-72">
@@ -318,6 +325,25 @@ export default function DealDetail() {
                 This deal can't be ordered right now. It's available {dealHoursLabel(deal)} (Kigali time).
               </p>
             )}
+            {signedIn === false ? (
+              // A visitor from a shared link: log in (or sign up), then come back here.
+              <div className="space-y-2 rounded-xl border border-border bg-muted/30 p-4 text-center">
+                <p className="text-sm text-muted-foreground">Students order on Unipicks. Log in to order this deal.</p>
+                <Link
+                  to={withNext('/login', `/deal/${deal.id}`)}
+                  className="block w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-accent-dim"
+                >
+                  Log in to order
+                </Link>
+                <p className="text-sm text-muted-foreground">
+                  New here?{' '}
+                  <Link to={withNext('/register', `/deal/${deal.id}`)} className="font-medium text-accent underline underline-offset-2">
+                    Create an account
+                  </Link>
+                </p>
+              </div>
+            ) : (
+            <>
             {deal.offer_type === 'group_buy' && (
               <>
                 <button
@@ -339,6 +365,8 @@ export default function DealDetail() {
             >
               {!priced ? 'Price not set' : openNow ? 'Continue to Order' : 'Not available right now'}
             </button>
+            </>
+            )}
           </div>
         </div>
       </div>
