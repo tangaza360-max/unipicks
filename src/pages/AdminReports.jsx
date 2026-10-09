@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import { STORY_BUCKET } from '../lib/studentStories.js'
 import { AVATAR_BUCKET } from '../lib/studentAvatars.js'
+import { REVIEW_BUCKET, reviewPhotoUrls } from '../lib/reviewPhotos.js'
+import StarRating from '../components/StarRating.jsx'
 import { formatDateTime } from '../lib/format.js'
 
 // Admin → Reports (fix 8; social audit D5). Reports from students and
@@ -14,7 +16,7 @@ const STATUS_LABELS = {
   dismissed: 'Dismissed',
 }
 
-const CONTEXT_LABELS = { chat: 'from a chat', profile: 'from a profile', business: 'about a business', story: 'about a story', avatar: 'about a profile photo' }
+const CONTEXT_LABELS = { chat: 'from a chat', profile: 'from a profile', business: 'about a business', story: 'about a story', avatar: 'about a profile photo', review: 'about a review' }
 
 const FILTERS = [
   ['open', 'Open'],
@@ -43,6 +45,7 @@ export default function AdminReports() {
   const [submitting, setSubmitting] = useState(false)
   const [storyUrls, setStoryUrls] = useState({}) // media path → private link
   const [avatarUrls, setAvatarUrls] = useState({}) // photo path → private link
+  const [reviewUrls, setReviewUrls] = useState({}) // review photo path → private link
 
   useEffect(() => {
     loadReports()
@@ -64,6 +67,9 @@ export default function AdminReports() {
       if (linkError) console.error('Failed to open reported story photos:', linkError.message)
       setStoryUrls(Object.fromEntries((links || []).map((link) => [link.path, link.signedUrl])))
     }
+
+    // Reported review photos (the copy kept with the report).
+    setReviewUrls(await reviewPhotoUrls((data || []).map((r) => r.review_photo_path)))
 
     // Reported profile photos are private too. A removed photo gets no link.
     const avatarPaths = [...new Set((data || []).map((r) => r.avatar_path).filter(Boolean))]
@@ -143,6 +149,22 @@ export default function AdminReports() {
     if (!removeError && path) {
       const { error: fileError } = await supabase.storage.from(AVATAR_BUCKET).remove([path])
       if (fileError) console.error('Profile photo not removed:', fileError.message)
+    }
+    setSubmitting(false)
+    if (removeError) {
+      setError(removeError.message)
+      return
+    }
+    await loadReports()
+  }
+
+  async function removeReview(report) {
+    if (!window.confirm(`Remove the text and photo of this review by ${report.reported_name || 'this student'}? The stars stay.`)) return
+    setSubmitting(true)
+    const { data: path, error: removeError } = await supabase.rpc('admin_remove_review', { p_report_id: report.id })
+    if (!removeError && path) {
+      const { error: fileError } = await supabase.storage.from(REVIEW_BUCKET).remove([path])
+      if (fileError) console.error('Review photo not removed:', fileError.message)
     }
     setSubmitting(false)
     if (removeError) {
@@ -260,6 +282,24 @@ export default function AdminReports() {
                   </div>
                 )}
 
+                {report.context === 'review' && (
+                  <div className="flex gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                    {reviewUrls[report.review_photo_path] && (
+                      <img
+                        src={reviewUrls[report.review_photo_path]}
+                        alt={`Food photo in the reported review by ${report.reported_name || 'this student'}`}
+                        className="h-24 w-24 flex-shrink-0 rounded-md object-cover"
+                      />
+                    )}
+                    <div className="min-w-0 space-y-1 text-sm">
+                      <p className="text-xs text-muted-foreground">Reported review</p>
+                      {report.review_rating != null && <StarRating value={report.review_rating} readonly iconSize={14} />}
+                      {report.review_text && <p className="break-words">“{report.review_text}”</p>}
+                      {report.review_removed && <p className="text-xs text-muted-foreground">Text and photo were removed.</p>}
+                    </div>
+                  </div>
+                )}
+
                 {report.avatar_path && (
                   <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
                     {avatarUrls[report.avatar_path] ? (
@@ -326,6 +366,16 @@ export default function AdminReports() {
                         className="text-xs border border-[color:var(--status-bad-fg)] text-[color:var(--status-bad-fg)] hover:bg-[color:var(--status-bad-bg)] rounded-lg px-3 py-2 transition disabled:opacity-50"
                       >
                         Remove story
+                      </button>
+                    )}
+                    {report.context === 'review' && !report.review_removed && (
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        onClick={() => removeReview(report)}
+                        className="text-xs border border-[color:var(--status-bad-fg)] text-[color:var(--status-bad-fg)] hover:bg-[color:var(--status-bad-bg)] rounded-lg px-3 py-2 transition disabled:opacity-50"
+                      >
+                        Remove review
                       </button>
                     )}
                     {report.avatar_path && avatarUrls[report.avatar_path] && (

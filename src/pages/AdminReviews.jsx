@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import StarRating from '../components/StarRating.jsx'
+import { REVIEW_BUCKET, reviewPhotoUrls } from '../lib/reviewPhotos.js'
 
 export default function AdminReviews() {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [photos, setPhotos] = useState({}) // photo path → private link
 
   async function loadReviews() {
     setLoading(true)
@@ -16,6 +18,7 @@ export default function AdminReviews() {
     if (fetchError) setError(fetchError.message)
     else setReviews(data || [])
     setLoading(false)
+    setPhotos(await reviewPhotoUrls((data || []).map((r) => r.photo_path)))
   }
 
   useEffect(() => {
@@ -28,6 +31,11 @@ export default function AdminReviews() {
     if (deleteError) {
       setError(deleteError.message)
       return
+    }
+    // The food photo goes too (admins may delete any review photo).
+    if (review.photo_path) {
+      const { error: fileError } = await supabase.storage.from(REVIEW_BUCKET).remove([review.photo_path])
+      if (fileError) console.error('Review photo not removed:', fileError.message)
     }
     setReviews((current) => current.filter((item) => item.id !== review.id))
   }
@@ -51,6 +59,9 @@ export default function AdminReviews() {
                   <p className="text-muted-foreground text-xs">{review.deals?.business_name || 'Unknown business'} · {new Date(review.created_at).toLocaleString()}</p>
                   <StarRating value={review.rating} readonly iconSize={16} />
                   {review.review && <p className="text-sm text-foreground mt-2">{review.review}</p>}
+                  {photos[review.photo_path] && (
+                    <img src={photos[review.photo_path]} alt={`Food photo in the review of ${review.deals?.title || 'a deal'}`} className="mt-2 h-32 w-32 rounded-lg object-cover" />
+                  )}
                 </div>
                 <button type="button" onClick={() => deleteReview(review)} className="self-start rounded-lg border border-destructive/40 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10">Delete</button>
               </div>

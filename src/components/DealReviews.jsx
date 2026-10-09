@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabaseClient.js'
 import { reviewPhotoUrls } from '../lib/reviewPhotos.js'
 import StarRating from './StarRating.jsx'
 import StudentAvatar from './StudentAvatar.jsx'
+import ReportDialog from './ReportDialog.jsx'
+import { Flag } from 'lucide-react'
 
 function ago(iso) {
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
@@ -17,9 +19,12 @@ function ago(iso) {
 export default function DealReviews({ dealId }) {
   const [reviews, setReviews] = useState(null)
   const [photos, setPhotos] = useState({})
+  const [signedIn, setSignedIn] = useState(false)
+  const [reporting, setReporting] = useState(null) // the review being reported
 
   useEffect(() => {
     let cancelled = false
+    supabase.auth.getSession().then(({ data }) => !cancelled && setSignedIn(Boolean(data.session)))
     async function load() {
       const { data, error } = await supabase.rpc('get_deal_reviews', { p_deal_id: dealId, p_limit: 20 })
       if (cancelled) return
@@ -67,10 +72,29 @@ export default function DealReviews({ dealId }) {
                   className="max-h-80 w-full rounded-xl object-cover"
                 />
               )}
+              {signedIn && !r.is_mine && (
+                <button
+                  type="button"
+                  onClick={() => setReporting(r)}
+                  aria-label={`Report review by ${name}`}
+                  className="inline-flex min-h-11 items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  <Flag size={14} aria-hidden="true" /> Report
+                </button>
+              )}
             </li>
           )
         })}
       </ul>
+      {reporting && (
+        <ReportDialog
+          context="review"
+          ratingId={reporting.id}
+          reportedId={reporting.reviewer_id}
+          reportedName={reporting.reviewer_name}
+          onClose={() => setReporting(null)}
+        />
+      )}
     </section>
   )
 }

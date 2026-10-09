@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient.js'
 // queue; admins are alerted and aim to respond within 24 hours (decision D5).
 const CATEGORIES = ['Harassment', 'Spam', 'Impersonation', 'Inappropriate behavior', 'Other']
 
-export default function ReportDialog({ reportedId, reportedName, context, storyId = null, onClose }) {
+export default function ReportDialog({ reportedId, reportedName, context, storyId = null, ratingId = null, onClose }) {
   const [category, setCategory] = useState('')
   const [description, setDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -36,17 +36,18 @@ export default function ReportDialog({ reportedId, reportedName, context, storyI
     const { data: { user } } = await supabase.auth.getUser()
     const { error: insertError } = await supabase.from('student_reports').insert({
       reporter_id: user?.id,
-      reported_id: reportedId,
+      reported_id: reportedId || null, // a review: the database fills in who wrote it
       category,
       description: description.trim() || null,
       context,
       ...(storyId ? { story_id: storyId } : {}),
+      ...(ratingId ? { rating_id: ratingId } : {}),
     })
     setSubmitting(false)
 
     if (insertError) {
       setError(
-        /suspended|profile photo|photo you can see/.test(insertError.message)
+        /suspended|profile photo|photo you can see|your own review|no longer exists/.test(insertError.message)
           ? insertError.message
           : 'Your report could not be sent. Please try again.',
       )
@@ -71,7 +72,9 @@ export default function ReportDialog({ reportedId, reportedName, context, storyI
         <h2 id="report-title" className="font-display text-lg font-semibold">
           {storyId
             ? `Report this story from ${reportedName || 'this student'}`
-            : context === 'avatar'
+            : context === 'review'
+              ? `Report this review${reportedName ? ` by ${reportedName}` : ''}`
+              : context === 'avatar'
               ? `Report the profile photo of ${reportedName || 'this student'}`
               : `Report ${reportedName || 'this account'}`}
         </h2>

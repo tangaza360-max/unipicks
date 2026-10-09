@@ -113,7 +113,8 @@ erDiagram
   users ||--o{ system_settings : "updated by admin"
   student_reports {
     text status "pending | reviewing | resolved | dismissed"
-    text context "chat | profile | business | story | avatar"
+    text context "chat | profile | business | story | avatar | review"
+    uuid rating_id "reported review (copy of text and photo kept)"
     text avatar_path "reported photo, set by the database"
   }
 ```

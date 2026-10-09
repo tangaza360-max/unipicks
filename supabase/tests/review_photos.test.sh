@@ -139,6 +139,31 @@ echo " removing"
 check "Fred can't delete Aline's photo" "$(as_user $F "delete from storage.objects where bucket_id = 'review-photos' returning 1;")" ""
 check "Aline can delete her own" "$(as_user $A "delete from storage.objects where bucket_id = 'review-photos' and name = '$PIC' returning 1;")" "1"
 
+echo " reporting a review"
+q "insert into storage.objects (bucket_id, name) values ('review-photos', '$PIC');" >/dev/null   # the photo again
+RID=$(q "select id from public.ratings where student_id = '$A'")
+rep() { as_user "$1" "insert into public.student_reports (reporter_id, reported_id, category, context, rating_id) values ('$1', ${3:-null}, 'Inappropriate behavior', '${4:-review}', ${2}) returning reported_id;"; }
+check "Fred reports Aline's review; the database fills in who wrote it" "$(rep $F "'$RID'")" "$A"
+check "a wrong 'who' from the phone is replaced" "$(rep $K "'$RID'" "'$M'")" "$A"
+check "the business can report a review of its deal" "$(rep $M "'$RID'")" "$A"
+check "you can't report your own review" "$(rep $A "'$RID'")" "You can't report your own review."
+check "a review that doesn't exist" "$(rep $F "'30000000-0000-4000-8000-000000000009'")" "This review no longer exists."
+check "other report types can't carry a review" "$(as_user $F "insert into public.student_reports (reporter_id, reported_id, category, context, rating_id) values ('$F','$A','Spam','profile','$RID') returning coalesce(rating_id::text,'none');")" "none"
+check "the report keeps a copy of the text and photo" "$(q "select review_text || '|' || review_photo_path from public.student_reports where reporter_id = '$F' and context = 'review'")" "Best rolex!|$PIC"
+as_user $A "update public.ratings set review = 'edited' where id = '$RID';" >/dev/null
+check "editing the review later doesn't change the copy" "$(q "select review_text from public.student_reports where reporter_id = '$F' and context = 'review'")" "Best rolex!"
+check "while reported, Aline can't delete that photo file" "$(as_user $A "delete from storage.objects where bucket_id = 'review-photos' and name = '$PIC' returning 1;")" ""
+REP=$(q "select id from public.student_reports where reporter_id = '$F' and context = 'review'")
+check "admin queue shows the review (stars, copy, photo)" "$(as_user $AD "select review_rating || '|' || review_text || '|' || review_photo_path || '|' || review_removed from public.get_admin_reports() where id = '$REP';")" "5|Best rolex!|$PIC|false"
+check "only admins can remove a review" "$(as_user $F "select public.admin_remove_review('$REP');")" "Only admins can remove reviews"
+check "admin_remove_review refuses other reports" "$(as_user $AD "select public.admin_remove_review((select id from public.student_reports where context = 'profile' limit 1));")" "This report is not about a review."
+check "admin removes it: returns the photo to delete" "$(as_user $AD "select public.admin_remove_review('$REP');")" "$PIC"
+check "text and photo cleared, stars kept" "$(q "select coalesce(review,'-') || '|' || coalesce(photo_path,'-') || '|' || rating from public.ratings where id = '$RID'")" "-|-|5"
+check "queue now says removed" "$(as_user $AD "select review_removed from public.get_admin_reports() where id = '$REP';")" "t"
+check "logged as remove_review" "$(q "select count(*) from public.activity_logs where action = 'remove_review' and target_id = '$A'")" "1"
+check "admin can delete the file" "$(as_user $AD "delete from storage.objects where bucket_id = 'review-photos' and name = '$PIC' returning 1;")" "1"
+check "get_admin_reports: definer, admins only" "$(as_user $F "select count(*) from public.get_admin_reports();")" "Only admins can view reports"
+
 echo " erasure"
 check "account deletion empties the review-photos folder" "$(q "select public.tombstone_user_core('$A') -> 'storage' @> '[{\"bucket\":\"review-photos\",\"prefix\":\"$A\"}]'")" "t"
 check "and clears the text and photo on her kept rating" "$(q "select coalesce(review,'-') || '|' || coalesce(photo_path,'-') || '|' || rating from public.ratings where student_id = '$A'")" "-|-|5"
