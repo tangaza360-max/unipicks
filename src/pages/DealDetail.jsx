@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Star, Store, Users } from 'lucide-react'
+import { Share2, Star, Store, Users } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { dealHoursLabel, hasDealHours, isDealOpenNow } from '../../supabase/functions/_shared/deal-availability.ts'
 import { hasStudentPrice, offerBadge, struckOutPrice, studentPrice } from '../lib/dealPricing.js'
 import { formatMoney, formatDate } from '../lib/format.js'
 import BackLink from '../components/BackLink.jsx'
 import { withNext } from '../lib/safeNext.js'
+import { ShareButton } from '../components/ShareDeal.jsx'
 
 function formatRelativeTime(isoString) {
   const diff = Date.now() - new Date(isoString).getTime()
@@ -208,13 +209,22 @@ export default function DealDetail() {
           </div>
 
           <div className="space-y-5 p-5 md:p-7">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                {deal.business_name}
-              </p>
-              <h1 className="mt-1 font-display text-2xl font-semibold md:text-3xl">
-                {deal.title}
-              </h1>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {deal.business_name}
+                </p>
+                <h1 className="mt-1 font-display text-2xl font-semibold md:text-3xl">
+                  {deal.title}
+                </h1>
+              </div>
+              {/* Anyone can share, even visitors: the link has a preview card. */}
+              <ShareButton
+                deal={deal}
+                className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-border px-4 text-sm font-medium hover:bg-muted"
+              >
+                <Share2 size={16} aria-hidden="true" /> Share
+              </ShareButton>
             </div>
 
             {ratingStats?.review_count > 0 && (

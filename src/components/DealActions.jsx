@@ -1,6 +1,7 @@
 import { Bookmark, Heart } from 'lucide-react'
+import { ShareButton } from './ShareDeal.jsx'
 
-// ❤️ like (with the count) and 🔖 save, drawn on a deal photo. They sit next
+// ❤️ like (with the count), 🔖 save and share, drawn on a deal photo. They sit next
 // to the card's link, not inside it (a button can't be inside a link).
 export default function DealActions({ deal, social, onLike, onSave, busy = false }) {
   const likes = Number(social?.like_count || 0)
@@ -33,6 +34,7 @@ export default function DealActions({ deal, social, onLike, onSave, busy = false
       >
         <Bookmark size={18} aria-hidden="true" className={saved ? 'fill-neutral-900 text-neutral-900' : 'text-neutral-900'} />
       </button>
+      <ShareButton deal={deal} className={`${pill} w-9`} />
     </div>
   )
 }
