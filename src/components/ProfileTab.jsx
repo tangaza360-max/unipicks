@@ -950,14 +950,9 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
         <button
           onClick={() => setShowOrderHistory(true)}
           className="w-full flex items-center justify-between text-left group"
-          aria-label={
-            [
-              'Order History',
-              needsActionCount > 0 && `${needsActionCount} order${needsActionCount === 1 ? '' : 's'} waiting for payment`,
-              disputeUnreadCount > 0 && `${disputeUnreadCount} dispute update${disputeUnreadCount === 1 ? '' : 's'}`,
-            ].filter(Boolean).join(', ')
-          }
         >
+          {/* The name is the visible text (WCAG 2.5.3 Label in Name); hidden
+              text only adds what the screen doesn't show. */}
           <div>
             <p className="font-display text-lg font-semibold">Order History</p>
             <p className="text-sm text-muted-foreground mt-1">
@@ -966,6 +961,11 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
                 : disputeUnreadCount > 0
                   ? 'Your dispute has an update'
                   : 'View all your past orders'}
+              {needsActionCount > 0 && disputeUnreadCount > 0 && (
+                <span className="sr-only">
+                  , {disputeUnreadCount} dispute update{disputeUnreadCount === 1 ? '' : 's'}
+                </span>
+              )}
             </p>
           </div>
           <span className="flex items-center gap-2">
@@ -977,7 +977,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
                 {needsActionCount + disputeUnreadCount > 99 ? '99+' : needsActionCount + disputeUnreadCount}
               </span>
             )}
-            <span className="text-muted-foreground group-hover:text-accent transition">&rarr;</span>
+            <span aria-hidden="true" className="text-muted-foreground group-hover:text-accent transition">&rarr;</span>
           </span>
         </button>
       </div>

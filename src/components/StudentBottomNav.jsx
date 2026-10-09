@@ -120,7 +120,6 @@ function NavItem({ item, active, onClick, badgeCount = 0, badgeLabel }) {
         haptic(10)
         onClick?.()
       }}
-      aria-label={showBadge && badgeLabel ? `${label}, ${badgeLabel(badgeCount)}` : label}
       aria-current={active ? 'page' : undefined}
       className={[
         'flex h-full min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium',
@@ -139,7 +138,10 @@ function NavItem({ item, active, onClick, badgeCount = 0, badgeLabel }) {
           </span>
         )}
       </span>
+      {/* The name is the visible word plus hidden badge text, so voice
+          control users can say what they see (WCAG 2.5.3). */}
       {label}
+      {showBadge && badgeLabel && <span className="sr-only">, {badgeLabel(badgeCount)}</span>}
     </button>
   )
 }

@@ -94,7 +94,6 @@ export default function BusinessBottomNav({ activeTab, onNavigate, pendingOrders
                 type="button"
                 onClick={() => go(id)}
                 aria-current={active ? 'page' : undefined}
-                aria-label={count ? `${label}, ${count} waiting` : label}
                 className={`flex min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium ${
                   active ? 'text-accent' : 'text-muted-foreground'
                 }`}
@@ -103,7 +102,9 @@ export default function BusinessBottomNav({ activeTab, onNavigate, pendingOrders
                   <Icon size={22} strokeWidth={active ? 2.5 : 2} aria-hidden="true" />
                   <Badge count={count} />
                 </span>
+                {/* Visible word + hidden badge text (WCAG 2.5.3 Label in Name). */}
                 {label}
+                {count > 0 && <span className="sr-only">, {count} waiting</span>}
               </button>
             )
           })}
@@ -111,7 +112,6 @@ export default function BusinessBottomNav({ activeTab, onNavigate, pendingOrders
             type="button"
             onClick={() => setMoreOpen((open) => !open)}
             aria-expanded={moreOpen}
-            aria-label={unreadMessages ? `More, ${unreadMessages} unread messages` : 'More'}
             className={`flex min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium ${
               moreActive || moreOpen ? 'text-accent' : 'text-muted-foreground'
             }`}
@@ -121,6 +121,7 @@ export default function BusinessBottomNav({ activeTab, onNavigate, pendingOrders
               <Badge count={unreadMessages} />
             </span>
             More
+            {unreadMessages > 0 && <span className="sr-only">, {unreadMessages} unread messages</span>}
           </button>
         </div>
       </nav>
