@@ -59,6 +59,9 @@ export default function StudentAvatar({
 
   return (
     <span
+      // alt="" means the photo sits next to the written name: decorative, so
+      // screen readers skip the photo and the initials (WCAG 1.1.1, 2.5.3).
+      aria-hidden={alt === '' ? 'true' : undefined}
       className={[
         'relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full',
         'bg-gradient-to-br from-accent/80 via-accent/40 to-foreground/20',
@@ -80,7 +83,9 @@ export default function StudentAvatar({
           onError={() => setFailed(true)}
         />
       ) : (
-        <span aria-hidden="true">{initials}</span>
+        // Drawn by CSS, not as text: initials are a picture of the name, so
+        // they must not become part of a button's name (WCAG 2.5.3).
+        <span aria-hidden="true" data-initials={initials} className="before:content-[attr(data-initials)]" />
       )}
     </span>
   )
