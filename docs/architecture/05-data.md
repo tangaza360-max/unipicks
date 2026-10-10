@@ -70,8 +70,19 @@ erDiagram
 
 - **One order ↔ one payment** in the current flow (`transactions.normal_order_id`).
 - **The price is decided by the server** (`create-order`), never by the app.
-- Refunds will add a `refunds` table linked to `orders` and `transactions`
-  (plan approved 2026-10-05).
+- **Refunds** (`refunds`, migration `20261010140000`): each refund points to
+  the order and its payment, with the amount (whole RWF), reason
+  (`cant_serve` · `dispute` · `double_payment` · `other`), who pays for it
+  (`business` · `unipicks`, chosen by the admin), status (see page 4) and the
+  MoMo reference once sent. A refunded **double charge** is counted on its
+  own (the app keeps one payment per order, so a second charge shows only in
+  UmunotaPay). `orders` gained `cant_serve_at`, `cant_serve_reason`
+  (`sold_out` · `closed` · `other`) and `cant_serve_note`.
+- ⚠️ **Drift found 2026-10-10:** production's payment-status rule allows
+  `pending · processing · paid · failed · refunded`; the tables built from the
+  migration files still have the older `pending · success · failed ·
+  cancelled`. Production is right (the code writes `paid`); the refunds test
+  copies production's rule.
 
 ## C. Group orders
 

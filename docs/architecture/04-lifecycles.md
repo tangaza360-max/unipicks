@@ -22,7 +22,8 @@ stateDiagram-v2
   payment_expired --> paid: late callback success (accepted)
   paid --> paid: business taps Food ready (sets ready_at, alerts the student)
   paid --> redeemed: pickup code used (redeem_pickup_code)
-  paid --> refunded: planned (refunds)
+  paid --> refunded: all money returned (admin_mark_refund_sent)
+  redeemed --> refunded: all money returned
   declined --> [*]
   confirmation_expired --> [*]
   redeemed --> [*]
@@ -36,7 +37,7 @@ stateDiagram-v2
 | `paid` | Money received, pickup code sent. `ready_at` is empty while the food is being made; the business's **Food ready** tap fills it (update-order-status, action `ready`) and alerts the student. The status stays `paid` | Business enters the code |
 | `redeemed` | Collected ✓ | — |
 | `declined`, `confirmation_expired`, `payment_expired` | Ended without food (late money still makes it `paid`) | — |
-| `refunded` | Allowed by the database, **not used yet** (refunds planned) | — |
+| `refunded` | Everything paid was returned (a refund marked sent covers the whole payment) | — |
 | `completed`, `cancelled` | Allowed by the database, **never set** for orders | — |
 
 **Dispute** (`orders.dispute_status`, beside the status above):
@@ -59,7 +60,7 @@ stateDiagram-v2
   processing --> paid: callback success
   processing --> failed: callback failed / abandoned after 24 h (reconcile, off)
   failed --> paid: late success (accepted)
-  paid --> refunded: planned (refunds)
+  paid --> refunded: whole payment returned
 ```
 
 `pending` is allowed but not used by the current flow.
@@ -147,14 +148,26 @@ stateDiagram-v2
 
 Target: first answer within **24 hours** (the admin screen marks late ones red).
 
-## Refund (planned, approved 2026-10-05)
+## Refund (`refunds.status`, database built 2026-10-10)
 
 ```mermaid
 stateDiagram-v2
-  [*] --> to_send: admin starts it
+  [*] --> to_send: admin starts it (admin_start_refund)
   to_send --> sent: admin enters the MoMo reference
   to_send --> failed: MoMo did not go through
   failed --> sent: try again
   to_send --> cancelled: started by mistake
   failed --> cancelled
 ```
+
+- **Sent is final.** One open refund (to send / failed) per order; all refunds
+  of a payment together are never more than the payment.
+- **While a refund is open:** the pickup code does not work, and the student
+  and the business can't delete their accounts.
+- **A business that can't serve a paid order** taps "Can't serve this order"
+  (`request_cant_serve`): the student and every admin are told; an admin
+  decides the refund (founder, 2026-10-10).
+- A refund on a dispute ("Resolve and refund") also marks the dispute resolved.
+- Phase 1: an admin sends the MoMo by hand **from a Unipicks MoMo number**
+  (founder, 2026-10-10) and types its reference.
+

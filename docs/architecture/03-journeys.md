@@ -125,8 +125,8 @@ flowchart LR
     `reconcile-payments` is built to ask UmunotaPay but is **switched off**;
   - the business is not approved / banned → `create-order` refuses
     ("This business isn't taking orders right now.");
-  - money must go back (sold out, dispute) → **refunds not built yet**
-    (plan approved).
+  - money must go back (sold out, dispute) → **refunds**: the database is
+    built (`20261010140000`); the admin, student and business screens come next.
 
 ## J4. A group order
 
@@ -167,7 +167,7 @@ sequenceDiagram
   DB-->>B: notification
   AD->>DB: Admin → Disputes → resolve_order_dispute<br/>(under review / resolved / rejected + note)
   DB-->>S: notification with the outcome<br/>(the business is told too)
-  Note over AD,DB: Resolved for the student → refund<br/>(planned: "Resolve and refund")
+  Note over AD,DB: Resolved for the student → refund<br/>(admin_start_refund with reason dispute)
 ```
 
 ## J6. Report and ban
@@ -223,5 +223,5 @@ sequenceDiagram
 
 ---
 
-**Not drawn yet (not built):** refunds (plan approved 2026-10-05), payouts to
+**Not drawn yet:** refunds (database built 2026-10-10, screens next), payouts to
 businesses (waiting for UmunotaPay).

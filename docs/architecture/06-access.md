@@ -69,6 +69,7 @@ Write new rules the same way.
 | `user_notifications` | — | own; mark read | own; mark read | own | triggers and server |
 | `push_subscriptions` | — | own phones | own phones | own | `save_push_subscription` |
 | `activity_logs` | — | — | — | read | admin actions, server |
+| `refunds` | — | own (amount, status, note, MoMo reference) | refunds of own orders | all | **admin functions only** (no app writes): `admin_start_refund`, `admin_mark_refund_sent`, `admin_mark_refund_failed`, `admin_cancel_refund` |
 | `ratings` | all (written reviews via `get_deal_reviews`: text for visitors, photo for signed-in people, the reviewer's name only for students they haven't blocked and admins) | rate own collected order, with an optional photo from their own folder (edit 24 h) | — | delete | student |
 | `deal_likes` | — | own likes only; like live deals (not banned); remove own | — | — | student; others see counts only via `get_deals_social` (also: how many of my friends liked it and the newest one's name — blocked people never counted — and the comment count) |
 | `student_saved_items` | — | own only (save / unsave) | — | — | student |
@@ -93,14 +94,21 @@ were public (no student screen shows the pay code; students pay in the app).
 
 `export_my_data()` (signed in): one JSON file with everything stored about
 the caller — Profile → Settings → Download my data. Leaves out password data,
-payment-provider payloads, phone-alert keys and reports filed against them.
+payment-provider payloads, phone-alert keys and reports filed against them. ⚠️ Refunds are not in the file yet (to add with the student refund screen).
 
 ## Admin-only actions (each checks the admin role itself)
 
 `admin_ban_user`, `admin_unban_user`, `admin_delete_user`,
 `get_all_students`, `get_all_merchants`, `get_admin_reports`,
 `review_report`, `admin_remove_story`, `admin_remove_avatar`, `admin_remove_review`, `admin_remove_comment`, `log_admin_action`,
-`resolve_order_dispute`.
+`resolve_order_dispute`, `admin_start_refund`, `admin_mark_refund_sent`,
+`admin_mark_refund_failed`, `admin_cancel_refund` (refunds: amount never more
+than what is left on the payment; one open refund per order; each step logged
+in `activity_logs`).
+
+**Business-only:** `request_cant_serve(order, reason, note)` — the order's
+business, not banned, paid order not collected; tells the student and every
+admin; an admin decides the refund.
 
 ## Checks that run whoever writes (triggers)
 
@@ -112,12 +120,14 @@ payment-provider payloads, phone-alert keys and reports filed against them.
 | Stories: students only, own folder, images only, 24 h set by the database, kept while reported | Privacy, evidence |
 | University and student ID are set by the server from the email | Fake students |
 | Messages: receivers can only mark them read | Chats as dispute evidence |
+| An order can't be marked collected while a refund on it is open | Food *and* money back (`block_pickup_during_refund`) |
+| An account can't be deleted while a refund on its orders is open | The refund needs the phone on the order |
 
 ## The private schema
 
 Social and role functions keep their code in the `private` schema (page 2);
 only signed-in users may use it, and every function there is closed to
-visitors who are not logged in. Ten table rules call `private.is_admin()`,
+visitors who are not logged in. Eleven table rules call `private.is_admin()`,
 which gives the same answer as `public.is_admin()`.
 
 ## Photos (Storage)

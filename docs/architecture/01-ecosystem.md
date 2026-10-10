@@ -77,6 +77,6 @@ flowchart LR
 ## Not connected yet
 
 - **Payouts to businesses**: not built; waiting for UmunotaPay's answer.
-- **Refunds**: plan approved 2026-10-05 (`refund-plan`), not built yet.
+- **Refunds**: database built 2026-10-10 (`20261010140000_refunds.sql`); the admin, student and business screens are the next steps. Money is sent by hand from a Unipicks MoMo number.
 - **Payment status check** (`reconcile-payments`): built, **switched off**
   (`RECONCILE_ENABLED` not set, no timer job).
