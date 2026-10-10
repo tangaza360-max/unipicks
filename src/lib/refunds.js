@@ -73,3 +73,19 @@ export function refundQueue({ refunds = [], cantServeOrders = [] }) {
     .sort((a, b) => String(b.sent_at || b.updated_at || b.created_at).localeCompare(String(a.sent_at || a.updated_at || a.created_at)))
   return { waiting, toSend, done, count: waiting.length + toSend.length }
 }
+
+// What the student sees about money coming back on one order card:
+//   cantServe — the business said it can't serve, and no refund is moving yet
+//   open      — a refund in progress (to send, or failed and being sent again)
+//   sent      — refunds sent, oldest first
+//   stopped   — refunds an admin stopped
+//   codePaused — the pickup code doesn't work while a refund is in progress
+/** @param {any} order */
+export function studentRefundView(order) {
+  const refunds = [...(order?.refunds || [])].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))
+  const open = refunds.find((r) => r.status === 'to_send' || r.status === 'failed') || null
+  const sent = refunds.filter((r) => r.status === 'sent')
+  const stopped = refunds.filter((r) => r.status === 'cancelled')
+  const cantServe = Boolean(order?.cant_serve_at) && order?.status === 'paid' && !open && sent.length === 0
+  return { cantServe, open, sent, stopped, codePaused: Boolean(open) }
+}

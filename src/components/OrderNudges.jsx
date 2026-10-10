@@ -28,7 +28,7 @@ export default function OrderNudges() {
       async function load() {
         const { data, error } = await supabase
           .from('orders')
-          .select('id, status, payment_deadline, ready_at, deals(title, business_name)')
+          .select('id, status, payment_deadline, ready_at, deals(title, business_name), refunds(status)')
           .eq('student_id', user.id)
           .in('status', ['confirmed', 'paid'])
         if (!active) return

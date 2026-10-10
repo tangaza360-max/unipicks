@@ -127,7 +127,8 @@ flowchart LR
     ("This business isn't taking orders right now.");
   - money must go back (sold out, dispute) → **refunds**: an admin starts it
     in Admin → Refunds, sends the MoMo by hand, then marks it sent with the
-    reference (`20261010140000`); the student and business screens come next.
+    reference (`20261010140000`); the student sees it on the order card and receipt;
+    the business screen comes next.
 
 ## J4. A group order
 
@@ -224,5 +225,5 @@ sequenceDiagram
 
 ---
 
-**Not drawn yet:** refunds (database and Admin → Refunds built 2026-10-10; student and business screens next), payouts to
+**Not drawn yet:** refunds (database, Admin → Refunds and the student's view built 2026-10-10; business screen next), payouts to
 businesses (waiting for UmunotaPay).

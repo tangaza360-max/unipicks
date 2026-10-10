@@ -94,7 +94,7 @@ were public (no student screen shows the pay code; students pay in the app).
 
 `export_my_data()` (signed in): one JSON file with everything stored about
 the caller — Profile → Settings → Download my data. Leaves out password data,
-payment-provider payloads, phone-alert keys and reports filed against them. ⚠️ Refunds are not in the file yet (to add with the student refund screen).
+payment-provider payloads, phone-alert keys and reports filed against them. Refunds are included (`20261010150000`): the student's own, and for a business the refunds on its orders with who paid; never which admin handled them.
 
 ## Admin-only actions (each checks the admin role itself)
 

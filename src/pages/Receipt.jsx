@@ -16,7 +16,7 @@ import BackLink from '../components/BackLink.jsx'
 // Unipicks' own registration, shown once the company is registered with RDB.
 const UNIPICKS_REGISTRATION = import.meta.env.VITE_UNIPICKS_REGISTRATION || ''
 
-const RECEIPT_STATUSES = { paid: 'Paid', redeemed: 'Collected', completed: 'Collected' }
+const RECEIPT_STATUSES = { paid: 'Paid', redeemed: 'Collected', completed: 'Collected', refunded: 'Refunded' }
 const PAYMENT_METHODS = { momo: 'Mobile Money', mtn_momo: 'MTN MoMo', airtel: 'Airtel Money', airtel_money: 'Airtel Money' }
 
 function money(value, currency = 'RWF') {
@@ -38,7 +38,7 @@ function Row({ label, children }) {
 
 export default function Receipt() {
   const { orderId } = useParams()
-  const [state, setState] = useState({ loading: true, error: '', order: null, payment: null, seller: null })
+  const [state, setState] = useState({ loading: true, error: '', order: null, payment: null, seller: null, refunds: [] })
 
   useEffect(() => {
     let active = true
@@ -69,16 +69,23 @@ export default function Receipt() {
           .from('transactions')
           .select('amount, currency, payment_method, status, umunota_reference, created_at, updated_at')
           .or(paymentFilter)
-          .eq('status', 'paid')
+          .in('status', ['paid', 'refunded'])
           .order('updated_at', { ascending: false })
           .limit(1),
         // Only this order's student, its business or an admin get the seller
         // (business details are private: 20261010130000).
         supabase.rpc('get_receipt_seller', { p_order_id: order.id }),
       ])
+      // Money sent back on this order (refunds, 20261010140000).
+      const { data: refunds } = await supabase
+        .from('refunds')
+        .select('id, amount, reason, momo_reference, sent_at')
+        .eq('order_id', order.id)
+        .eq('status', 'sent')
+        .order('sent_at', { ascending: true })
 
       if (!active) return
-      setState({ loading: false, error: '', order, payment: payments?.[0] ?? null, seller: seller?.[0] ?? null })
+      setState({ loading: false, error: '', order, payment: payments?.[0] ?? null, seller: seller?.[0] ?? null, refunds: refunds || [] })
     }
 
     load().catch(() => {
@@ -89,7 +96,7 @@ export default function Receipt() {
     }
   }, [orderId])
 
-  const { loading, error, order, payment, seller } = state
+  const { loading, error, order, payment, seller, refunds } = state
 
   if (loading) {
     return (
@@ -160,6 +167,23 @@ export default function Receipt() {
             <Row label="Payment reference">{payment?.umunota_reference || '—'}</Row>
             <Row label="Order date">{dateTime(order.created_at)}</Row>
           </section>
+
+          {refunds.length > 0 && (
+            <section className="border-t border-border pt-3" aria-label="Refunds">
+              {refunds.map((r) => (
+                <Row key={r.id} label={`${r.reason === 'double_payment' ? 'Extra charge refunded' : 'Refunded'} ${dateTime(r.sent_at)}`}>
+                  {r.reason === 'double_payment' ? '' : '− '}{money(r.amount, currency)}<span className="block text-xs font-normal text-muted-foreground [word-break:normal]">MoMo ref. {r.momo_reference}</span>
+                </Row>
+              ))}
+              {/* A refunded double charge was never part of this payment. */}
+              {refunds.some((r) => r.reason !== 'double_payment') && (
+                <Row label="Total after refunds">
+                  {money(Math.max(0, Number(payment?.amount ?? order.total_price)
+                    - refunds.filter((r) => r.reason !== 'double_payment').reduce((sum, r) => sum + Number(r.amount), 0)), currency)}
+                </Row>
+              )}
+            </section>
+          )}
 
           {!payment && (
             <p role="status" className="text-xs text-muted-foreground">

@@ -114,6 +114,15 @@ do \$\$ begin
   end if;
 end \$\$;
 SQL
+# A refund sent to Aline on her order (written directly: the refund rules are
+# tested in refunds.test.sh).
+"${PSQL[@]}" >/dev/null <<SQL
+insert into public.refunds (order_id, transaction_id, student_id, merchant_id, amount, reason, note, charged_to, status, momo_reference, sent_at, started_by, sent_by)
+select o.id, t.id, '$A', '$M', 500, 'other', 'Your drink was missing', 'business', 'sent', 'MP-REF-1', now(), '$K', '$K'
+  from public.orders o, public.transactions t
+ where o.student_id = '$A' and t.reference = 'UMP-TEST-1'
+ limit 1;
+SQL
 
 PASS=0; FAIL=0
 check() { if [ "$2" = "$3" ]; then echo "  ✅ $1"; PASS=$((PASS+1)); else echo "  ❌ $1"; echo "     expected: $3"; echo "     actual:   $2"; FAIL=$((FAIL+1)); fi; }
@@ -133,6 +142,9 @@ check "reports she filed, not the one filed against her" "$(j "len(d['reports_yo
 check "no password, alert keys, payment payload or the private report" "$(for s in SECRET-HASH SECRET-ENDPOINT SECRET-P256 SECRET-AUTH SECRET-PAYLOAD 'Fred reports Aline'; do echo "$EXA" | grep -c -- "$s"; done | tr '\n' ' ')" "0 0 0 0 0 0 "
 check "no one else's email" "$(echo "$EXA" | grep -c 'fred@keplercollege\|kevin@keplercollege\|m@shop.rw')" "0"
 check "photos listed" "$(j "sorted(d['photos'].keys())")" "['profile_photo', 'review_photos', 'story_photos']"
+check "her refunds: amount, note, status, MoMo reference" "$(j "len(d['refunds']), d['refunds'][0]['amount'], d['refunds'][0]['note'], d['refunds'][0]['status'], d['refunds'][0]['momo_reference']")" "1 500 Your drink was missing sent MP-REF-1"
+check "…without who paid for it or which admin handled it" "$(j "sorted(d['refunds'][0].keys())")" "['amount', 'momo_reference', 'note', 'order_id', 'reason', 'sent_at', 'started_at', 'status']"
+check "the business sees refunds on its orders, and who paid" "$(ex $M | python3 -c "import json,sys; d=json.load(sys.stdin); r=d['refunds_on_your_orders_as_business']; print(len(r), r[0]['amount'], r[0]['paid_by'], len(d['refunds']))")" "1 500 business 0"
 check "Fred's export has his own things, not Aline's account" "$(ex $F | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['account']['email'], d['chat_messages'][0]['direction'], 'aline@' in json.dumps(d))")" "fred@keplercollege.ac.rw sent False"
 check "visitors can't call it" "$("${PSQL[@]}" -At -c "set role anon; select public.export_my_data();" 2>&1 | grep -o 'permission denied.*' | head -1)" "permission denied for function export_my_data"
 check "definer with an empty search path" "$(q "select prosecdef || ' ' || array_to_string(proconfig, ',') from pg_proc where proname = 'export_my_data'")" 'true search_path=""'

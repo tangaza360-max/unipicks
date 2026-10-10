@@ -39,3 +39,11 @@ Deno.test('no orders, no banner', () => {
   assertEquals(orderNudges([], NOW), [])
   assertEquals(orderNudges(null, NOW), [])
 })
+
+Deno.test('no "food ready" while a refund is in progress (the code is paused)', () => {
+  const ready = { id: 'r', status: 'paid', ready_at: at(-2) }
+  assertEquals(kinds(orderNudges([{ ...ready, refunds: [{ status: 'to_send' }] }], NOW)), [])
+  assertEquals(kinds(orderNudges([{ ...ready, refunds: [{ status: 'failed' }] }], NOW)), [])
+  assertEquals(kinds(orderNudges([{ ...ready, refunds: [{ status: 'cancelled' }] }], NOW)), ['ready:r'])
+  assertEquals(kinds(orderNudges([{ ...ready, refunds: [{ status: 'sent' }] }], NOW)), ['ready:r']) // a part refund: food still to collect
+})

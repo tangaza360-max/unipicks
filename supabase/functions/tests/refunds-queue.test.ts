@@ -1,7 +1,7 @@
 // Admin → Refunds: the to-do list, the amount left, and the order-number search.
 import { assertEquals } from 'jsr:@std/assert@1'
 // @ts-ignore: plain JS module from the web app
-import { amountLeft, orderNumber, orderNumberRange, payerPhone, reasonLabel, refundQueue, refundStatusLabel } from '../../../src/lib/refunds.js'
+import { amountLeft, orderNumber, orderNumberRange, payerPhone, reasonLabel, refundQueue, refundStatusLabel, studentRefundView } from '../../../src/lib/refunds.js'
 
 Deno.test('the to-do list: waiting businesses, then refunds to send, oldest first', () => {
   const refunds = [
@@ -55,4 +55,17 @@ Deno.test('plain words and the phone that paid', () => {
   assertEquals(payerPhone({ webhook_payload: { phone: '0788000222' } }), '0788000222')
   assertEquals(payerPhone({ webhook_payload: {} }), null)
   assertEquals(payerPhone(null), null)
+})
+
+Deno.test("the student's order card: can't serve, in progress, sent, stopped", () => {
+  const paid = { status: 'paid', cant_serve_at: '2026-10-10T10:00:00Z' }
+  assertEquals(studentRefundView({ ...paid, refunds: [] }), { cantServe: true, open: null, sent: [], stopped: [], codePaused: false })
+  const open = { status: 'to_send', amount: 4800, created_at: '2026-10-10T11:00:00Z' }
+  const v = studentRefundView({ ...paid, refunds: [open] })
+  assertEquals([v.cantServe, v.open?.amount, v.codePaused], [false, 4800, true])
+  assertEquals(studentRefundView({ ...paid, refunds: [{ ...open, status: 'failed' }] }).codePaused, true)
+  const done = studentRefundView({ status: 'refunded', cant_serve_at: paid.cant_serve_at, refunds: [{ ...open, status: 'sent' }, { status: 'cancelled', amount: 100, created_at: '2026-10-10T09:00:00Z' }] })
+  assertEquals([done.cantServe, done.open, done.sent.length, done.stopped.length, done.codePaused], [false, null, 1, 1, false])
+  assertEquals(studentRefundView({ status: 'paid', refunds: [{ status: 'cancelled' }] }).cantServe, false) // no "can't serve" asked
+  assertEquals(studentRefundView(null).open, null)
 })

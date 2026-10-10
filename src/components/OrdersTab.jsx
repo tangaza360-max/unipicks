@@ -11,6 +11,7 @@ import { liveChannel } from '../lib/realtime.js'
 import { nowText, reachedStep } from '../lib/orderSteps.js'
 import { Package, RotateCcw } from 'lucide-react'
 import { formatMoney, formatDate, formatTime } from '../lib/format.js'
+import { cantServeLabel, studentRefundView } from '../lib/refunds.js'
 
 const DECLINE_REASON_LABELS = {
   unavailable: 'Item unavailable',
@@ -130,7 +131,7 @@ export default function OrdersTab() {
 
     const { data: normal, error: normalError } = await supabase
       .from('orders')
-      .select('id, deal_id, merchant_id, quantity, unit_price, total_price, status, ready_at, decline_reason, decline_reason_note, dispute_status, dispute_reason, dispute_raised_at, dispute_resolution_note, created_at, payment_deadline, merchant_phone, deals(title, business_name), redemptions(code)')
+      .select('id, deal_id, merchant_id, quantity, unit_price, total_price, status, ready_at, decline_reason, decline_reason_note, dispute_status, dispute_reason, dispute_raised_at, dispute_resolution_note, created_at, payment_deadline, merchant_phone, cant_serve_at, cant_serve_reason, deals(title, business_name), redemptions(code), refunds(id, amount, status, note, momo_reference, created_at, sent_at)')
       .eq('student_id', userId)
       .order('created_at', { ascending: false })
 
@@ -410,13 +411,15 @@ function NormalOrderCard({ order, onRaiseDispute }) {
     : false
   const canPay = status === 'confirmed' && isPaymentWindowOpen
   const showPaymentExpired = status === 'confirmed' && !isPaymentWindowOpen
-  const showPickupCode = (status === 'paid' || status === 'redeemed' || status === 'completed') && redemption?.code
+  const refund = studentRefundView(order)
+  const showPickupCode = (status === 'paid' || status === 'redeemed' || status === 'completed') && redemption?.code && !refund.codePaused
   const showDecline = status === 'declined'
   const reached = reachedStep(order)
   const isReady = reached === 3
-  const showExpired = INACTIVE_ORDER_STATUSES.includes(status)
+  const showExpired = INACTIVE_ORDER_STATUSES.includes(status) && status !== 'refunded'
   const canRaiseDispute =
     !order.dispute_status &&
+    !refund.codePaused && // a refund is already on its way
     ['confirmed', 'paid', 'redeemed', 'completed', 'declined'].includes(status)
   const showDisputeStatus = Boolean(order.dispute_status)
 
@@ -437,7 +440,9 @@ function NormalOrderCard({ order, onRaiseDispute }) {
         <StatusBadge status={status} ready={Boolean(order.ready_at)} />
       </div>
 
-      {reached !== null && (
+      {/* "Preparing" / "ready, go and collect" would contradict a business that
+          can't serve, or a refund in progress: the refund box says what happens. */}
+      {reached !== null && !refund.cantServe && !refund.codePaused && (
         <OrderSteps reached={reached} text={nowText(order, deal?.business_name || 'the business')} highlight={isReady} />
       )}
 
@@ -472,6 +477,8 @@ function NormalOrderCard({ order, onRaiseDispute }) {
         </div>
       )}
 
+      <OrderRefundInfo order={order} refund={refund} businessName={deal?.business_name || 'The business'} />
+
       {/* Finished orders of deals that are still live (order.deals is empty
           when the deal is switched off): back to the deal, same quantity. */}
       {REORDER_STATUSES.includes(status) && deal && (
@@ -483,7 +490,7 @@ function NormalOrderCard({ order, onRaiseDispute }) {
         </Link>
       )}
 
-      {['paid', 'redeemed', 'completed'].includes(status) && (
+      {['paid', 'redeemed', 'completed', 'refunded'].includes(status) && (
         <Link
           to={`/receipt/${order.id}`}
           className="mt-1 inline-flex min-h-11 items-center text-xs font-medium text-accent underline underline-offset-2 hover:decoration-2"
@@ -531,6 +538,42 @@ function NormalOrderCard({ order, onRaiseDispute }) {
           Raise a dispute
         </button>
       )}
+    </div>
+  )
+}
+
+// Money coming back on this order (refund plan, phase 1): the business can't
+// serve it, a refund in progress (the pickup code is paused), sent, or stopped.
+function OrderRefundInfo({ order, refund, businessName }) {
+  const { cantServe, open, sent, stopped, codePaused } = refund
+  if (!cantServe && !open && sent.length === 0 && stopped.length === 0) return null
+  return (
+    <div className="mt-3 space-y-2">
+      {cantServe && (
+        <p className="status-wait rounded-lg px-3 py-2 text-xs">
+          {businessName} can&apos;t serve this order ({cantServeLabel(order.cant_serve_reason).toLowerCase()}). Unipicks will contact you about your money within 24 hours.
+        </p>
+      )}
+      {open && (
+        <div className="status-wait rounded-lg px-3 py-2 text-xs">
+          <p className="font-semibold">Refund in progress: {formatMoney(open.amount)}</p>
+          <p className="mt-0.5">We&apos;ll send it to the MoMo number you paid with and tell you when it&apos;s sent.</p>
+          {open.note && <p className="mt-1">&ldquo;{open.note}&rdquo;</p>}
+          {codePaused && <p className="mt-1">Your pickup code is paused while we refund you.</p>}
+        </div>
+      )}
+      {sent.map((r) => (
+        <div key={r.id} className="status-good rounded-lg px-3 py-2 text-xs">
+          <p className="font-semibold">Refunded {formatMoney(r.amount)} on {formatDate(r.sent_at)}</p>
+          <p className="mt-0.5">MoMo reference {r.momo_reference}</p>
+          {r.note && <p className="mt-1">&ldquo;{r.note}&rdquo;</p>}
+        </div>
+      ))}
+      {stopped.map((r) => (
+        <p key={r.id} className="rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+          A refund of {formatMoney(r.amount)} was stopped. We sent you the reason in an alert.
+        </p>
+      ))}
     </div>
   )
 }

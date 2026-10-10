@@ -378,7 +378,7 @@ numbers again in Check code. We'll reply today.
 
 - **Refunds are sent by hand:** an admin sends the MoMo from the Unipicks MoMo
   number and records it in **Admin → Refunds** (the student gets an alert with
-  the MoMo reference). Students don't see a refund on their order card yet
-  (refunds step 3).
+  the MoMo reference). The student sees it on the order card ("Refund in
+  progress", then "Refunded … · MoMo reference …") and on the receipt.
 - **Business payouts not settled** (waiting on UmunotaPay).
 - **WhatsApp number** not chosen yet (❓ above).

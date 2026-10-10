@@ -144,3 +144,45 @@ test('Disputes: "Resolve and refund" resolves the dispute and starts the refund'
   expect(order.dispute_status).toBe('resolved')
   expect(fake.tables.refunds[0]).toMatchObject({ reason: 'dispute', amount: 4800, status: 'to_send' })
 })
+
+test('the student sees the refund: can\'t serve, in progress (code paused), then refunded with the receipt', async ({ page, fake }) => {
+  const order = fake.seedCantServeOrder('sold_out')
+  Object.assign(order, { ready_at: new Date().toISOString() }) // marked ready before the business gave up
+  fake.tables.redemptions.push({ id: crypto.randomUUID(), order_id: order.id, deal_id: order.deal_id, student_id: order.student_id, student_name: 'Aline Uwase', code: '7351', status: 'pending', created_at: new Date().toISOString() })
+  await logIn(page, 'aline@keplercollege.ac.rw', 'Aline-Kigali-2026!')
+  const card = page.getByText('Burger Thursday · Mr. Chips').locator('xpath=ancestor::div[contains(@class, "rounded-2xl")][1]')
+
+  // The business can't serve it: told, code still there, no refund yet.
+  await page.goto('/dashboard/profile?view=orders')
+  await expect(card).toContainText("Mr. Chips can't serve this order (sold out). Unipicks will contact you about your money within 24 hours.")
+  await expect(card.getByText('7351')).toBeVisible()
+
+  // An admin starts the refund: in progress, the pickup code is paused, no "food ready" on Home.
+  fake.tables.refunds.push({ id: crypto.randomUUID(), order_id: order.id, student_id: order.student_id, amount: 4800, reason: 'cant_serve', note: 'Sorry, sold out', status: 'to_send', momo_reference: null, created_at: new Date().toISOString(), sent_at: null })
+  await page.reload()
+  await expect(card).toContainText('Refund in progress: 4,800 RWF')
+  await expect(card).toContainText("We'll send it to the MoMo number you paid with and tell you when it's sent.")
+  await expect(card).toContainText('“Sorry, sold out”')
+  await expect(card).toContainText('Your pickup code is paused while we refund you.')
+  await expect(card.getByText('7351')).toHaveCount(0)
+  await expect(card).not.toContainText("can't serve this order")
+  await page.goto('/dashboard')
+  await expect(page.getByRole('heading', { name: 'All deals' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Your orders need you' })).toHaveCount(0)
+
+  // Sent: refunded, with the reference, and on the receipt.
+  Object.assign(fake.tables.refunds[0], { status: 'sent', momo_reference: 'MP241010.1234', sent_at: new Date().toISOString() })
+  order.status = 'refunded'
+  fake.tables.transactions.find((t) => t.normal_order_id === order.id)!.status = 'refunded'
+  await page.goto('/dashboard/profile?view=orders')
+  await expect(card).toContainText(/Refunded 4,800 RWF on \d{1,2} \w{3} \d{4}/)
+  await expect(card).toContainText('MoMo reference MP241010.1234')
+  await expect(card.getByText('Refunded', { exact: true })).toBeVisible() // the status badge
+  await expect(card).not.toContainText('This order is no longer active.')
+  await card.getByRole('link', { name: 'View receipt' }).click()
+  const refunds = page.getByRole('region', { name: 'Refunds' })
+  await expect(page.getByRole('region', { name: 'Payment' })).toContainText('Refunded')
+  await expect(refunds).toContainText('− 4,800 RWF')
+  await expect(refunds).toContainText('MoMo ref. MP241010.1234')
+  await expect(refunds).toContainText('Total after refunds0 RWF')
+})
