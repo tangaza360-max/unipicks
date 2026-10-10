@@ -81,7 +81,7 @@ export default function BusinessBottomNav({ activeTab, onNavigate, pendingOrders
 
       <nav
         aria-label="Business navigation"
-        className="fixed inset-x-0 bottom-0 z-50 border-t border-border/60 bg-background/95 backdrop-blur-xl md:hidden"
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-border/60 bg-background md:hidden"
         style={{ paddingBottom: 'var(--safe-area-bottom)' }}
       >
         <div className="mx-auto grid h-16 max-w-lg grid-cols-5">

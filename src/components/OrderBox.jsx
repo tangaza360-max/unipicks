@@ -41,7 +41,7 @@ export default function OrderBox({ deal, openNow }) {
     'flex h-11 w-11 items-center justify-center rounded-full border border-border text-foreground disabled:opacity-40'
 
   return (
-    <div className="sticky bottom-0 z-10 -mx-5 space-y-2 border-t border-border bg-card/95 px-5 py-3 backdrop-blur md:-mx-7 md:px-7">
+    <div className="sticky bottom-0 z-10 -mx-5 space-y-2 border-t border-border bg-card px-5 py-3 md:-mx-7 md:px-7">
       {problem ? (
         <p className="text-center text-sm text-muted-foreground">{problem}</p>
       ) : (

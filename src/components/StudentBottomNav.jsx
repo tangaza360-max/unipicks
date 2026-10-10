@@ -48,7 +48,9 @@ export default function StudentBottomNav({
       className={[
         'fixed inset-x-0 bottom-0 z-40',
         'border-t border-border/40',
-        'bg-background/90 backdrop-blur-xl',
+        // Solid, not see-through: a photo under a 90% bar lowered the active
+        // label to 4.49:1 (WCAG 2.2 SC 1.4.3 needs 4.5:1).
+        'bg-background',
         className,
       ].join(' ')}
       style={{
