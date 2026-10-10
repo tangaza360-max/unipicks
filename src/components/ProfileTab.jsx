@@ -17,6 +17,7 @@ import {
   Users,
   ShieldCheck,
   Trash2,
+  Download,
 } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { useTheme } from '../context/ThemeContext.jsx'
@@ -28,6 +29,7 @@ import BackLink from './BackLink.jsx'
 import AvatarEditor from './AvatarEditor.jsx'
 import StudentAvatar from './StudentAvatar.jsx'
 import { useStudentAvatar } from '../lib/studentAvatars.js'
+import { downloadMyData } from '../lib/exportMyData.js'
 
 // University and student ID are set server-side from the verified email
 // domain (auth app_metadata, which the client cannot write). user_metadata
@@ -86,6 +88,22 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
   }, [])
 
   const [showDeleteAccount, setShowDeleteAccount] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [exportMessage, setExportMessage] = useState('')
+
+  async function handleDownloadData() {
+    if (exporting) return
+    setExporting(true)
+    setExportMessage('')
+    try {
+      const name = await downloadMyData()
+      setExportMessage(`Downloaded: ${name}. Keep it somewhere safe; it has your personal details.`)
+    } catch (exportError) {
+      setExportMessage(exportError.message)
+    } finally {
+      setExporting(false)
+    }
+  }
   const location = useLocation()
 
   // The profile is a short menu (like the main food apps); each row opens a
@@ -1031,6 +1049,24 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
              Manage your Unipicks account.
            </p>
          </div>
+
+         <button
+           type="button"
+           onClick={handleDownloadData}
+           disabled={exporting}
+           className="w-full min-h-11 text-left border-t border-border pt-3 flex items-start gap-2 hover:text-accent transition disabled:opacity-60"
+         >
+           <Download size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+           <span>
+             <span className="block text-sm font-medium">{exporting ? 'Preparing your file…' : 'Download my data'}</span>
+             <span className="block text-xs text-muted-foreground mt-0.5">
+               A file with everything Unipicks stores about you.
+             </span>
+           </span>
+         </button>
+         {exportMessage && (
+           <p role="status" className="text-xs text-muted-foreground">{exportMessage}</p>
+         )}
 
          <button
            onClick={() => setShowDeleteAccount(true)}

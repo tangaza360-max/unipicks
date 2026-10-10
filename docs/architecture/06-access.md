@@ -74,6 +74,12 @@ Write new rules the same way.
 | `student_saved_items` | — | own only (save / unsave) | — | — | student |
 | `deal_comments` | number only (`get_deal_comment_count`) | read via `get_deal_comments` (names as for reviews; people you blocked hidden); write on live deals, reply one level (not to someone who blocked you), 10 per 10 min; delete own | write and reply on **own** deals; delete own; can't delete students' comments | read, delete any | author; alerts by trigger |
 
+## Your own data
+
+`export_my_data()` (signed in): one JSON file with everything stored about
+the caller — Profile → Settings → Download my data. Leaves out password data,
+payment-provider payloads, phone-alert keys and reports filed against them.
+
 ## Admin-only actions (each checks the admin role itself)
 
 `admin_ban_user`, `admin_unban_user`, `admin_delete_user`,
