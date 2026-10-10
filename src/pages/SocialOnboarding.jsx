@@ -243,7 +243,6 @@ export default function SocialOnboarding({ onComplete }) {
                 placeholder="Choose your username"
                 value={form.username}
                 onChange={(e) => update('username', e.target.value)}
-                autoComplete="off"
               />
 
               <p className="text-xs text-muted-foreground mt-2">
