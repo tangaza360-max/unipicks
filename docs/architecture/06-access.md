@@ -72,6 +72,7 @@ Write new rules the same way.
 | `ratings` | all (written reviews via `get_deal_reviews`: text for visitors, photo for signed-in people, the reviewer's name only for students they haven't blocked and admins) | rate own collected order, with an optional photo from their own folder (edit 24 h) | — | delete | student |
 | `deal_likes` | — | own likes only; like live deals (not banned); remove own | — | — | student; others see counts only via `get_deals_social` |
 | `student_saved_items` | — | own only (save / unsave) | — | — | student |
+| `deal_comments` | number only (`get_deal_comment_count`) | read via `get_deal_comments` (names as for reviews; people you blocked hidden); write on live deals, reply one level (not to someone who blocked you), 10 per 10 min; delete own | write and reply on **own** deals; delete own; can't delete students' comments | read, delete any | author; alerts by trigger |
 
 ## Admin-only actions (each checks the admin role itself)
 
