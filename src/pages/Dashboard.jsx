@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { liveChannel } from '../lib/realtime.js'
 import { useTheme } from '../context/ThemeContext.jsx'
 import DealsFeed from './DealsFeed.jsx'
-import { ClipboardCheck, ClipboardList, GraduationCap, BarChart3, Users, Settings, FileClock, FileText, Camera, MessageCircle, ShoppingBag, Sun, Moon, LogOut, AlertCircle, Flag } from 'lucide-react'
+import { ClipboardList, BarChart3, Settings, Camera, MessageCircle, ShoppingBag, Sun, Moon, LogOut } from 'lucide-react'
 import Logo from '../components/Logo.jsx'
 import StudentLayout from '../components/StudentLayout.jsx'
 import NotificationBell from '../components/NotificationBell.jsx'
@@ -13,6 +13,7 @@ import PhoneAlertsCard from '../components/PhoneAlertsCard.jsx'
 import { forgetThisPhone } from '../lib/pushNotifications.js'
 import { lazyPage } from '../lib/lazyPage.js'
 import PageLoading from '../components/PageLoading.jsx'
+import AdminTabs from '../components/AdminTabs.jsx'
 
 // Loaded only when opened, so they stay out of the first download.
 const MerchantDeals = lazyPage(() => import('./MerchantDeals.jsx'))
@@ -421,51 +422,12 @@ return () => {
   } else if (role === 'admin') {
     content = (
       <>
-        <div className="flex gap-2 border-b border-border pb-3 mb-4 flex-wrap">
-          {[
-            { id: 'approvals', label: 'Approvals', icon: ClipboardCheck },
-            { id: 'student-view', label: 'Students', icon: GraduationCap },
-            { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-            { id: 'users', label: 'Users', icon: Users },
-            { id: 'settings', label: 'Settings', icon: Settings },
-            { id: 'activity-logs', label: 'Activity logs', icon: FileClock },
-            { id: 'reviews', label: 'Reviews', icon: FileText },
-            { id: 'disputes', label: 'Disputes', icon: AlertCircle },
-            { id: 'reports', label: 'Reports', icon: Flag },
-          ].map((tab) => {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.id}
-                onClick={() => navigate(`/dashboard/${tab.id}`)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${
-                  dashboardTab === tab.id
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground border border-border'
-                }`}
-              >
-                <Icon size={16} />
-                <span>{tab.label}</span>
-                {tab.id === 'disputes' && openDisputeCount > 0 && (
-                  <span
-                    className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white"
-                    aria-label={`${openDisputeCount} open dispute${openDisputeCount === 1 ? '' : 's'}`}
-                  >
-                    {openDisputeCount > 99 ? '99+' : openDisputeCount}
-                  </span>
-                )}
-                {tab.id === 'reports' && openReportCount > 0 && (
-                  <span
-                    className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white"
-                    aria-label={`${openReportCount} open report${openReportCount === 1 ? '' : 's'}`}
-                  >
-                    {openReportCount > 99 ? '99+' : openReportCount}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
+        <AdminTabs
+          active={dashboardTab}
+          onSelect={(id) => navigate(`/dashboard/${id}`)}
+          openDisputeCount={openDisputeCount}
+          openReportCount={openReportCount}
+        />
         {dashboardTab === 'approvals' ? <AdminApprovals /> : 
          dashboardTab === 'student-view' ? <AdminStudentView /> : 
          dashboardTab === 'analytics' ? <AdminAnalytics /> : 
