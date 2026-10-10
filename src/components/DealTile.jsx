@@ -1,9 +1,20 @@
 import { Link } from 'react-router-dom'
-import { Star } from 'lucide-react'
+import { Heart, MessageCircle, Star } from 'lucide-react'
 import { offerBadge, struckOutPrice, studentPrice } from '../lib/dealPricing.js'
 import { formatMoney } from '../lib/format.js'
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
+
+// "Fred M and 2 other friends liked this" (names only of friends; the
+// database leaves out anyone blocked).
+export function friendsLikedText(social) {
+  const n = Number(social?.friend_like_count || 0)
+  if (n === 0) return ''
+  const name = social?.friend_name
+  if (!name) return `${n} friend${n === 1 ? '' : 's'} liked this`
+  if (n === 1) return `${name} liked this`
+  return `${name} and ${n - 1} other friend${n - 1 === 1 ? '' : 's'} liked this`
+}
 
 export function isNewDeal(deal, now = Date.now()) {
   return deal.created_at ? now - new Date(deal.created_at).getTime() < WEEK_MS : false
@@ -13,11 +24,13 @@ export function isNewDeal(deal, now = Date.now()) {
 // business, stars, price. The whole card opens the deal; ordering happens
 // there. `overlay` is for buttons drawn on the photo (they can't sit inside
 // the link).
-export default function DealTile({ deal, ratingStats, overlay = null, className = '' }) {
+export default function DealTile({ deal, ratingStats, social = null, overlay = null, className = '' }) {
   const price = studentPrice(deal)
   const before = struckOutPrice(deal)
   const badge = offerBadge(deal)
   const reviews = Number(ratingStats?.review_count || 0)
+  const friends = friendsLikedText(social)
+  const comments = Number(social?.comment_count || 0)
 
   return (
     <article className={`relative ${className}`}>
@@ -59,6 +72,23 @@ export default function DealTile({ deal, ratingStats, overlay = null, className 
             <span className="ml-auto text-xs text-muted-foreground">Price not set</span>
           )}
         </p>
+        {(friends || comments > 0) && (
+          <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+            {friends && (
+              <span className="flex min-w-0 items-center gap-1">
+                <Heart size={12} aria-hidden="true" className="shrink-0 fill-red-600 text-red-600" />
+                <span className="truncate">{friends}</span>
+              </span>
+            )}
+            {comments > 0 && (
+              <span className="ml-auto flex shrink-0 items-center gap-1">
+                <MessageCircle size={12} aria-hidden="true" />
+                {comments}
+                <span className="sr-only"> comment{comments === 1 ? '' : 's'}</span>
+              </span>
+            )}
+          </p>
+        )}
       </Link>
       {overlay}
     </article>

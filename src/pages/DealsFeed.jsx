@@ -281,6 +281,7 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
         key={deal.id}
         deal={deal}
         ratingStats={ratingStats[deal.id]}
+        social={social[deal.id]}
         className={className}
         overlay={
           <DealActions
