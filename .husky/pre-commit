@@ -1,0 +1,3 @@
+# Before every commit: the app must still build (Vite). Takes about 5 seconds.
+# If it fails, read the error, fix it, and commit again.
+npm run build
