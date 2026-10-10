@@ -79,3 +79,32 @@ test('if approval is removed while the form is open, the business gets a plain m
   await expect(page.getByText(/row-level security/)).toHaveCount(0)
   expect(fake.tables.deals.find((d) => d.title === 'Late deal')).toBeUndefined()
 })
+
+test('alert links in the business bell only open Unipicks pages', async ({ page, fake }) => {
+  const owner = fake.userByEmail(SEED.business.email)!
+  const deal = fake.tables.deals.find((d) => d.merchant_id === owner.id)!
+  const alert = (n: number, message: string, link_path: string) =>
+    fake.tables.user_notifications.push({ id: `00000000-0000-4000-8000-00000000000${n}`, user_id: owner.id, type: 'comment', message, link_path, is_read: false, created_at: new Date(Date.now() - n * 60_000).toISOString() })
+  alert(1, 'Aline commented on Burger Thursday', `/deal/${deal.id}`)
+  alert(2, 'Win a prize (other website)', 'https://evil.example/prize')
+  alert(3, 'Win a prize (protocol-relative)', '//evil.example/prize')
+  alert(4, 'Win a prize (backslash)', '/\\evil.example/prize')
+
+  await logIn(page, SEED.business.email, SEED.business.password)
+  const bell = page.getByRole('button', { name: /^Notifications/ })
+  const openBell = async () => {
+    if ((await bell.getAttribute('aria-expanded')) !== 'true') await bell.click()
+  }
+  const here = page.url()
+  for (const bad of ['Win a prize (other website)', 'Win a prize (protocol-relative)', 'Win a prize (backslash)']) {
+    await openBell()
+    await page.getByText(bad).click()
+    // Not a link: marked read, and the business stays exactly where it was.
+    await expect(page).toHaveURL(here)
+  }
+  await openBell()
+  await page.getByText('Aline commented on Burger Thursday').click()
+  await expect(page).toHaveURL(new RegExp(`/deal/${deal.id}$`))
+  // Every alert tapped was marked read, safe or not.
+  expect(fake.tables.user_notifications.every((n) => n.is_read)).toBe(true)
+})

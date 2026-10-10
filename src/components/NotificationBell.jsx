@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { liveChannel } from '../lib/realtime.js'
 import { Bell } from 'lucide-react'
+import { safeNext } from '../lib/safeNext.js'
 
 // Dashboard bell for merchants and admins. It merges two inboxes:
 //  - `notifications` (merchant order events: new order, payment received), and
@@ -17,8 +18,14 @@ function fromMerchantInbox(row) {
   return { key: `n:${row.id}`, source: 'notifications', id: row.id, message: row.message, created_at: row.created_at, read: Boolean(row.read), link_path: null }
 }
 
+// Only Unipicks pages on the allow-list become links (the same check as after
+// log in): another website, "//evil.example" or odd characters never do.
+function safeLink(path) {
+  return path && safeNext(path) === path ? path : null
+}
+
 function fromUserInbox(row) {
-  return { key: `u:${row.id}`, source: 'user_notifications', id: row.id, message: row.message, created_at: row.created_at, read: Boolean(row.is_read), link_path: row.link_path || null }
+  return { key: `u:${row.id}`, source: 'user_notifications', id: row.id, message: row.message, created_at: row.created_at, read: Boolean(row.is_read), link_path: safeLink(row.link_path) }
 }
 
 function mergeNewestFirst(items) {
