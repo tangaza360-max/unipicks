@@ -1,4 +1,5 @@
 import { MessageCircle } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
 import IconButton from './IconButton.jsx'
 import Logo from './Logo.jsx'
 
@@ -7,6 +8,17 @@ export default function StudentTopBar({
   unreadCount = 0,
   className = '',
 }) {
+  const { pathname } = useLocation()
+
+  function goHome(event) {
+    if (pathname !== '/dashboard' && pathname !== '/dashboard/deals') return
+    event.preventDefault()
+    const smooth = !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    for (const el of [document.scrollingElement, document.querySelector('main')]) {
+      el?.scrollTo?.({ top: 0, behavior: smooth ? 'smooth' : 'auto' })
+    }
+  }
+
   return (
     <header
       className={[
@@ -19,12 +31,25 @@ export default function StudentTopBar({
         paddingTop: 'var(--safe-area-top)',
       }}
     >
-      <div className="flex h-14 items-center justify-between px-3 sm:px-4">
-        <div className="flex min-w-0 items-center">
-          <Logo size={24} className="text-accent" />
-        </div>
+      {/* Three parts: U logo (Home) on the left, the name in the middle,
+          Messages on the right — the middle stays centred whatever the sides. */}
+      <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center px-3 sm:px-4">
+        {/* Tap the U to go Home; on Home, back to the top (like Instagram). */}
+        <Link
+          to="/dashboard/deals"
+          onClick={goHome}
+          aria-label="Go to Home"
+          className="-ml-1 flex h-11 w-11 items-center justify-center justify-self-start rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {/* The brand green: logos are exempt from text contrast (WCAG 1.4.3). */}
+          <Logo size={28} className="text-[hsl(var(--color-primary))]" />
+        </Link>
 
-        <div className="flex items-center gap-1">
+        <span className="font-body text-[22px] font-semibold leading-none tracking-tight text-foreground">
+          Unipicks
+        </span>
+
+        <div className="flex items-center gap-1 justify-self-end">
           <div className="relative">
             <IconButton
               ariaLabel={
