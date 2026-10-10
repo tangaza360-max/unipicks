@@ -9,9 +9,16 @@ import { formatMoney } from '../lib/format.js'
 import Button from '../components/Button.jsx'
 import MoreActions from '../components/MoreActions.jsx'
 
+// Shown when a business that Unipicks hasn't approved (yet, or any more)
+// tries to post or change a deal.
+const NOT_APPROVED_MESSAGE =
+  "Your business is waiting for Unipicks to approve it. You can post deals once it's approved."
+
 export default function MerchantDeals() {
   // --- State for deals and form ---
   const [businessName, setBusinessName] = useState('')
+  // null until known; false = waiting for Unipicks to approve the business.
+  const [approved, setApproved] = useState(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [offerType, setOfferType] = useState('percentage')
@@ -77,11 +84,12 @@ export default function MerchantDeals() {
         // enforces this too); sign-up metadata is only a fallback.
         const { data: profile } = await supabase
           .from('merchant_profiles')
-          .select('business_name')
+          .select('business_name, approved')
           .eq('id', userData.user.id)
           .maybeSingle()
         if (cancelled) return
         setBusinessName(profile?.business_name?.trim() || userData.user.user_metadata?.business_name || '')
+        setApproved(profile ? Boolean(profile.approved) : null)
       }
 
       const { data, error: fetchError } = await supabase
@@ -476,7 +484,14 @@ export default function MerchantDeals() {
     setSaving(false)
 
     if (errorResult) {
-      setError(errorResult.message)
+      // 42501 = the database refused it (only approved businesses may save
+      // deals). Say why in plain words instead of Postgres's own message.
+      if (errorResult.code === '42501') {
+        setApproved(false)
+        setError(NOT_APPROVED_MESSAGE)
+      } else {
+        setError(errorResult.message)
+      }
       return
     }
 
@@ -620,6 +635,11 @@ export default function MerchantDeals() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-display text-xl font-semibold">Your Deals</h2>
+        {approved === false && (
+          <p id="not-approved-note" role="status" className="status-wait w-full rounded-lg px-3 py-2 text-sm">
+            {NOT_APPROVED_MESSAGE}
+          </p>
+        )}
         <div className="flex gap-2">
           <button
             onClick={() => setShowCheckCodeModal(true)}
@@ -632,7 +652,9 @@ export default function MerchantDeals() {
               resetForm()
               setShowCreateModal(true)
             }}
-            className="flex min-h-11 items-center gap-2 bg-accent hover:bg-accent-dim text-background-foreground rounded-lg px-4 py-2 text-sm font-medium transition"
+            disabled={approved === false}
+            aria-describedby={approved === false ? 'not-approved-note' : undefined}
+            className="flex min-h-11 items-center gap-2 bg-accent hover:bg-accent-dim text-background-foreground rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Sparkles size={16} /> Create deal
           </button>
@@ -644,7 +666,11 @@ export default function MerchantDeals() {
         <p className="text-muted-foreground text-sm">Loading deals…</p>
       ) : myDeals.length === 0 ? (
         <div className="text-center py-12 border border-dashed border-border rounded-xl">
-          <p className="text-muted-foreground">No deals yet. Create your first deal!</p>
+          <p className="text-muted-foreground">
+            {approved === false
+              ? 'No deals yet. You can create your first deal once your business is approved.'
+              : 'No deals yet. Create your first deal.'}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

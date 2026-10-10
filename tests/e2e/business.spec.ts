@@ -1,4 +1,5 @@
 import { test, expect, logIn } from './support/fixtures'
+import { SEED } from './support/fake-supabase'
 
 // Business flow: Register → Create a deal → View stats → Check a student's code.
 test('business registers, is approved, creates a deal, sees stats and checks a code', async ({ page, fake }) => {
@@ -52,16 +53,27 @@ test('business registers, is approved, creates a deal, sees stats and checks a c
   expect(fake.tables.orders.find((o) => o.merchant_id === fake.userByEmail(email)?.id)?.status).toBe('redeemed')
 })
 
-test('a business that is not approved yet cannot publish a deal', async ({ page, fake }) => {
+const NOT_APPROVED = "Your business is waiting for Unipicks to approve it. You can post deals once it's approved."
+
+test('a business that is not approved yet is told so, and cannot open Create deal', async ({ page, fake }) => {
   const business = fake.addPendingBusiness('Waiting Cafe', 'waiting@cafe.rw')
   await logIn(page, business.email, 'Pending-Kigali-2026!')
+  await expect(page.getByRole('status').filter({ hasText: NOT_APPROVED })).toBeVisible()
+  const create = page.getByRole('button', { name: 'Create deal' })
+  await expect(create).toBeDisabled()
+  await expect(create).toHaveAccessibleDescription(NOT_APPROVED)
+  await expect(page.getByText('No deals yet. You can create your first deal once your business is approved.')).toBeVisible()
+})
+
+test('if approval is removed while the form is open, the business gets a plain message', async ({ page, fake }) => {
+  await logIn(page, SEED.business.email, SEED.business.password)
   await page.getByRole('button', { name: 'Create deal' }).click()
-  await page.getByLabel('Deal title').fill('Early deal')
+  await page.getByLabel('Deal title').fill('Late deal')
   await page.getByLabel(/^Price/).fill('1000')
+  // Meanwhile the admin deactivates the business.
+  fake.tables.merchant_profiles.find((p) => p.business_name === SEED.business.name)!.approved = false
   await page.getByRole('button', { name: 'Post Deal' }).click()
-  // The database refuses it. (Today the business sees Postgres's own words,
-  // "new row violates row-level security policy…" — to be replaced by a plain
-  // message; then check that message here.)
-  await expect(page.getByText(/row-level security|approv/i).first()).toBeVisible()
-  expect(fake.tables.deals.find((d) => d.title === 'Early deal')).toBeUndefined()
+  await expect(page.getByText(NOT_APPROVED).first()).toBeVisible()
+  await expect(page.getByText(/row-level security/)).toHaveCount(0)
+  expect(fake.tables.deals.find((d) => d.title === 'Late deal')).toBeUndefined()
 })
