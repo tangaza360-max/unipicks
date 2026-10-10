@@ -7,6 +7,7 @@ import ConfirmModal from '../components/ConfirmModal.jsx'
 import { Search, Sparkles, X, Pencil, UtensilsCrossed, CheckCircle2, ShoppingCart } from 'lucide-react'
 import { formatMoney } from '../lib/format.js'
 import Button from '../components/Button.jsx'
+import MoreActions from '../components/MoreActions.jsx'
 
 export default function MerchantDeals() {
   // --- State for deals and form ---
@@ -750,16 +751,18 @@ export default function MerchantDeals() {
                         <p className="text-muted-foreground text-xs">No orders yet</p>
                       )}
                     </div>
-                    <div className="grid w-full grid-cols-3 gap-2">
+                    {/* Delete sits behind "⋯" so it isn't one tap away on every card. */}
+                    <div className="grid w-full grid-cols-[1fr_1fr_auto] gap-2">
                       <Button variant="secondary" onClick={() => startEdit(deal)}>
                         Edit
                       </Button>
                       <Button variant="secondary" onClick={() => toggleActive(deal)}>
                         {deal.active ? 'Pause' : 'Activate'}
                       </Button>
-                      <Button variant="danger" onClick={() => openDeleteModal(deal.id)}>
-                        Delete
-                      </Button>
+                      <MoreActions
+                        label={`More actions for ${deal.title}`}
+                        items={[{ label: 'Delete deal', danger: true, onClick: () => openDeleteModal(deal.id) }]}
+                      />
                     </div>
                   </div>
                 </div>
