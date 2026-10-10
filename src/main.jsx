@@ -13,8 +13,16 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { initMonitoring } from './lib/monitoring.js'
 import { lazyPage } from './lib/lazyPage.js'
 import PageLoading from './components/PageLoading.jsx'
+import { useParams } from 'react-router-dom'
 
 // Screens load when opened (only Login and Register come with the first file).
+
+// /deal/<id>/confirm was the old separate confirm step; it now lives on the deal page.
+function ConfirmRedirect() {
+  const { id } = useParams()
+  return <Navigate to={`/deal/${id}`} replace />
+}
+
 const RegisterMerchant = lazyPage(() => import('./pages/RegisterMerchant.jsx'))
 const ForgotPassword = lazyPage(() => import('./pages/ForgotPassword.jsx'))
 const ResetPassword = lazyPage(() => import('./pages/ResetPassword.jsx'))
@@ -26,7 +34,6 @@ const Terms = lazyPage(() => import('./pages/Terms.jsx'))
 const DeleteAccount = lazyPage(() => import('./pages/DeleteAccount.jsx'))
 const PaymentCheckout = lazyPage(() => import('./pages/PaymentCheckout.jsx'))
 const DealDetail = lazyPage(() => import('./pages/DealDetail.jsx'))
-const OrderConfirmation = lazyPage(() => import('./pages/OrderConfirmation.jsx'))
 
 function RouteTitle() {
   const { pathname } = useLocation()
@@ -122,7 +129,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/delete-account" element={<DeleteAccount />} />
           <Route path="/payment" element={<PaymentCheckout />} />
         <Route path="/deal/:id" element={<DealDetail />} />
-        <Route path="/deal/:id/confirm" element={<OrderConfirmation />} />
+        {/* The confirm step is now on the deal page (3-step ordering); old links still work. */}
+        <Route path="/deal/:id/confirm" element={<ConfirmRedirect />} />
           <Route path="*" element={<Navigate to="/register" replace />} />
         </Routes>
         </Suspense>

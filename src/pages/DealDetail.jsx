@@ -10,6 +10,7 @@ import { withNext } from '../lib/safeNext.js'
 import { ShareButton } from '../components/ShareDeal.jsx'
 import DealReviews from '../components/DealReviews.jsx'
 import DealComments from '../components/DealComments.jsx'
+import OrderBox from '../components/OrderBox.jsx'
 
 function formatRelativeTime(isoString) {
   const diff = Date.now() - new Date(isoString).getTime()
@@ -189,7 +190,8 @@ export default function DealDetail() {
       <div className="max-w-3xl mx-auto px-4 py-5 md:py-8 space-y-5">
         <BackLink to={signedIn === false ? '/register' : '/dashboard/deals'} />
 
-        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+        {/* overflow-clip (not hidden): rounds the corners without breaking the sticky order bar */}
+        <div className="overflow-clip rounded-xl border border-border bg-card shadow-sm">
           <div className="relative h-56 w-full sm:h-72">
             {deal.image_url ? (
               <img
@@ -322,20 +324,6 @@ export default function DealDetail() {
 
             <DealComments dealId={deal.id} />
 
-            <div className="border-t border-border pt-4">
-              <h2 className="font-semibold">Terms</h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Please review the deal description, price, expiry date, and
-                the Unipicks Terms of Service before ordering.
-              </p>
-              <button
-                onClick={() => navigate('/terms')}
-                className="mt-2 text-sm text-primary hover:underline"
-              >
-                View Unipicks Terms of Service
-              </button>
-            </div>
-
             {!openNow && (
               <p role="status" className="text-sm text-muted-foreground text-center">
                 This deal can't be ordered right now. It's available {dealHoursLabel(deal)} (Kigali time).
@@ -374,13 +362,7 @@ export default function DealDetail() {
                 {groupStartError && <p role="alert" className="text-sm text-destructive">{groupStartError}</p>}
               </>
             )}
-            <button
-              onClick={() => navigate(`/deal/${deal.id}/confirm`)}
-              disabled={!openNow || !priced}
-              className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-accent-dim disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {!priced ? 'Price not set' : openNow ? 'Continue to Order' : 'Not available right now'}
-            </button>
+            <OrderBox deal={deal} openNow={openNow} />
             </>
             )}
           </div>

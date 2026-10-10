@@ -77,7 +77,7 @@ sequenceDiagram
   participant DB as Database
   actor B as Business
 
-  S->>W: taps a deal card on Home → deal page → "Continue to Order"
+  S->>W: taps a deal card on Home → deal page:<br/>quantity + "Place order" (3 taps to Pay)
   W->>CO: deal, quantity
   CO->>DB: checks: student not banned, business approved,<br/>deal live, price set → order pending_confirmation<br/>(business has 5 min)
   CO-->>B: phone alert "New order" + live update

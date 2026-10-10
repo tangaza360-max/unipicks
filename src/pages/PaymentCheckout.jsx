@@ -64,6 +64,19 @@ export default function PaymentCheckout() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
 
+  // Fill in the phone number from the profile (one less thing to type);
+  // the student can still change it.
+  useEffect(() => {
+    let cancelled = false
+    supabase.auth.getUser().then(({ data }) => {
+      const saved = String(data?.user?.user_metadata?.phone || '').replace(/\s+/g, '')
+      if (!cancelled && phonePattern.test(saved)) setPhoneNumber((current) => current || saved)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const loadOrder = useCallback(async () => {
     if (!orderId) return null
     const { data, error: orderError } = await supabase

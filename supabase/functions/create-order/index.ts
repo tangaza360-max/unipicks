@@ -28,7 +28,7 @@ type PriceResult =
 const roundMoney = (value: number) => Math.round(value * 100) / 100
 
 // Server-side source of truth for what a student is charged.
-// Keep in sync with priceOrder() in src/pages/OrderConfirmation.jsx.
+// Keep in sync with priceOrder() in src/lib/orderPricing.js.
 function priceOrder(deal: PricedDeal, quantity: number): PriceResult {
   const offerType = deal.offer_type ?? 'percentage'
   const price = deal.price == null ? null : Number(deal.price)
