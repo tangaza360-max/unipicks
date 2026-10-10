@@ -23,7 +23,8 @@ export function isNewDeal(deal, now = Date.now()) {
 // A small, concrete deal card (like the main food apps): photo, deal name,
 // business, stars, price. The whole card opens the deal; ordering happens
 // there. `overlay` is for buttons drawn on the photo (they can't sit inside
-// the link).
+// the link). The buttons take the top-left corner, so the offer badge sits at
+// the bottom-left: on small row cards a top-right badge was hidden under them.
 export default function DealTile({ deal, ratingStats, social = null, overlay = null, className = '' }) {
   const price = studentPrice(deal)
   const before = struckOutPrice(deal)
@@ -45,7 +46,7 @@ export default function DealTile({ deal, ratingStats, social = null, overlay = n
             </div>
           )}
           {badge && (
-            <span className="absolute right-2 top-2 rounded-full bg-primary px-2.5 py-1 font-display text-xs font-semibold text-primary-foreground shadow">
+            <span className="absolute bottom-2 left-2 max-w-[calc(100%-1rem)] truncate rounded-full bg-primary px-2.5 py-1 font-display text-xs font-semibold text-primary-foreground shadow">
               {badge}
             </span>
           )}
