@@ -125,6 +125,28 @@ check "unlike removes it" "$(as_user $A "delete from public.deal_likes where dea
 check "count goes down" "$(social $F)" "1 true false"
 check "function: empty search path, definer" "$(q "select prosecdef || ' ' || array_to_string(proconfig, ',') from pg_proc where proname = 'get_deals_social'")" 'true search_path=""'
 
+echo " friends who liked it"
+# Fred and Gina are Aline's friends; Hugo is a friend Aline blocked; Ivy blocked Aline.
+G=00000000-0000-0000-0000-0000000000a6; H=00000000-0000-0000-0000-0000000000a7; I=00000000-0000-0000-0000-0000000000a8; S=00000000-0000-0000-0000-0000000000a9
+"${PSQL[@]}" >/dev/null <<SQL
+insert into auth.users (id, email, raw_user_meta_data) values
+ ('$G','g@keplercollege.ac.rw','{"role":"student"}'), ('$H','h@keplercollege.ac.rw','{"role":"student"}'),
+ ('$I','i@keplercollege.ac.rw','{"role":"student"}'), ('$S','s@keplercollege.ac.rw','{"role":"student"}');
+insert into public.student_profiles (user_id, username, display_name, university, campus, is_18_plus) values
+ ('$F','fred','Fred M','Kepler College','Kigali',true), ('$G','gina','Gina K','Kepler College','Kigali',true),
+ ('$H','hugo','Hugo B','Kepler College','Kigali',true), ('$I','ivy','Ivy T','Kepler College','Kigali',true);
+insert into public.friendships (student_a, student_b) select least('$A'::uuid, x), greatest('$A'::uuid, x) from unnest(array['$F','$G','$H','$I']::uuid[]) x;
+insert into public.blocked_students (blocker_id, blocked_id) values ('$A','$H'), ('$I','$A');
+insert into public.deal_likes (student_id, deal_id, created_at) values
+ ('$G','$D', now() - interval '3 minutes'), ('$H','$D', now() - interval '2 minutes'),
+ ('$I','$D', now() - interval '1 minute'), ('$S','$D', now());
+insert into public.deal_comments (deal_id, author_id, body) values ('$D','$S','Nice'), ('$D','$G','Yum');
+SQL
+fr() { as_user "$1" "select friend_like_count || '|' || coalesce(friend_name,'-') || '|' || like_count || '|' || comment_count from public.get_deals_social(array['$D']::uuid[]);"; }
+check "Aline: Fred and Gina count (blocked Hugo and Ivy don't); newest friend named" "$(fr $A)" "2|Fred M|5|2"
+check "a stranger has no friends who liked it" "$(fr $S)" "0|-|5|2"
+check "the business sees counts, no friends" "$(fr $M)" "0|-|5|2"
+
 echo " erasure"
 like $A $D >/dev/null
 check "deleting Aline's account removes her likes" "$(q "select public.tombstone_user_core('$A') ->> 'status'; select count(*) from public.deal_likes where student_id = '$A';" | tail -1)" "0"

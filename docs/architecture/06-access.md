@@ -70,7 +70,7 @@ Write new rules the same way.
 | `push_subscriptions` | — | own phones | own phones | own | `save_push_subscription` |
 | `activity_logs` | — | — | — | read | admin actions, server |
 | `ratings` | all (written reviews via `get_deal_reviews`: text for visitors, photo for signed-in people, the reviewer's name only for students they haven't blocked and admins) | rate own collected order, with an optional photo from their own folder (edit 24 h) | — | delete | student |
-| `deal_likes` | — | own likes only; like live deals (not banned); remove own | — | — | student; others see counts only via `get_deals_social` |
+| `deal_likes` | — | own likes only; like live deals (not banned); remove own | — | — | student; others see counts only via `get_deals_social` (also: how many of my friends liked it and the newest one's name — blocked people never counted — and the comment count) |
 | `student_saved_items` | — | own only (save / unsave) | — | — | student |
 | `deal_comments` | number only (`get_deal_comment_count`) | read via `get_deal_comments` (names as for reviews; people you blocked hidden); write on live deals, reply one level (not to someone who blocked you), 10 per 10 min; delete own | write and reply on **own** deals; delete own; can't delete students' comments | read, delete any | author; alerts by trigger |
 
