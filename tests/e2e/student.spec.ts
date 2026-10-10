@@ -57,3 +57,33 @@ test('a student with a non-Kepler email cannot register', async ({ page, fake })
   await expect(page.getByText('must end in @keplercollege.ac.rw')).toBeVisible()
   expect(fake.userByEmail('test@gmail.com')).toBeUndefined()
 })
+
+test("a student can tap the order alerts in Social → Activity", async ({ page, fake }) => {
+  fake.seedPaidOrderWithCode(SEED.business.email) // creates the student Eric and a paid order
+  const eric = fake.userByEmail('eric@keplercollege.ac.rw')!
+  // He has set up Social (otherwise Social first shows its setup steps).
+  ;(fake.tables.student_profiles ??= []).push({ user_id: eric.id, username: 'eric', display_name: 'Eric M', university: 'Kepler College', campus: 'Kigali', is_18_plus: true, discoverable: true, created_at: new Date().toISOString() })
+  const order = fake.tables.orders.find((o) => o.student_id === eric.id)!
+  Object.assign(order, { status: 'confirmed', payment_deadline: new Date(Date.now() + 5 * 60_000).toISOString() })
+  const alert = (n: number, message: string, link_path: string) =>
+    fake.tables.user_notifications.push({ id: `00000000-0000-4000-8000-0000000000a${n}`, user_id: eric.id, type: 'order_update', message, link_path, is_read: false, created_at: new Date(Date.now() - n * 60_000).toISOString() })
+  alert(1, 'Mr. Chips accepted your order. Pay within 5 minutes.', `/payment?order_id=${order.id}`)
+  alert(2, 'Your order is ready to collect.', '/dashboard/profile?view=orders')
+  alert(3, 'Win a prize', `/payment?order_id=${order.id}&next=https://evil.example`)
+
+  await logIn(page, 'eric@keplercollege.ac.rw', 'Eric-Kigali-2026!')
+  const openActivity = async () => {
+    await page.goto('/dashboard/social')
+    await page.getByRole('button', { name: 'Activity' }).click()
+  }
+
+  await openActivity()
+  await expect(page.getByRole('link', { name: /Win a prize/ })).toHaveCount(0) // not an exact allowed page
+  await page.getByRole('link', { name: /accepted your order/ }).click()
+  await expect(page).toHaveURL(new RegExp(`/payment\\?order_id=${order.id}$`))
+  await expect(page.getByRole('button', { name: 'Pay Now' })).toBeVisible()
+
+  await openActivity()
+  await page.getByRole('link', { name: /ready to collect/ }).click()
+  await expect(page).toHaveURL(/\/dashboard\/profile\?view=orders$/)
+})

@@ -313,6 +313,16 @@ export class FakeSupabase {
         order.status = 'redeemed'
         return [{ redemption_id: r.id }]
       }
+      case 'get_social_activity':
+        // The student's own alerts, newest first (like the real function).
+        return {
+          notifications: this.tables.user_notifications
+            .filter((n) => n.user_id === user?.id)
+            .sort((a, b) => b.created_at.localeCompare(a.created_at))
+            .map(({ id, type, message, is_read, created_at }) => ({ id, type, actor_id: null, reference_id: null, message, is_read, created_at })),
+          friend_requests: [],
+          message_requests: [],
+        }
       case 'get_setting':
         return null
       default:
