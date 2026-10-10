@@ -23,3 +23,6 @@ Unipicks Branding(Logo)/
 supabase/.temp/
 *.backup-*
 *.corrupted-backup
+
+# End-to-end test build
+/.e2e-dist/

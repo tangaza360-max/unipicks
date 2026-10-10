@@ -114,9 +114,15 @@ Policy directive".
 
 | What | Command | How many |
 |---|---|---|
-| Server functions and shared helpers | `deno test --import-map=supabase/functions/tests/import_map.json --allow-env --allow-read supabase/functions/tests/` | 17 files |
-| Database rules (each builds a fresh local database from all migrations) | `bash supabase/tests/<name>.test.sh` | 15 files |
-| Screens (phone size, light and dark) | Playwright scripts with a fake Supabase (kept outside the repo so far) | per change |
+| Server functions and shared helpers | `deno test --import-map=supabase/functions/tests/import_map.json --allow-env --allow-read supabase/functions/tests/` | 31 files |
+| Database rules (each builds a fresh local database from all migrations) | `bash supabase/tests/<name>.test.sh` | 26 files |
+| **Whole journeys** — student: register → order → pay → pickup code; business: register → approved → create deal → stats → check a code; admin: approve → users → activity log; plus visitor pages and the safety net | `npm run test:e2e` (first time on a computer: `npx playwright install chromium`) | 4 files, 12 tests |
+| Screens in detail (phone size, light and dark, contrast, 44 px) | Playwright scripts kept outside the repo so far | per change |
 
-🟢 Idea: move the screen tests into the repo and run all tests on GitHub on
-every push (GitHub Actions).
+The journeys run the **real app** (built into `.e2e-dist`, served on
+`127.0.0.1:4000`) against a **fake Supabase inside the test**
+(`tests/e2e/support/fake-supabase.ts`): no real account, order or deal is
+ever created. Any request to a real `*.supabase.co` address is blocked and
+fails the test, and a server already running on port 4000 is never reused.
+
+🟢 Idea: run all tests on GitHub on every push (GitHub Actions).

@@ -1,78 +1,42 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test'
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
-
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
+// End-to-end tests: the real app on http://127.0.0.1:4000, talking to a FAKE
+// Supabase that lives inside the test (tests/e2e/support/fake-supabase.ts).
+// They never touch the real database.
+//
+// Safety: the app is built into .e2e-dist with VITE_SUPABASE_URL pointing at
+// the fake (these values win over .env), and a server already running on port
+// 4000 is never reused — it could be `npm run dev` connected to production.
+//
+// Run: npm run test:e2e   (report: npx playwright show-report)
 export default defineConfig({
+  testDir: './tests/e2e',
   workers: 1,
-  testDir: './tests',
-  /* Run tests in files in parallel */
-  fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  retries: process.env.CI ? 1 : 0,
+  reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: "http" + "://" + "127.0.0.1" + ":4000",
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    baseURL: 'http://127.0.0.1:4000',
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+    // Normally Playwright's own browser (`npx playwright install chromium`).
+    // PW_CHROMIUM_PATH points at another Chromium, e.g. on a machine that
+    // already has one installed.
+    launchOptions: process.env.PW_CHROMIUM_PATH ? { executablePath: process.env.PW_CHROMIUM_PATH } : {},
   },
-
-  /* Configure projects for major browsers */
   projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
+    // Students use phones first: a Pixel 7-sized Chrome.
+    { name: 'phone', use: { ...devices['Pixel 7'] } },
   ],
-
-  /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npm run dev -- --host 127.0.0.1',
-    url: "http" + "://" + "127.0.0.1" + ":4000",
-    reuseExistingServer: !process.env.CI,
+    command: 'npx vite build --outDir .e2e-dist --emptyOutDir && npx vite preview --outDir .e2e-dist --host 127.0.0.1 --port 4000 --strictPort',
+    url: 'http://127.0.0.1:4000',
+    reuseExistingServer: false,
+    timeout: 180_000,
+    env: {
+      VITE_SUPABASE_URL: 'http://fake-supabase.test',
+      VITE_SUPABASE_ANON_KEY: 'fake-anon-key',
+      VITE_SENTRY_DSN: '',
+    },
   },
-});
+})
