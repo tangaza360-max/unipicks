@@ -7,7 +7,7 @@ them runs on its own, reads the database, or has any password or key.
 | Helper | File | Status |
 |---|---|---|
 | Support (student and business questions) | [`support-agent.md`](./support-agent.md) | ✅ Ready |
-| Marketing (posts, launch ideas) | — | Later (separate step) |
+| Marketing (posts, pitches, launch) | [`marketing-agent.md`](./marketing-agent.md) | ✅ Ready |
 | Analytics (weekly numbers) | — | Later — when there is real order data; the numbers are in [`../business/metrics.md`](../business/metrics.md) |
 
 ## How to use the support helper
@@ -30,6 +30,13 @@ them runs on its own, reads the database, or has any password or key.
 **Never** give the AI: database results, passwords, API keys, MoMo PINs,
 pickup codes, or screenshots showing other people's details.
 
+## How to use the marketing helper
+
+Same way: copy its **system prompt** (section 2) and **What we can say**
+(section 1) into a chat or a Claude Project, then ask for a post ("WhatsApp
+status for Burger Thursday") and give it the deal's facts from section 4.
+Check the draft against the list in section 6 before posting.
+
 ## Why not automatic yet
 
 An automatic support bot (by webhook or a timer) would need to read orders and
@@ -41,3 +48,5 @@ team answers more than about 20 messages a day.
 
 When a rule in the app changes (timers, statuses, refunds, approval), update
 `support-agent.md` in the same commit — `CODE_REVIEW.md` asks for it.
+When a founder decision changes (fee, campus, ambassadors, payouts), update
+`marketing-agent.md` §1 too.

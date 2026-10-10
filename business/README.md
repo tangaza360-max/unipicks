@@ -64,3 +64,4 @@ January, move the student push (weeks 5–8) so it happens during term.
 - ❓ Which notice boards on campus may carry posters.
 - ❓ Which UR campus comes after day 90.
 - ❓ Tax / VAT on the 1.5% fee and the merchant agreement (accountant, lawyer).
+- ❓ Advertising rules under the new consumer-protection law (lawyer) — see `agents/marketing-agent.md` §6.
