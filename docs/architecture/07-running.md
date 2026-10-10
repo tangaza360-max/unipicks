@@ -116,7 +116,7 @@ Policy directive".
 |---|---|---|
 | Server functions and shared helpers | `deno test --import-map=supabase/functions/tests/import_map.json --allow-env --allow-read supabase/functions/tests/` | 31 files |
 | Database rules (each builds a fresh local database from all migrations) | `bash supabase/tests/<name>.test.sh` | 26 files |
-| **Whole journeys** — student: register → order → pay → pickup code; business: register → approved → create deal → stats → check a code; admin: approve → users → activity log; plus visitor pages and the safety net | `npm run test:e2e` (first time on a computer: `npx playwright install chromium`) | 4 files, 12 tests |
+| **Whole journeys** — student: register → order → pay → pickup code; business: register → approved → create deal → stats → check a code; admin: approve → users → activity log; admin refunds (business can't serve → start → failed → sent; any order by number, part refund, stop; Disputes → Resolve and refund); Help page; plus visitor pages and the safety net | `npm run test:e2e` (first time on a computer: `npx playwright install chromium`) | 6 files, 24 tests |
 | Screens in detail (phone size, light and dark, contrast, 44 px) | Playwright scripts kept outside the repo so far | per change |
 
 The journeys run the **real app** (built into `.e2e-dist`, served on

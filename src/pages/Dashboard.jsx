@@ -14,6 +14,7 @@ import { forgetThisPhone } from '../lib/pushNotifications.js'
 import { lazyPage } from '../lib/lazyPage.js'
 import PageLoading from '../components/PageLoading.jsx'
 import AdminTabs from '../components/AdminTabs.jsx'
+import { refundQueue } from '../lib/refunds.js'
 
 // Loaded only when opened, so they stay out of the first download.
 const MerchantDeals = lazyPage(() => import('./MerchantDeals.jsx'))
@@ -30,6 +31,7 @@ const AdminSettings = lazyPage(() => import('./AdminSettings.jsx'))
 const AdminActivityLogs = lazyPage(() => import('./AdminActivityLogs.jsx'))
 const AdminReviews = lazyPage(() => import('./AdminReviews.jsx'))
 const AdminDisputes = lazyPage(() => import('./AdminDisputes.jsx'))
+const AdminRefunds = lazyPage(() => import('./AdminRefunds.jsx'))
 const AdminReports = lazyPage(() => import('./AdminReports.jsx'))
 
 export default function Dashboard() {
@@ -43,6 +45,7 @@ export default function Dashboard() {
   const [pendingOrderCount, setPendingOrderCount] = useState(0)
   const [openDisputeCount, setOpenDisputeCount] = useState(0)
   const [openReportCount, setOpenReportCount] = useState(0)
+  const [refundToDoCount, setRefundToDoCount] = useState(0)
   const [businessName, setBusinessName] = useState('')
   // The signed-in user's id; live features below restart only when it changes.
   const userIdRef = useRef(null)
@@ -104,7 +107,7 @@ return () => {
       student: ['deals', 'search', 'social', 'advisor', 'orders', 'profile', 'messages'],
       merchant: ['deals', 'orders', 'stats', 'profile', 'stories', 'messages'],
       delivery: ['jobs'],
-      admin: ['approvals', 'student-view', 'analytics', 'users', 'settings', 'activity-logs', 'reviews', 'disputes', 'reports'],
+      admin: ['approvals', 'student-view', 'analytics', 'users', 'settings', 'activity-logs', 'reviews', 'disputes', 'refunds', 'reports'],
     }
     const defaultTab = role === 'admin' ? 'approvals' : role === 'delivery' ? 'jobs' : 'deals'
 
@@ -254,6 +257,38 @@ return () => {
 
     refetchOpenReports()
     const timer = setInterval(refetchOpenReports, 60_000)
+    return () => {
+      active = false
+      clearInterval(timer)
+    }
+  }, [role, userId, dashboardTab])
+
+  // Admin refunds badge: refunds to send (or sent again) plus businesses that
+  // can't serve a paid order and no refund was started. Refreshed every minute
+  // and whenever the admin opens a tab; admins also get a bell alert.
+  useEffect(() => {
+    if (role !== 'admin' || !userId) return
+    let active = true
+
+    async function refetchRefundToDo() {
+      const [open, cantServe] = await Promise.all([
+        supabase.from('refunds').select('order_id, status, created_at').in('status', ['to_send', 'failed']),
+        supabase.from('orders').select('id, status, cant_serve_at').not('cant_serve_at', 'is', null).eq('status', 'paid'),
+      ])
+      if (open.error || cantServe.error) {
+        console.error('[admin refunds] count failed:', open.error || cantServe.error)
+        return
+      }
+      const ids = (cantServe.data || []).map((o) => o.id)
+      const started = ids.length
+        ? await supabase.from('refunds').select('order_id, status, created_at').in('order_id', ids).eq('status', 'sent') // open ones are in the first list
+        : { data: [] }
+      if (!active || started.error) return
+      setRefundToDoCount(refundQueue({ refunds: [...(open.data || []), ...(started.data || [])], cantServeOrders: cantServe.data || [] }).count)
+    }
+
+    refetchRefundToDo()
+    const timer = setInterval(refetchRefundToDo, 60_000)
     return () => {
       active = false
       clearInterval(timer)
@@ -427,6 +462,7 @@ return () => {
           onSelect={(id) => navigate(`/dashboard/${id}`)}
           openDisputeCount={openDisputeCount}
           openReportCount={openReportCount}
+          refundToDoCount={refundToDoCount}
         />
         {dashboardTab === 'approvals' ? <AdminApprovals /> : 
          dashboardTab === 'student-view' ? <AdminStudentView /> : 
@@ -435,6 +471,7 @@ return () => {
          dashboardTab === 'settings' ? <AdminSettings /> :
          dashboardTab === 'activity-logs' ? <AdminActivityLogs /> :
          dashboardTab === 'disputes' ? <AdminDisputes /> :
+         dashboardTab === 'refunds' ? <AdminRefunds /> :
          dashboardTab === 'reports' ? <AdminReports /> :
          <AdminReviews />}
       </>

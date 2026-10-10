@@ -106,9 +106,11 @@ Then paste section 3 ("How Unipicks works") under it, and the message.
 - Unipicks and the business are told at once. An admin reviews it and marks
   it **Under review**, **Resolved** or **Rejected**, with a note; the student
   and the business are told.
-- **Refunds are not automatic.** If the founder agrees to a refund, Unipicks
-  sends the money back **by MoMo** to the number the student paid with. The
-  app does not show "Refunded" yet.
+- **Refunds are not automatic.** If the founder agrees to a refund, an admin
+  sends the money back **by MoMo** from the Unipicks MoMo number to the number
+  the student paid with, and records it in **Admin → Refunds**. The student
+  gets an alert when it starts and when it is sent (with the MoMo reference).
+  While a refund is in progress, the pickup code does not work.
 
 ### Accounts
 - Students sign up with a **@keplercollege.ac.rw** email only (Kepler only for
@@ -374,7 +376,9 @@ numbers again in Check code. We'll reply today.
 
 ## 7. Known gaps (so replies stay honest)
 
-- **No in-app refunds yet:** money goes back by hand, and the app doesn't show
-  "Refunded" (plan approved 2026-10-05, not built).
+- **Refunds are sent by hand:** an admin sends the MoMo from the Unipicks MoMo
+  number and records it in **Admin → Refunds** (the student gets an alert with
+  the MoMo reference). Students don't see a refund on their order card yet
+  (refunds step 3).
 - **Business payouts not settled** (waiting on UmunotaPay).
 - **WhatsApp number** not chosen yet (❓ above).

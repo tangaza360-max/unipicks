@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { ClipboardCheck, GraduationCap, BarChart3, Users, Settings, FileClock, FileText, AlertCircle, Flag } from 'lucide-react'
+import { ClipboardCheck, GraduationCap, BarChart3, Users, Settings, FileClock, FileText, AlertCircle, Flag, HandCoins } from 'lucide-react'
 
 const TABS = [
   { id: 'approvals', label: 'Approvals', icon: ClipboardCheck },
@@ -10,15 +10,16 @@ const TABS = [
   { id: 'activity-logs', label: 'Activity logs', icon: FileClock },
   { id: 'reviews', label: 'Reviews', icon: FileText },
   { id: 'disputes', label: 'Disputes', icon: AlertCircle },
+  { id: 'refunds', label: 'Refunds', icon: HandCoins },
   { id: 'reports', label: 'Reports', icon: Flag },
 ]
 
-function CountBadge({ count, label }) {
+function CountBadge({ count, label, plural = `${label}s` }) {
   if (count <= 0) return null
   return (
     <span
       className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white"
-      aria-label={`${count} open ${label}${count === 1 ? '' : 's'}`}
+      aria-label={`${count} ${count === 1 ? label : plural}`}
     >
       {count > 99 ? '99+' : count}
     </span>
@@ -29,7 +30,7 @@ function CountBadge({ count, label }) {
 // 9 buttons wrapped into 4 rows, half the screen); on a computer they wrap.
 // The open section is scrolled into view when it changes, and again if the
 // buttons change size just after (the font loads, a count bubble appears).
-export default function AdminTabs({ active, onSelect, openDisputeCount = 0, openReportCount = 0 }) {
+export default function AdminTabs({ active, onSelect, openDisputeCount = 0, openReportCount = 0, refundToDoCount = 0 }) {
   const rowRef = useRef(null)
 
   useEffect(() => {
@@ -75,8 +76,9 @@ export default function AdminTabs({ active, onSelect, openDisputeCount = 0, open
             >
               <Icon size={16} aria-hidden="true" />
               <span>{tab.label}</span>
-              {tab.id === 'disputes' && <CountBadge count={openDisputeCount} label="dispute" />}
-              {tab.id === 'reports' && <CountBadge count={openReportCount} label="report" />}
+              {tab.id === 'disputes' && <CountBadge count={openDisputeCount} label="open dispute" />}
+              {tab.id === 'reports' && <CountBadge count={openReportCount} label="open report" />}
+              {tab.id === 'refunds' && <CountBadge count={refundToDoCount} label="refund to do" plural="refunds to do" />}
             </button>
           )
         })}

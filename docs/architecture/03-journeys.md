@@ -125,8 +125,9 @@ flowchart LR
     `reconcile-payments` is built to ask UmunotaPay but is **switched off**;
   - the business is not approved / banned → `create-order` refuses
     ("This business isn't taking orders right now.");
-  - money must go back (sold out, dispute) → **refunds**: the database is
-    built (`20261010140000`); the admin, student and business screens come next.
+  - money must go back (sold out, dispute) → **refunds**: an admin starts it
+    in Admin → Refunds, sends the MoMo by hand, then marks it sent with the
+    reference (`20261010140000`); the student and business screens come next.
 
 ## J4. A group order
 
@@ -223,5 +224,5 @@ sequenceDiagram
 
 ---
 
-**Not drawn yet:** refunds (database built 2026-10-10, screens next), payouts to
+**Not drawn yet:** refunds (database and Admin → Refunds built 2026-10-10; student and business screens next), payouts to
 businesses (waiting for UmunotaPay).

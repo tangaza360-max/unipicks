@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import { formatMoney } from '../lib/format.js'
+import StartRefundDialog from '../components/StartRefundDialog.jsx'
 
 const DISPUTE_STATUS_LABELS = {
   open: 'Open',
@@ -25,6 +26,8 @@ export default function AdminDisputes() {
   const [target, setTarget] = useState(null)
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [refundTarget, setRefundTarget] = useState(null) // { orderId, note }
+  const [notice, setNotice] = useState('')
 
   useEffect(() => {
     loadOrders()
@@ -113,6 +116,7 @@ export default function AdminDisputes() {
         </div>
       </div>
 
+      <p role="status" className="text-sm">{notice}</p>
       {error && <p className="text-sm text-red-400">{error}</p>}
 
       {orders.length === 0 ? (
@@ -218,6 +222,16 @@ export default function AdminDisputes() {
               >
                 Reject
               </button>
+              {['paid', 'redeemed', 'completed'].includes(target.status) && (
+                <button
+                  type="button"
+                  onClick={() => { setRefundTarget({ orderId: target.id, note }); setTarget(null); setNote('') }}
+                  disabled={submitting}
+                  className="min-h-11 text-sm border border-border text-foreground rounded-lg px-4 py-2.5 transition disabled:opacity-50"
+                >
+                  Resolve and refund
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => handleResolve('resolved')}
@@ -229,6 +243,20 @@ export default function AdminDisputes() {
             </div>
           </div>
         </div>
+      )}
+
+      {refundTarget && (
+        <StartRefundDialog
+          orderId={refundTarget.orderId}
+          presetReason="dispute"
+          presetNote={refundTarget.note}
+          onClose={() => setRefundTarget(null)}
+          onStarted={(message) => {
+            setRefundTarget(null)
+            setNotice(`Dispute resolved. ${message}`)
+            loadOrders()
+          }}
+        />
       )}
     </div>
   )

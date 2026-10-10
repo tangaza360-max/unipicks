@@ -59,6 +59,7 @@ function RouteTitle() {
       'activity-logs': 'Activity Logs',
       reviews: 'Reviews',
       disputes: 'Disputes',
+      refunds: 'Refunds',
       reports: 'Reports',
     }
     const dashboardTab = pathname.split('/')[2]

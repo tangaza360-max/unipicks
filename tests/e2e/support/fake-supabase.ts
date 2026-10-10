@@ -43,7 +43,7 @@ export class FakeSupabase {
   private refresh = new Map<string, string>()
 
   constructor() {
-    for (const t of ['deals', 'orders', 'redemptions', 'merchant_profiles', 'user_roles', 'activity_logs', 'notifications', 'user_notifications', 'transactions']) {
+    for (const t of ['deals', 'orders', 'redemptions', 'merchant_profiles', 'user_roles', 'activity_logs', 'notifications', 'user_notifications', 'transactions', 'refunds']) {
       this.tables[t] = []
     }
     // An approved business with one live deal (all days, all hours), and an admin.
@@ -97,6 +97,17 @@ export class FakeSupabase {
     this.tables.orders.push(order)
     this.tables.redemptions.push({ id: id(), order_id: order.id, deal_id: deal.id, student_id: student.id, student_name: 'Eric Mugisha', code: PICKUP_CODE, status: 'pending', payment_status: 'paid', created_at: nowIso(-5) })
     return { code: PICKUP_CODE, dealTitle: deal.title, studentName: 'Eric Mugisha' }
+  }
+
+  /** A paid order (with its MoMo payment) that the business can't serve. */
+  seedCantServeOrder(reason = 'sold_out') {
+    const owner = this.userByEmail(SEED.business.email)!
+    const deal = this.tables.deals.find((d) => d.merchant_id === owner.id)!
+    const student = this.userByEmail('aline@keplercollege.ac.rw') ?? this.addUser('aline@keplercollege.ac.rw', 'Aline-Kigali-2026!', { role: 'student', full_name: 'Aline Uwase' }, true)
+    const order = { id: id(), student_id: student.id, merchant_id: owner.id, deal_id: deal.id, quantity: 1, unit_price: 4800, total_price: 4800, status: 'paid', created_at: nowIso(-30), updated_at: nowIso(-20), cant_serve_at: nowIso(-10), cant_serve_reason: reason, cant_serve_note: null, dispute_status: null }
+    this.tables.orders.push(order)
+    this.tables.transactions.push({ id: id(), normal_order_id: order.id, student_id: student.id, amount: 4800, status: 'paid', umunota_reference: 'UMP-TEST-1', webhook_payload: { phone: '250788000111' }, created_at: nowIso(-25) })
+    return order
   }
 
   /** A business that signed up and confirmed its email, waiting for approval. */
@@ -260,17 +271,24 @@ export class FakeSupabase {
     return json(route, {})
   }
 
-  /** Embedded selects such as `deals(title)` or `redemptions(code)`. */
-  private embed(table: string, rows: Row[], select: string | null) {
-    const rels = [...(select ?? '').matchAll(/(\w+)\(/g)].map((m) => m[1])
-    if (rels.length === 0) return rows
+  /** Embedded selects such as `deals(title)`, nested `orders(deals(title))`, and json fields `alias:col->>key`. */
+  private embed(table: string, rows: Row[], select: string | null): Row[] {
+    const parts = splitSelect(select ?? '')
+    const rels = parts.map((p) => p.match(/^(\w+)\((.*)\)$/s)).filter(Boolean) as RegExpMatchArray[]
+    const paths = parts.map((p) => p.match(/^(\w+):(\w+)->>(\w+)$/)).filter(Boolean) as RegExpMatchArray[]
+    if (rels.length === 0 && paths.length === 0) return rows
     return rows.map((row) => {
       const out = { ...row }
-      for (const rel of rels) {
+      for (const [, alias, col, key] of paths) out[alias] = row[col]?.[key] ?? null
+      for (const [, rel, inner] of rels) {
         const fk = `${rel.replace(/s$/, '')}_id`
-        out[rel] = fk in row
-          ? (this.tables[rel] ?? []).find((r) => r.id === row[fk]) ?? null
-          : (this.tables[rel] ?? []).filter((r) => r[`${table.replace(/s$/, '')}_id`] === row.id)
+        const own = rel === 'transactions' && table === 'orders' ? 'normal_order_id' : `${table.replace(/s$/, '')}_id`
+        if (fk in row) {
+          const found = (this.tables[rel] ?? []).find((r) => r.id === row[fk])
+          out[rel] = found ? this.embed(rel, [found], inner)[0] : null
+        } else {
+          out[rel] = this.embed(rel, (this.tables[rel] ?? []).filter((r) => r[own] === row.id), inner)
+        }
       }
       return out
     })
@@ -325,9 +343,70 @@ export class FakeSupabase {
         }
       case 'get_setting':
         return null
+      case 'admin_start_refund':
+      case 'admin_mark_refund_sent':
+      case 'admin_mark_refund_failed':
+      case 'admin_cancel_refund':
+        if (role !== 'admin') throw new FakeDbError('Admin only')
+        return this.refundAction(name, args, user!)
       default:
         return []
     }
+  }
+
+  /** The refund rules of 20261010140000_refunds.sql that the screens rely on. */
+  private refundAction(name: string, args: Row, admin: User) {
+    const refunds = this.tables.refunds
+    const money = (n: number) => `${Math.round(n).toLocaleString('en-US')} RWF`
+    const tell = (userId: string, type: string, message: string) =>
+      this.tables.user_notifications.push({ id: id(), user_id: userId, type, message, link_path: '/dashboard/profile?view=orders', is_read: false, created_at: nowIso() })
+    const log = (action: string, orderId: string, details: Row) =>
+      this.tables.activity_logs.push({ id: id(), admin_id: admin.id, admin_email: admin.email, admin_name: 'Unipicks Admin', action, target_type: 'order', target_id: orderId, target_name: orderId.slice(0, 8).toUpperCase(), details, created_at: nowIso() })
+    if (name === 'admin_start_refund') {
+      const order = this.tables.orders.find((o) => o.id === args.p_order_id)
+      if (!order) throw new FakeDbError('Order not found')
+      if (refunds.some((r) => r.order_id === order.id && ['to_send', 'failed'].includes(r.status))) throw new FakeDbError('This order already has a refund in progress.')
+      const tx = this.tables.transactions.find((t) => t.normal_order_id === order.id && ['paid', 'refunded'].includes(t.status))
+      if (!tx) throw new FakeDbError('This order has no payment to refund.')
+      const double = args.p_reason === 'double_payment'
+      const used = refunds.filter((r) => r.transaction_id === tx.id && r.status !== 'cancelled' && (r.reason === 'double_payment') === double).reduce((a, r) => a + r.amount, 0)
+      if (args.p_amount > tx.amount - used) throw new FakeDbError(`The most you can refund on this payment is ${money(tx.amount - used)}.`)
+      const refund = { id: id(), order_id: order.id, transaction_id: tx.id, student_id: order.student_id, merchant_id: order.merchant_id, amount: args.p_amount, reason: args.p_reason, note: args.p_note, charged_to: args.p_charged_to, status: 'to_send', momo_reference: null, started_by: admin.id, created_at: nowIso(), updated_at: nowIso(), sent_at: null }
+      refunds.push(refund)
+      if (args.p_reason === 'dispute' && ['open', 'under_review'].includes(order.dispute_status)) Object.assign(order, { dispute_status: 'resolved', dispute_resolution_note: args.p_note ?? order.dispute_resolution_note })
+      tell(order.student_id, 'refund_started', `We are refunding ${money(args.p_amount)} for order ${order.id.slice(0, 8).toUpperCase()}.`)
+      log('refund_started', order.id, { refund_id: refund.id, amount: args.p_amount, reason: args.p_reason, charged_to: args.p_charged_to })
+      return refund.id
+    }
+    const refund = refunds.find((r) => r.id === args.p_refund_id)
+    if (!refund) throw new FakeDbError('Refund not found')
+    if (name === 'admin_mark_refund_sent') {
+      if (!String(args.p_momo_reference ?? '').trim()) throw new FakeDbError('Type the MoMo reference of the transfer.')
+      if (!['to_send', 'failed'].includes(refund.status)) throw new FakeDbError(`This refund is already ${refund.status === 'sent' ? 'sent' : 'cancelled'}.`)
+      Object.assign(refund, { status: 'sent', momo_reference: args.p_momo_reference.trim(), sent_at: nowIso(), updated_at: nowIso(), sent_by: admin.id })
+      const tx = this.tables.transactions.find((t) => t.id === refund.transaction_id)!
+      const back = refunds.filter((r) => r.transaction_id === tx.id && r.status !== 'cancelled' && r.reason !== 'double_payment').reduce((a, r) => a + r.amount, 0)
+      if (refund.reason !== 'double_payment' && back >= tx.amount) {
+        tx.status = 'refunded'
+        const order = this.tables.orders.find((o) => o.id === refund.order_id)!
+        if (['paid', 'redeemed', 'completed'].includes(order.status)) order.status = 'refunded'
+      }
+      tell(refund.student_id, 'refund_sent', `Refund sent: ${money(refund.amount)}. MoMo reference ${refund.momo_reference}.`)
+      log('refund_sent', refund.order_id, { refund_id: refund.id, amount: refund.amount, momo_reference: refund.momo_reference })
+      return null
+    }
+    if (name === 'admin_mark_refund_failed') {
+      if (refund.status !== 'to_send') throw new FakeDbError('Only a refund waiting to be sent can be marked as failed.')
+      Object.assign(refund, { status: 'failed', updated_at: nowIso() })
+      log('refund_failed', refund.order_id, { refund_id: refund.id, note: args.p_note ?? null })
+      return null
+    }
+    if (!String(args.p_note ?? '').trim()) throw new FakeDbError('Say why the refund is stopped (the student will see it).')
+    if (!['to_send', 'failed'].includes(refund.status)) throw new FakeDbError('Only a refund in progress can be stopped.')
+    Object.assign(refund, { status: 'cancelled', updated_at: nowIso() })
+    tell(refund.student_id, 'refund_cancelled', `The refund of ${money(refund.amount)} was stopped: ${args.p_note.trim()}`)
+    log('refund_cancelled', refund.order_id, { refund_id: refund.id, note: args.p_note.trim() })
+    return null
   }
 
   // ---- Edge Functions ----
@@ -376,6 +455,28 @@ function json(route: Route, body: unknown, status = 200, count?: number) {
     headers: { 'content-range': `0-${Math.max(0, n - 1)}/${n}` },
     body: JSON.stringify(body),
   })
+}
+
+/** A database error as Supabase sends it (400, code P0001, the plain message). */
+class FakeDbError extends Error {}
+
+/** Top-level parts of a PostgREST select, keeping `rel(a, b(c))` together. */
+function splitSelect(select: string) {
+  const parts: string[] = []
+  let depth = 0
+  let current = ''
+  for (const ch of select.replace(/\s+/g, '')) {
+    if (ch === ',' && depth === 0) {
+      parts.push(current)
+      current = ''
+      continue
+    }
+    if (ch === '(') depth++
+    if (ch === ')') depth--
+    current += ch
+  }
+  if (current) parts.push(current)
+  return parts
 }
 
 /** PostgREST filters used by the app: eq, neq, in, is (and not.*). */
