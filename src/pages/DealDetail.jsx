@@ -9,6 +9,7 @@ import BackLink from '../components/BackLink.jsx'
 import { withNext } from '../lib/safeNext.js'
 import { ShareButton } from '../components/ShareDeal.jsx'
 import DealReviews from '../components/DealReviews.jsx'
+import DealComments from '../components/DealComments.jsx'
 
 function formatRelativeTime(isoString) {
   const diff = Date.now() - new Date(isoString).getTime()
@@ -318,6 +319,8 @@ export default function DealDetail() {
             )}
 
             <DealReviews dealId={deal.id} />
+
+            <DealComments dealId={deal.id} />
 
             <div className="border-t border-border pt-4">
               <h2 className="font-semibold">Terms</h2>
