@@ -33,7 +33,7 @@ export default function Terms() {
           </section>
         ))}
         <footer className="border-t border-border pt-6 text-sm text-muted-foreground">
-          <Link to="/privacy" className="text-primary underline underline-offset-2 hover:decoration-2">Privacy Policy</Link>
+          <Link to="/privacy" className="inline-flex min-h-11 items-center text-primary underline underline-offset-2 hover:decoration-2">Privacy Policy</Link>
         </footer>
       </article>
     </main>

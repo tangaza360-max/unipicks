@@ -227,7 +227,7 @@ export default function NotificationBell({ includeMerchantInbox = true }) {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-full hover:bg-muted transition-colors"
+        className="relative flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted transition-colors"
         aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
         aria-expanded={isOpen}
       >

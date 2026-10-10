@@ -124,7 +124,7 @@ export default function Receipt() {
           <button
             type="button"
             onClick={() => window.print()}
-            className="text-sm bg-primary text-primary-foreground font-semibold rounded-lg px-4 py-2"
+            className="min-h-11 text-sm bg-primary text-primary-foreground font-semibold rounded-lg px-4 py-2"
           >
             Print / Save as PDF
           </button>

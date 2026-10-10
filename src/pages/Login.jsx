@@ -75,7 +75,7 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
             />
             <div className="mt-2 text-right">
-              <Link to="/forgot-password" className="text-xs text-accent underline underline-offset-2 hover:decoration-2">
+              <Link to="/forgot-password" className="inline-flex min-h-11 items-center text-xs text-accent underline underline-offset-2 hover:decoration-2">
                 Forgot password?
               </Link>
             </div>

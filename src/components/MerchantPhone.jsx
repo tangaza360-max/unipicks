@@ -23,7 +23,7 @@ export default function MerchantPhone({ phone }) {
       <span className="text-muted-foreground">Business phone:</span>
       <a
         href={telHref}
-        className="font-mono text-accent underline underline-offset-2 hover:opacity-80 transition"
+        className="inline-flex min-h-11 items-center font-mono text-accent underline underline-offset-2 hover:opacity-80 transition"
         aria-label={`Call the business at ${phone}`}
       >
         {phone}
@@ -31,7 +31,7 @@ export default function MerchantPhone({ phone }) {
       <button
         type="button"
         onClick={handleCopy}
-        className="text-xs border border-border text-muted-foreground hover:text-foreground rounded-md px-2 py-1 transition"
+        className="min-h-11 min-w-11 text-xs border border-border text-muted-foreground hover:text-foreground rounded-md px-3 py-1 transition"
         aria-label="Copy phone number"
       >
         {copied ? 'Copied' : 'Copy'}

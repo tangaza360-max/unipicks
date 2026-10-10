@@ -32,9 +32,9 @@ export default function Privacy() {
           </section>
         ))}
         <footer className="border-t border-border pt-6 text-sm text-muted-foreground">
-          <Link to="/terms" className="text-primary underline underline-offset-2 hover:decoration-2">Terms of Service</Link>
+          <Link to="/terms" className="inline-flex min-h-11 items-center text-primary underline underline-offset-2 hover:decoration-2">Terms of Service</Link>
           {' · '}
-          <Link to="/delete-account" className="text-primary underline underline-offset-2 hover:decoration-2">Delete your account</Link>
+          <Link to="/delete-account" className="inline-flex min-h-11 items-center text-primary underline underline-offset-2 hover:decoration-2">Delete your account</Link>
         </footer>
       </article>
     </main>

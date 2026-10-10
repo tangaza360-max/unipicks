@@ -194,7 +194,7 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
           <h2 className="font-display text-lg font-semibold">Business Profile</h2>
           <button
             onClick={() => { setSuccess(''); setError(''); setIsEditing(true) }}
-            className="text-sm bg-accent hover:bg-accent-dim text-background-foreground font-medium rounded-lg px-4 py-2 transition"
+            className="min-h-11 text-sm bg-accent hover:bg-accent-dim text-background-foreground font-medium rounded-lg px-4 py-2 transition"
           >
             Edit Profile
           </button>

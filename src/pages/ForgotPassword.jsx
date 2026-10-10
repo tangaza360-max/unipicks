@@ -77,7 +77,7 @@ export default function ForgotPassword() {
         )}
 
         <p className="text-center text-sm text-muted-foreground">
-          <Link to="/login" className="text-accent underline underline-offset-2 hover:decoration-2">Back to log in</Link>
+          <Link to="/login" className="inline-flex min-h-11 items-center text-accent underline underline-offset-2 hover:decoration-2">Back to log in</Link>
         </p>
       </div>
     </div>

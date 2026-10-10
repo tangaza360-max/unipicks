@@ -168,7 +168,7 @@ export default function StudentSearch() {
             role="tab"
             aria-selected={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+            className={`min-h-11 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
               activeTab === tab.id
                 ? 'bg-accent text-background-foreground shadow-sm'
                 : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'

@@ -128,7 +128,7 @@ export default function DeleteAccount() {
 
         <footer className="space-y-2 border-t border-border pt-6 text-sm text-muted-foreground">
           <p>Subject to change — see our <Link to="/privacy" className="text-primary underline underline-offset-2 hover:decoration-2">Privacy Policy</Link> for the current retention period.</p>
-          <p><Link to="/terms" className="text-primary underline underline-offset-2 hover:decoration-2">Terms of Service</Link></p>
+          <p><Link to="/terms" className="inline-flex min-h-11 items-center text-primary underline underline-offset-2 hover:decoration-2">Terms of Service</Link></p>
         </footer>
       </article>
     </main>

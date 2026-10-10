@@ -69,7 +69,7 @@ export default function AdminTabs({ active, onSelect, openDisputeCount = 0, open
               type="button"
               onClick={() => onSelect(tab.id)}
               aria-current={current ? 'page' : undefined}
-              className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
+              className={`flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
                 current ? 'bg-primary text-primary-foreground' : 'border border-border text-muted-foreground hover:text-foreground'
               }`}
             >

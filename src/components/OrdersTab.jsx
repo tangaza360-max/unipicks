@@ -486,7 +486,7 @@ function NormalOrderCard({ order, onRaiseDispute }) {
       {['paid', 'redeemed', 'completed'].includes(status) && (
         <Link
           to={`/receipt/${order.id}`}
-          className="mt-3 inline-block text-xs font-medium text-accent underline underline-offset-2 hover:decoration-2"
+          className="mt-1 inline-flex min-h-11 items-center text-xs font-medium text-accent underline underline-offset-2 hover:decoration-2"
         >
           View receipt
         </Link>
@@ -526,7 +526,7 @@ function NormalOrderCard({ order, onRaiseDispute }) {
         <button
           type="button"
           onClick={() => onRaiseDispute(order)}
-          className="mt-3 w-full border border-border text-muted-foreground hover:text-foreground rounded-lg py-2 text-xs transition"
+          className="mt-3 min-h-11 w-full border border-border text-muted-foreground hover:text-foreground rounded-lg py-2 text-xs transition"
         >
           Raise a dispute
         </button>

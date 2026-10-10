@@ -622,7 +622,7 @@ export default function MerchantDeals() {
         <div className="flex gap-2">
           <button
             onClick={() => setShowCheckCodeModal(true)}
-            className="flex items-center gap-2 bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg px-4 py-2 text-sm font-medium transition"
+            className="flex min-h-11 items-center gap-2 bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg px-4 py-2 text-sm font-medium transition"
           >
             <Search size={16} /> Check code
           </button>
@@ -631,7 +631,7 @@ export default function MerchantDeals() {
               resetForm()
               setShowCreateModal(true)
             }}
-            className="flex items-center gap-2 bg-accent hover:bg-accent-dim text-background-foreground rounded-lg px-4 py-2 text-sm font-medium transition"
+            className="flex min-h-11 items-center gap-2 bg-accent hover:bg-accent-dim text-background-foreground rounded-lg px-4 py-2 text-sm font-medium transition"
           >
             <Sparkles size={16} /> Create deal
           </button>
