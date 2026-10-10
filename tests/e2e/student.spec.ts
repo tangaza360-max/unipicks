@@ -87,3 +87,50 @@ test("a student can tap the order alerts in Social → Activity", async ({ page,
   await page.getByRole('link', { name: /ready to collect/ }).click()
   await expect(page).toHaveURL(/\/dashboard\/profile\?view=orders$/)
 })
+
+test('Home shows "pay now" and "food ready" to a student who never set up Social', async ({ page, fake }) => {
+  fake.seedPaidOrderWithCode(SEED.business.email) // Eric (no Social profile) and a paid order
+  const eric = fake.userByEmail('eric@keplercollege.ac.rw')!
+  const order = fake.tables.orders.find((o) => o.student_id === eric.id)!
+  const banner = page.getByRole('region', { name: 'Your orders need you' })
+
+  // The business accepted: pay within 5 minutes.
+  Object.assign(order, { status: 'confirmed', payment_deadline: new Date(Date.now() + 4 * 60_000).toISOString() })
+  await logIn(page, 'eric@keplercollege.ac.rw', 'Eric-Kigali-2026!')
+  await expect(banner.getByText('Mr. Chips accepted your order', { exact: true })).toBeVisible()
+  await expect(banner.getByText(/Burger Thursday · Pay within [34]:\d\d/)).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: 'Mr. Chips accepted your order. Pay within 5 minutes.' })).toHaveCount(1)
+  await banner.getByRole('link', { name: 'Pay now' }).click()
+  await expect(page).toHaveURL(new RegExp(`/payment\\?order_id=${order.id}$`))
+  await page.getByLabel('Rwandan phone number').fill('0788000333') // Eric's account has no phone saved
+  await page.getByRole('button', { name: 'Pay Now' }).click()
+  await expect(page.getByText('Payment successful')).toBeVisible()
+
+  // Paid, not ready yet: nothing to do, no banner.
+  await page.goto('/dashboard')
+  await expect(page.getByRole('heading', { name: 'All deals' })).toBeVisible()
+  await expect(banner).toHaveCount(0)
+
+  // The business marks it ready.
+  order.ready_at = new Date().toISOString()
+  await page.reload()
+  await expect(banner.getByText('Your food is ready at Mr. Chips', { exact: true })).toBeVisible()
+  await banner.getByRole('link', { name: 'See code' }).click()
+  await expect(page).toHaveURL(/\/dashboard\/profile\?view=orders$/)
+  await expect(page.getByText('4821').first()).toBeVisible()
+})
+
+test('the Home banner hides an expired payment window and groups extra orders', async ({ page, fake }) => {
+  fake.seedPaidOrderWithCode(SEED.business.email)
+  const eric = fake.userByEmail('eric@keplercollege.ac.rw')!
+  const first = fake.tables.orders.find((o) => o.student_id === eric.id)!
+  Object.assign(first, { status: 'confirmed', payment_deadline: new Date(Date.now() - 60_000).toISOString() }) // expired
+  for (let i = 0; i < 3; i++) {
+    fake.tables.orders.push({ ...first, id: crypto.randomUUID(), status: 'confirmed', payment_deadline: new Date(Date.now() + (i + 2) * 60_000).toISOString() })
+  }
+  await logIn(page, 'eric@keplercollege.ac.rw', 'Eric-Kigali-2026!')
+  const banner = page.getByRole('region', { name: 'Your orders need you' })
+  await expect(banner.getByRole('link', { name: 'Pay now' })).toHaveCount(2) // 3 open windows: 2 shown
+  await expect(banner.getByRole('link', { name: 'and 1 more in My orders' })).toBeVisible()
+  await expect(banner.getByText(/Pay within 1:\d\d/)).toBeVisible() // the most urgent (2 min) first
+})

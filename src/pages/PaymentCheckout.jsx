@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { useCountdown } from '../lib/useCountdown.js'
 import { liveChannel } from '../lib/realtime.js'
 import MerchantPhone from '../components/MerchantPhone.jsx'
 import { initiatePayment } from '../lib/payment.js'
@@ -24,20 +25,6 @@ const DECLINE_REASON_LABELS = {
 // it can still change.
 const POLL_MS = 10_000
 const FINAL_STATUSES = ['paid', 'redeemed', 'completed', 'declined', 'confirmation_expired', 'payment_expired', 'cancelled', 'refunded']
-
-function useCountdown(deadline) {
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => {
-    if (!deadline) return undefined
-    const timer = setInterval(() => setNow(Date.now()), 1000)
-    return () => clearInterval(timer)
-  }, [deadline])
-  if (!deadline) return null
-  const ms = new Date(deadline).getTime() - now
-  if (ms <= 0) return { expired: true, label: '0:00' }
-  const total = Math.ceil(ms / 1000)
-  return { expired: false, label: `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}` }
-}
 
 function StatusPanel({ tone = 'neutral', title, children }) {
   const tones = {

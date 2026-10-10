@@ -10,6 +10,7 @@ import StoryViewer from '../components/StoryViewer.jsx'
 import { Store, Search, X, Users, ChevronRight, LayoutGrid, Pizza, Utensils, Sandwich, CupSoda, IceCreamCone, Sparkles } from 'lucide-react'
 import DealTile, { isNewDeal } from '../components/DealTile.jsx'
 import DealActions from '../components/DealActions.jsx'
+import OrderNudges from '../components/OrderNudges.jsx'
 import { useDealSocial } from '../lib/useDealSocial.js'
 import { isDealOpenNow } from '../../supabase/functions/_shared/deal-availability.ts'
 import { formatMoney } from '../lib/format.js'
@@ -523,6 +524,9 @@ const getDiscoveryScore = (deal) => {
 
   return (
     <div className="space-y-4 relative">
+      {/* Pay now / food ready — first, whatever else is on Home. */}
+      <OrderNudges />
+
       {/* --- STORIES ROW --- */}
       {groupedStories.length > 0 && (
         <div className="pb-2 border-b border-border/50">
