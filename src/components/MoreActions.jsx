@@ -55,6 +55,9 @@ export default function MoreActions({ label, items }) {
             type="button"
             onClick={() => {
               setOpen(false)
+              // The panel hides: put focus on "⋯" first, so a dialog the item
+              // opens returns focus there when it closes.
+              buttonRef.current?.focus()
               item.onClick()
             }}
             className={`flex min-h-11 w-full items-center rounded-lg px-3 text-left text-sm font-semibold transition hover:bg-muted ${
