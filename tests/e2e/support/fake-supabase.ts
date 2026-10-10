@@ -137,7 +137,8 @@ export class FakeSupabase {
       if (path.startsWith('/storage/v1/')) return json(route, [])
       return json(route, {})
     } catch (error) {
-      return json(route, { message: String(error) }, 500)
+      // Like a `raise exception` in Postgres: status 400, the plain message.
+      return json(route, { code: 'P0001', message: error instanceof Error ? error.message : String(error) }, 400)
     }
   }
 

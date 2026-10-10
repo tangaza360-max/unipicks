@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 
 export default function VerifyCode() {
   const [codeInput, setCodeInput] = useState('')
   const [checking, setChecking] = useState(false)
   const [result, setResult] = useState(null)
+  const inputId = useId()
 
   async function handleCheck(e) {
     e.preventDefault()
@@ -51,10 +52,17 @@ export default function VerifyCode() {
   return (
     <div className="space-y-3">
       <h2 className="font-display text-lg font-semibold">Check a student's code</h2>
+      {/* A real label (a placeholder disappears and is not a name), the number
+          keypad on phones (codes are 4 digits), and the result announced, so
+          the person at the counter hears whether to hand over the food. */}
+      <label htmlFor={inputId} className="field-label">Pickup code</label>
       <form onSubmit={handleCheck} className="flex gap-2">
         <input
+          id={inputId}
           className="field-input"
           placeholder="4-digit code"
+          inputMode="numeric"
+          autoComplete="off"
           value={codeInput}
           onChange={(e) => setCodeInput(e.target.value)}
           maxLength={4}
@@ -68,11 +76,9 @@ export default function VerifyCode() {
         </button>
       </form>
 
-      {result && (
-        <p className={`text-sm ${result.ok ? 'text-accent' : 'text-red-400'}`}>
-          {result.message}
-        </p>
-      )}
+      <p role="status" aria-live="polite" className={result ? `text-sm ${result.ok ? 'text-accent' : 'text-[color:var(--status-bad-fg)]'}` : 'sr-only'}>
+        {result?.message}
+      </p>
     </div>
   )
 }
