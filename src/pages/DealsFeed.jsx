@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { isMissingPrice, studentPrice } from '../lib/dealPricing.js'
+import { discoveryRows } from '../lib/homeRows.js'
 import { liveChannel } from '../lib/realtime.js'
 import { createOrder } from '../lib/orders.js'
 import GroupOrders from './GroupOrders.jsx'
@@ -475,8 +476,9 @@ const getDiscoveryScore = (deal) => {
 
   const filtering = budget != null || searchQuery.trim() !== '' || selectedCategory !== 'all'
 
-  // Rows that scroll sideways (shown when nothing is filtered). A row that
-  // would only repeat the full list, or is empty, is left out.
+  // Rows that scroll sideways (shown when nothing is filtered). Discovery rows
+  // follow discoveryRows() (at least 2 deals, no repeats); Saved and Order
+  // again always show.
   const rows = useMemo(() => {
     if (filtering) return []
     const now = Date.now()
@@ -495,7 +497,7 @@ const getDiscoveryScore = (deal) => {
       // then deals you picked up before that are still live.
       ...(saved.length > 0 ? [['Saved', saved]] : []),
       ...(again.length > 0 ? [['Order again', again]] : []),
-      ...candidates.filter(([, list]) => list.length > 0 && list.length < visibleDeals.length),
+      ...discoveryRows(candidates, visibleDeals.length),
     ]
   }, [filtering, visibleDeals, social, orderedBefore])
 
