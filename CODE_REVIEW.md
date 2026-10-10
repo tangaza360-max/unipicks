@@ -46,5 +46,7 @@ with the diff (`git diff --staged`). Rules behind each item:
       evidence and the standard followed.
 - [ ] `docs/CHANGELOG.md` entry added; `docs/architecture/` updated if
       connections changed.
+- [ ] `agents/support-agent.md` updated if a rule users ask about changed
+      (timers, order labels, disputes, refunds, approval, account steps).
 - [ ] Deploy steps written down if the founder must run `supabase db push`,
       `supabase functions deploy` or `vercel --prod`.
