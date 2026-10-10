@@ -11,6 +11,7 @@ import { ShareButton } from '../components/ShareDeal.jsx'
 import DealReviews from '../components/DealReviews.jsx'
 import DealComments from '../components/DealComments.jsx'
 import OrderBox from '../components/OrderBox.jsx'
+import DealSocialBar from '../components/DealSocialBar.jsx'
 
 function formatRelativeTime(isoString) {
   const diff = Date.now() - new Date(isoString).getTime()
@@ -230,6 +231,8 @@ export default function DealDetail() {
                 <Share2 size={16} aria-hidden="true" /> Share
               </ShareButton>
             </div>
+
+            {signedIn && <DealSocialBar deal={deal} />}
 
             {ratingStats?.review_count > 0 && (
               <div className="flex items-center gap-2 text-sm">

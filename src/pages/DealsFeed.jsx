@@ -9,7 +9,7 @@ import StoryViewer from '../components/StoryViewer.jsx'
 import { Store, Search, X, Users, ChevronRight, LayoutGrid, Pizza, Utensils, Sandwich, CupSoda, IceCreamCone, Sparkles } from 'lucide-react'
 import DealTile, { isNewDeal } from '../components/DealTile.jsx'
 import DealActions from '../components/DealActions.jsx'
-import { haptic } from '../lib/haptics.js'
+import { useDealSocial } from '../lib/useDealSocial.js'
 import { isDealOpenNow } from '../../supabase/functions/_shared/deal-availability.ts'
 import { formatMoney } from '../lib/format.js'
 
@@ -45,9 +45,8 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [ratingStats, setRatingStats] = useState({})
-  const [social, setSocial] = useState({}) // deal id → { like_count, liked_by_me, saved_by_me }
-  const [socialBusy, setSocialBusy] = useState(() => new Set())
-  const [socialNotice, setSocialNotice] = useState('')
+  // ❤️ and 🔖 for every deal on the feed (shared with the deal page).
+  const { social, setSocial, busy: socialBusy, notice: socialNotice, toggle: toggleSocial } = useDealSocial()
   const [stories, setStories] = useState([])
   const [merchantData, setMerchantData] = useState({})
   const [storyViewerOpen, setStoryViewerOpen] = useState(false)
@@ -233,47 +232,6 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
       storiesChannel.unsubscribe()
     }
   }, [])
-
-  // ❤️ and 🔖: change the screen at once, then save; put it back if refused.
-  async function toggleSocial(deal, kind) {
-    if (socialBusy.has(deal.id)) return
-    const before = social[deal.id] || { like_count: 0, liked_by_me: false, saved_by_me: false }
-    const on = kind === 'like' ? !before.liked_by_me : !before.saved_by_me
-    const after =
-      kind === 'like'
-        ? { ...before, liked_by_me: on, like_count: Math.max(0, Number(before.like_count || 0) + (on ? 1 : -1)) }
-        : { ...before, saved_by_me: on }
-    setSocial((current) => ({ ...current, [deal.id]: after }))
-    setSocialBusy((current) => new Set(current).add(deal.id))
-    setSocialNotice('')
-    if (on) haptic(12)
-
-    const { data: { user } } = await supabase.auth.getUser()
-    let result
-    if (kind === 'like') {
-      result = on
-        ? await supabase.from('deal_likes').insert({ student_id: user?.id, deal_id: deal.id })
-        : await supabase.from('deal_likes').delete().eq('student_id', user?.id).eq('deal_id', deal.id)
-    } else {
-      result = on
-        ? await supabase.from('student_saved_items').insert({ student_id: user?.id, item_type: 'deal', item_id: deal.id })
-        : await supabase.from('student_saved_items').delete().eq('student_id', user?.id).eq('item_type', 'deal').eq('item_id', deal.id)
-    }
-
-    setSocialBusy((current) => {
-      const next = new Set(current)
-      next.delete(deal.id)
-      return next
-    })
-    // Already liked / saved on another phone: the screen is right as it is.
-    if (result.error && result.error.code !== '23505') {
-      console.warn(`Could not ${kind} the deal:`, result.error.message)
-      setSocial((current) => ({ ...current, [deal.id]: before }))
-      setSocialNotice(kind === 'like' ? "Your like wasn't saved. Please try again." : "That wasn't saved. Please try again.")
-    } else if (kind === 'save') {
-      setSocialNotice(on ? `Saved: ${deal.title}` : `Removed from saved: ${deal.title}`)
-    }
-  }
 
   function tile(deal, className = '') {
     return (
