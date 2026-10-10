@@ -8,7 +8,7 @@ Functions) behind it. Read this before suggesting code. The longer sources are
 ## 1. Code style
 
 - **React function components and hooks only.** No class components.
-- Routing with `react-router-dom` v6. Shared logic in `src/lib/`, shared UI in
+- Routing with `react-router-dom` v7 (`BrowserRouter`, no data loaders). Shared logic in `src/lib/`, shared UI in
   `src/components/`, screens in `src/pages/`.
 - Match the code around you: its naming, comment density and idioms.
 - Pure logic (prices, rules) goes in `src/lib/*.js` so it can be unit-tested
