@@ -117,6 +117,7 @@ erDiagram
     text status "pending | reviewing | resolved | dismissed"
     text context "chat | profile | business | story | avatar | review"
     uuid rating_id "reported review (copy of text and photo kept)"
+    uuid comment_id "reported comment (copy of text kept)"
     text avatar_path "reported photo, set by the database"
   }
 ```

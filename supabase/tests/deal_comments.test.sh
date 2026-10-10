@@ -137,6 +137,20 @@ check "Aline heard the business replied (by name)" "$(q "select message from pub
 check "a student's reply says 'Someone', not the name" "$(q "select message from public.user_notifications where user_id = '$A' and type = 'comment_reply' order by created_at offset 1 limit 1")" "Someone replied to your comment on Rolex: “Same question!”"
 check "the business isn't alerted about its own replies" "$(q "select count(*) from public.user_notifications where user_id = '$M' and actor_id = '$M'")" "0"
 
+echo " reporting a comment"
+rep() { as_user "$1" "insert into public.student_reports (reporter_id, reported_id, category, context, comment_id) values ('$1', ${3:-null}, 'Spam', '${4:-comment}', ${2}) returning reported_id;"; }
+check "Fred reports Kevin's comment; the database fills in who wrote it" "$(rep $F "'$C2'")" "$K"
+check "a wrong 'who' from the phone is replaced" "$(rep $M "'$C2'" "'$A'")" "$K"
+check "you can't report your own comment" "$(rep $K "'$C2'")" "You can't report your own comment."
+check "a comment that doesn't exist" "$(rep $F "'30000000-0000-4000-8000-000000000009'")" "This comment no longer exists."
+check "other report types can't carry a comment" "$(as_user $F "insert into public.student_reports (reporter_id, reported_id, category, context, comment_id) values ('$F','$A','Spam','profile','$C2') returning coalesce(comment_id::text,'none');")" "none"
+CREP=$(q "select id from public.student_reports where reporter_id = '$F' and context = 'comment'")
+check "admin queue shows the comment copy" "$(as_user $AD "select comment_text || '|' || comment_removed from public.get_admin_reports() where id = '$CREP';")" "Is there a vegan one?|false"
+check "only admins can remove a comment" "$(as_user $F "select public.admin_remove_comment('$CREP');")" "Only admins can remove comments"
+check "admin removes it" "$(as_user $AD "select public.admin_remove_comment('$CREP'); select count(*) from public.deal_comments where id = '$C2';" )" "0"
+check "queue now says removed; logged" "$(as_user $AD "select comment_removed from public.get_admin_reports() where id = '$CREP';")|$(q "select count(*) from public.activity_logs where action = 'remove_comment' and target_id = '$K'")" "t|1"
+C2=$(say $K "Is there a vegan one?")   # again, for the delete checks below
+
 echo " deleting"
 check "Fred can't delete Aline's comment" "$(as_user $F "delete from public.deal_comments where id = '$C1' returning 1;")" ""
 check "the business can't delete students' comments" "$(as_user $M "delete from public.deal_comments where id = '$C1' returning 1;")" ""

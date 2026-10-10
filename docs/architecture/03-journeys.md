@@ -178,9 +178,9 @@ sequenceDiagram
   actor R as Student or business
   participant DB as Database
   actor AD as Admin
-  R->>DB: ReportDialog → student_reports<br/>(chat, profile, business, story,<br/>profile photo or review)
+  R->>DB: ReportDialog → student_reports<br/>(chat, profile, business, story,<br/>profile photo, review or comment)
   DB-->>AD: every admin notified ("respond within 24 hours")
-  AD->>DB: Admin → Reports: start review / resolve / dismiss<br/>(story: see photo, Remove story<br/>profile photo: see it, Remove photo<br/>review: see it, Remove review)
+  AD->>DB: Admin → Reports: start review / resolve / dismiss<br/>(story: see photo, Remove story<br/>profile photo: see it, Remove photo<br/>review: see it, Remove review<br/>comment: see it, Remove comment)
   AD->>DB: Ban reported account (admin_ban_user)
   Note over DB: a banned account cannot message, order,<br/>sell, post stories or report (triggers)
 ```

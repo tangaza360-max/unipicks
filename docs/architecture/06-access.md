@@ -78,7 +78,7 @@ Write new rules the same way.
 
 `admin_ban_user`, `admin_unban_user`, `admin_delete_user`,
 `get_all_students`, `get_all_merchants`, `get_admin_reports`,
-`review_report`, `admin_remove_story`, `admin_remove_avatar`, `admin_remove_review`, `log_admin_action`,
+`review_report`, `admin_remove_story`, `admin_remove_avatar`, `admin_remove_review`, `admin_remove_comment`, `log_admin_action`,
 `resolve_order_dispute`.
 
 ## Checks that run whoever writes (triggers)

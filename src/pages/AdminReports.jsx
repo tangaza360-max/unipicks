@@ -16,7 +16,7 @@ const STATUS_LABELS = {
   dismissed: 'Dismissed',
 }
 
-const CONTEXT_LABELS = { chat: 'from a chat', profile: 'from a profile', business: 'about a business', story: 'about a story', avatar: 'about a profile photo', review: 'about a review' }
+const CONTEXT_LABELS = { chat: 'from a chat', profile: 'from a profile', business: 'about a business', story: 'about a story', avatar: 'about a profile photo', review: 'about a review', comment: 'about a comment' }
 
 const FILTERS = [
   ['open', 'Open'],
@@ -174,6 +174,18 @@ export default function AdminReports() {
     await loadReports()
   }
 
+  async function removeComment(report) {
+    if (!window.confirm(`Delete this comment by ${report.reported_name || 'this person'}? Replies to it go too.`)) return
+    setSubmitting(true)
+    const { error: removeError } = await supabase.rpc('admin_remove_comment', { p_report_id: report.id })
+    setSubmitting(false)
+    if (removeError) {
+      setError(removeError.message)
+      return
+    }
+    await loadReports()
+  }
+
   async function submitDecision() {
     if (!target) return
     const ok = await review(target.report, target.status, note)
@@ -282,6 +294,14 @@ export default function AdminReports() {
                   </div>
                 )}
 
+                {report.context === 'comment' && (
+                  <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                    <p className="text-xs text-muted-foreground">Reported comment</p>
+                    {report.comment_text && <p className="break-words">“{report.comment_text}”</p>}
+                    {report.comment_removed && <p className="text-xs text-muted-foreground">The comment was removed.</p>}
+                  </div>
+                )}
+
                 {report.context === 'review' && (
                   <div className="flex gap-3 rounded-lg border border-border bg-muted/30 p-3">
                     {reviewUrls[report.review_photo_path] && (
@@ -366,6 +386,16 @@ export default function AdminReports() {
                         className="text-xs border border-[color:var(--status-bad-fg)] text-[color:var(--status-bad-fg)] hover:bg-[color:var(--status-bad-bg)] rounded-lg px-3 py-2 transition disabled:opacity-50"
                       >
                         Remove story
+                      </button>
+                    )}
+                    {report.context === 'comment' && !report.comment_removed && (
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        onClick={() => removeComment(report)}
+                        className="text-xs border border-[color:var(--status-bad-fg)] text-[color:var(--status-bad-fg)] hover:bg-[color:var(--status-bad-bg)] rounded-lg px-3 py-2 transition disabled:opacity-50"
+                      >
+                        Remove comment
                       </button>
                     )}
                     {report.context === 'review' && !report.review_removed && (

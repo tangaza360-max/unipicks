@@ -4,6 +4,7 @@ import { MessageCircle, Store } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import { withNext } from '../lib/safeNext.js'
 import StudentAvatar from './StudentAvatar.jsx'
+import ReportDialog from './ReportDialog.jsx'
 
 const MAX = 500
 
@@ -32,6 +33,7 @@ export default function DealComments({ dealId }) {
   const [comments, setComments] = useState([])
   const [count, setCount] = useState(0)
   const [replyTo, setReplyTo] = useState(null) // top-level comment being answered
+  const [reporting, setReporting] = useState(null) // comment being reported
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
@@ -106,12 +108,12 @@ export default function DealComments({ dealId }) {
           <ul className="space-y-4">
             {top.map((c) => (
               <li key={c.id} className="space-y-3">
-                <Comment comment={c} onReply={() => setReplyTo(c.id)} onDelete={() => remove(c)} />
+                <Comment comment={c} onReply={() => setReplyTo(c.id)} onDelete={() => remove(c)} onReport={() => setReporting(c)} />
                 {(repliesOf(c.id).length > 0 || replyTo === c.id) && (
                   <ul className="ml-11 space-y-3 border-l border-border pl-3">
                     {repliesOf(c.id).map((r) => (
                       <li key={r.id}>
-                        <Comment comment={r} onDelete={() => remove(r)} />
+                        <Comment comment={r} onDelete={() => remove(r)} onReport={() => setReporting(r)} />
                       </li>
                     ))}
                     {replyTo === c.id && (
@@ -134,11 +136,20 @@ export default function DealComments({ dealId }) {
         </>
       )}
       {error && <p role="alert" className="status-bad rounded-md px-2 py-1 text-sm">{error}</p>}
+      {reporting && (
+        <ReportDialog
+          context="comment"
+          commentId={reporting.id}
+          reportedId={reporting.author_id}
+          reportedName={reporting.author_name}
+          onClose={() => setReporting(null)}
+        />
+      )}
     </section>
   )
 }
 
-function Comment({ comment: c, onReply, onDelete }) {
+function Comment({ comment: c, onReply, onDelete, onReport }) {
   const name = c.is_mine ? 'You' : c.author_name || 'A student'
   return (
     <div className="flex gap-2">
@@ -162,9 +173,13 @@ function Comment({ comment: c, onReply, onDelete }) {
               Reply
             </button>
           )}
-          {c.is_mine && (
+          {c.is_mine ? (
             <button type="button" onClick={onDelete} aria-label="Delete your comment" className="min-h-9 text-xs font-medium text-muted-foreground hover:text-foreground">
               Delete
+            </button>
+          ) : (
+            <button type="button" onClick={onReport} aria-label={`Report comment by ${name}`} className="min-h-9 text-xs font-medium text-muted-foreground hover:text-foreground">
+              Report
             </button>
           )}
         </div>
