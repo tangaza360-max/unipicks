@@ -10,6 +10,8 @@ import {
 import { supabase } from '../lib/supabaseClient.js'
 import { formatDate, formatDayMonth } from '../lib/format.js'
 import StudentAvatar from './StudentAvatar.jsx'
+import { Link } from 'react-router-dom'
+import { HOME, safeNext } from '../lib/safeNext.js'
 
 const TABS = [
   { id: 'notifications', label: 'Notifications' },
@@ -43,8 +45,21 @@ export default function SocialActivity() {
       return
     }
 
+    // Where each alert leads (e.g. a comment → its deal). Read from the
+    // student's own alerts; only Unipicks pages are allowed (safeNext).
+    const notifications = data?.notifications || []
+    const ids = notifications.map((n) => n.id)
+    if (ids.length > 0) {
+      const { data: links } = await supabase.from('user_notifications').select('id, link_path').in('id', ids)
+      const linkOf = Object.fromEntries((links || []).map((l) => [l.id, l.link_path]))
+      for (const n of notifications) {
+        const safe = safeNext(linkOf[n.id])
+        n.link_path = linkOf[n.id] && safe !== HOME ? safe : null
+      }
+    }
+
     setActivity({
-      notifications: data?.notifications || [],
+      notifications,
       friend_requests: data?.friend_requests || [],
       message_requests: data?.message_requests || [],
     })
@@ -282,9 +297,21 @@ export default function SocialActivity() {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm">
-                        {getNotificationText(notification)}
-                      </p>
+                      {notification.link_path ? (
+                        // Opens what it is about (the deal) and marks it read.
+                        <Link
+                          to={notification.link_path}
+                          onClick={() => !notification.is_read && markNotificationRead(notification.id)}
+                          className="block text-sm underline-offset-2 hover:underline focus-visible:underline"
+                        >
+                          {getNotificationText(notification)}
+                          <span className="ml-1 font-medium text-accent">Open</span>
+                        </Link>
+                      ) : (
+                        <p className="text-sm">
+                          {getNotificationText(notification)}
+                        </p>
+                      )}
                       <p className="mt-1 text-xs text-muted-foreground">
                         {formatDate(notification.created_at)}
                       </p>
