@@ -31,6 +31,7 @@ const Dashboard = lazyPage(() => import('./pages/Dashboard.jsx'))
 const AdminStudentView = lazyPage(() => import('./pages/AdminStudentView.jsx'))
 const Privacy = lazyPage(() => import('./pages/Privacy.jsx'))
 const Terms = lazyPage(() => import('./pages/Terms.jsx'))
+const Help = lazyPage(() => import('./pages/Help.jsx'))
 const DeleteAccount = lazyPage(() => import('./pages/DeleteAccount.jsx'))
 const PaymentCheckout = lazyPage(() => import('./pages/PaymentCheckout.jsx'))
 const DealDetail = lazyPage(() => import('./pages/DealDetail.jsx'))
@@ -81,6 +82,8 @@ function RouteTitle() {
                 ? 'Privacy'
                 : pathname === '/terms'
                   ? 'Terms'
+                  : pathname === '/help'
+                    ? 'Help'
                   : pathname === '/delete-account'
                     ? 'Delete Account'
                   : pathname === '/admin/student-view'
@@ -126,6 +129,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/admin/student-view" element={<AdminStudentView />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/help" element={<Help />} />
           <Route path="/delete-account" element={<DeleteAccount />} />
           <Route path="/payment" element={<PaymentCheckout />} />
         <Route path="/deal/:id" element={<DealDetail />} />

@@ -37,6 +37,9 @@ export default defineConfig({
       VITE_SUPABASE_URL: 'http://fake-supabase.test',
       VITE_SUPABASE_ANON_KEY: 'fake-anon-key',
       VITE_SENTRY_DSN: '',
+      // Made-up number: the Help tests only read the WhatsApp link, never open it.
+      VITE_SUPPORT_EMAIL: '',
+      VITE_SUPPORT_WHATSAPP: '0788 000 999',
     },
   },
 })

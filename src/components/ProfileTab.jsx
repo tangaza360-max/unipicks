@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   ChevronRight,
+  CircleHelp,
   History,
   Mail,
   MapPin,
@@ -542,7 +543,8 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
           {isStudent && (
             <p className="text-xs text-muted-foreground">
               University and student ID come from your verified student email and
-              can't be changed here. Contact support if they're wrong.
+              can't be changed here. If they're wrong,{' '}
+              <Link to="/help" state={{ from: '/dashboard/profile' }} className="text-accent underline underline-offset-2 hover:decoration-2">contact us</Link>.
             </p>
           )}
 
@@ -1172,6 +1174,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
 
       <MenuGroup>
         <MenuRow icon={Settings} label="Settings" hint="Dark mode, alerts, privacy, account" onClick={() => openView('settings')} />
+        <MenuRow icon={CircleHelp} label="Help" hint="Questions, order problems, contact us" onClick={() => navigate('/help', { state: { from: '/dashboard/profile' } })} />
       </MenuGroup>
 
       <MenuGroup>

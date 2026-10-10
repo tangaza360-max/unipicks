@@ -1,7 +1,7 @@
 import { test, expect } from './support/fixtures'
 
 // The public pages open for visitors.
-for (const path of ['/register', '/register/merchant', '/login', '/privacy', '/terms']) {
+for (const path of ['/register', '/register/merchant', '/login', '/privacy', '/terms', '/help']) {
   test(`visitor can open ${path}`, async ({ page, fake }) => {
     void fake
     await page.goto(path)

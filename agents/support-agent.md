@@ -15,7 +15,7 @@ update this file in the same commit.*
 
 | What | Rule |
 |---|---|
-| Where people write | Email **unipicks.team@gmail.com** (shown in the app) and **WhatsApp ❓ number to add** |
+| Where people write | Email **unipicks.team@gmail.com** and **WhatsApp ❓ number to add** — both on the app's **Help** page (`/help`: Profile → Help, or Help on the log-in page). The WhatsApp button appears once the number is set in Vercel as `VITE_SUPPORT_WHATSAPP` |
 | How fast | **Within 24 hours.** Money problems ("I paid but…") **the same day.** |
 | Refunds | **Decided case by case by the founder.** Nobody else promises a refund. |
 | Who sends replies | A Unipicks team member, after reading the draft |
@@ -147,6 +147,11 @@ Then paste section 3 ("How Unipicks works") under it, and the message.
 - A host starts a group order on a group-buy deal and shares a code; it stays
   open 24 hours. The host submits it as **one order** and **pays the whole
   amount**; members pay the host themselves (Unipicks doesn't track that).
+
+### Getting help
+- **Help** page: Profile → **Help** (students), Profile → **Help and contact**
+  (businesses), or **Help** at the bottom of the log-in page. It shows the
+  email and WhatsApp, the reply times, and short answers to common questions.
 
 ### Social
 - Anyone can **Report** a story, profile, profile photo, review, comment or
@@ -372,6 +377,4 @@ numbers again in Check code. We'll reply today.
 - **No in-app refunds yet:** money goes back by hand, and the app doesn't show
   "Refunded" (plan approved 2026-10-05, not built).
 - **Business payouts not settled** (waiting on UmunotaPay).
-- **No "Help" button in the app:** the support email is only in Terms, Privacy
-  and Delete account; Profile says "Contact support" without saying how.
 - **WhatsApp number** not chosen yet (❓ above).

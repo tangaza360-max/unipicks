@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
-import { LogOut, Store, Trash2 } from 'lucide-react'
+import { CircleHelp, LogOut, Store, Trash2 } from 'lucide-react'
 import DeleteAccountDialog from '../components/DeleteAccountDialog.jsx'
 import PhoneAlertsCard from '../components/PhoneAlertsCard.jsx'
 import ConfirmModal from '../components/ConfirmModal.jsx'
@@ -238,6 +239,20 @@ export default function MerchantProfile({ merchantId, onBusinessNameChange, onLo
         {success && <p className="text-sm text-green-400">{success}</p>}
 
         <PhoneAlertsCard audience="merchant" />
+
+        <div className="border border-border rounded-lg p-4">
+          <p className="text-sm font-medium">Help</p>
+          <Link
+            to="/help"
+            state={{ from: '/dashboard/profile' }}
+            className="mt-2 min-h-11 flex items-center gap-2 text-sm font-medium hover:text-accent transition"
+          >
+            <CircleHelp size={16} aria-hidden="true" /> Help and contact
+          </Link>
+          <p className="text-xs text-muted-foreground">
+            Questions about approval, orders or payments. We answer within 24 hours.
+          </p>
+        </div>
 
         <div className="border border-border rounded-lg p-4">
           <p className="text-sm font-medium">Account</p>

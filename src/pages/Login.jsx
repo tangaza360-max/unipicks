@@ -110,6 +110,8 @@ export default function Login() {
           <Link to="/terms" className="hover:text-foreground underline underline-offset-2 hover:decoration-2">Terms</Link>
           {' · '}
           <Link to="/privacy" className="hover:text-foreground underline underline-offset-2 hover:decoration-2">Privacy</Link>
+          {' · '}
+          <Link to="/help" state={{ from: '/login' }} className="hover:text-foreground underline underline-offset-2 hover:decoration-2">Help</Link>
         </p>
       </div>
     </div>
