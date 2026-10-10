@@ -73,7 +73,9 @@ SQL
 # --- Every migration, in order (MAINTAIN is a Postgres 17 privilege; local is 16) -
 NEW=20261004120000_merchant_profile_self_edit.sql
 for f in "$REPO"/supabase/migrations/*.sql; do
-  [ "$(basename "$f")" = "$NEW" ] && continue
+  # Stop at this test's own migration: later ones (e.g. 20261010130000) use
+  # the columns it adds. The same choice as rls_initplan.test.sh.
+  [ "$(basename "$f")" = "$NEW" ] && break
   sed 's/MAINTAIN, //' "$f" | "${PSQL[@]}" >/dev/null 2>&1 || { echo "migration failed: $(basename "$f")"; "${PSQL[@]}" -f <(sed 's/MAINTAIN, //' "$f") 2>&1 | grep ERROR | head -3; exit 1; }
 done
 

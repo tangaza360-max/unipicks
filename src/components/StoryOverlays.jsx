@@ -219,7 +219,8 @@ export function PlacePicker({ initial, onPick, onRemove, onCancel }) {
     async function load() {
       const [{ data: { user } }, { data: businesses }] = await Promise.all([
         supabase.auth.getUser(),
-        supabase.from('merchant_profiles').select('business_name').eq('approved', true).order('business_name').limit(100),
+        // Approved business names (details are private: 20261010130000).
+        supabase.rpc('get_businesses'),
       ])
       if (cancelled) return
       const list = []

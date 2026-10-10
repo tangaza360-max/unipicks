@@ -72,15 +72,13 @@ export default function Receipt() {
           .eq('status', 'paid')
           .order('updated_at', { ascending: false })
           .limit(1),
-        supabase
-          .from('merchant_profiles')
-          .select('business_name, rdb_number, address')
-          .eq('id', order.merchant_id)
-          .maybeSingle(),
+        // Only this order's student, its business or an admin get the seller
+        // (business details are private: 20261010130000).
+        supabase.rpc('get_receipt_seller', { p_order_id: order.id }),
       ])
 
       if (!active) return
-      setState({ loading: false, error: '', order, payment: payments?.[0] ?? null, seller: seller ?? null })
+      setState({ loading: false, error: '', order, payment: payments?.[0] ?? null, seller: seller?.[0] ?? null })
     }
 
     load().catch(() => {

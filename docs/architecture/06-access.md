@@ -40,7 +40,7 @@ flowchart LR
 
 | Role | Comes from | Can never |
 |---|---|---|
-| **Not logged in** | — | See anything except live deals, business names/profiles and ratings |
+| **Not logged in** | — | See anything except live deals, business names and logos, and ratings |
 | **Student** | Set by the database at sign-up (`user_roles`) | Change its role or university, see other students' orders or payments, publish deals |
 | **Business** | Same, sign-up as business; must be **approved** | Approve itself, see orders of other businesses, sell while banned or not approved |
 | **Admin** | Given by hand in the database (`user_roles.role = admin`) | Be deleted while still admin |
@@ -60,7 +60,7 @@ Write new rules the same way.
 | `orders` | — | own | own (as seller) | all | **server functions only** (no app writes) |
 | `transactions` (payments) | — | own | — | all | **server functions only** |
 | `redemptions` (pickup codes) | — | own | for own deals | — | server; used via `redeem_pickup_code` |
-| `merchant_profiles` | **all** (name, phone, MoMo code: founder decision) | — | own; edit own (name/RDB change → re-approval) | all; approve, delete | business, admin |
+| `merchant_profiles` | — (name and logo through `get_businesses`) | — (also phone and address through `get_businesses` if an active student) | own; edit own (name/RDB change → re-approval) | all; approve, delete | business, admin |
 | `student_profiles` | — | own only (others via search functions that respect blocks) | — | via `get_all_students` | student |
 | `chat_messages` | — | own conversations; group chat if member; send only to friends / accepted requests / own business | own conversations with students who ordered | — | sender; receiver may only mark read |
 | `group_orders`, members | — | groups they host or joined; join open groups | — | — | host, members, server |
@@ -73,6 +73,21 @@ Write new rules the same way.
 | `deal_likes` | — | own likes only; like live deals (not banned); remove own | — | — | student; others see counts only via `get_deals_social` (also: how many of my friends liked it and the newest one's name — blocked people never counted — and the comment count) |
 | `student_saved_items` | — | own only (save / unsave) | — | — | student |
 | `deal_comments` | number only (`get_deal_comment_count`) | read via `get_deal_comments` (names as for reviews; people you blocked hidden); write on live deals, reply one level (not to someone who blocked you), 10 per 10 min; delete own | write and reply on **own** deals; delete own; can't delete students' comments | read, delete any | author; alerts by trigger |
+
+## Business details (founder decision 2026-10-10)
+
+Nobody reads other businesses from the table itself. Instead:
+
+- `get_businesses(ids)` (anyone): name and logo of approved businesses in good
+  standing; phone and address only for an active student (not banned) or an
+  admin. Never the RDB number or MoMo pay code. Pending businesses never appear.
+- `get_receipt_seller(order)` (signed in): the seller's name, address and RDB
+  number, only for that order's student, its business or an admin.
+- `search_merchants(text)` (signed in): approved businesses by name; address
+  only for active students and admins; never the owner's personal name.
+
+This replaces the 2026-10-03 decision that business phone and MoMo pay code
+were public (no student screen shows the pay code; students pay in the app).
 
 ## Your own data
 

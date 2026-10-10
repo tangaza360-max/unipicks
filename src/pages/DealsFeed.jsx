@@ -101,10 +101,9 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
         // 3. Try to fetch merchant profiles
         let merchantMap = {}
         try {
+          // Name and logo only (business details are private: 20261010130000).
           const { data: profiles, error: profileError } = await supabase
-            .from('merchant_profiles')
-            .select('id, business_name, logo_url')
-            .in('id', merchantIds)
+            .rpc('get_businesses', { p_ids: merchantIds })
 
           if (!profileError && profiles) {
             profiles.forEach(p => {

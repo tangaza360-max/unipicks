@@ -54,10 +54,8 @@ export default function ChatThread({
       if (!ids.length) return
 
       const [merchantResult, studentResult] = await Promise.all([
-        supabase
-          .from('merchant_profiles')
-          .select('id, business_name')
-          .in('id', ids),
+        // Business names (details are private: 20261010130000).
+        supabase.rpc('get_businesses', { p_ids: ids }),
         supabase.rpc('get_student_message_profiles', {
           target_student_ids: ids,
         }),

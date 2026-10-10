@@ -98,11 +98,8 @@ const [studentConversations, setStudentConversations] = useState([])
     }
 
     async function loadStudentInbox(userId) {
-      const { data: merchantProfiles, error: merchantError } = await supabase
-        .from('merchant_profiles')
-        .select('id, business_name, logo_url')
-        .eq('approved', true)
-        .order('business_name', { ascending: true })
+      // Approved businesses, by name (business details are private: 20261010130000).
+      const { data: merchantProfiles, error: merchantError } = await supabase.rpc('get_businesses')
 
       if (merchantError) {
         console.error('Failed to load merchants:', merchantError.message)
