@@ -47,6 +47,7 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
   const [ratingStats, setRatingStats] = useState({})
   // ❤️ and 🔖 for every deal on the feed (shared with the deal page).
   const { social, setSocial, busy: socialBusy, notice: socialNotice, toggle: toggleSocial } = useDealSocial()
+  const [orderedBefore, setOrderedBefore] = useState([]) // deal ids I collected, newest first
   const [stories, setStories] = useState([])
   const [merchantData, setMerchantData] = useState({})
   const [storyViewerOpen, setStoryViewerOpen] = useState(false)
@@ -161,6 +162,21 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
   useEffect(() => {
     let cancelled = false
 
+    // Deals I picked up before, for the "Order again" row.
+    async function loadOrderedBefore() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data, error: ordersError } = await supabase
+        .from('orders')
+        .select('deal_id, created_at')
+        .eq('student_id', user.id)
+        .in('status', ['redeemed', 'completed'])
+        .order('created_at', { ascending: false })
+        .limit(50)
+      if (cancelled || ordersError) return
+      setOrderedBefore([...new Set((data || []).map((o) => o.deal_id))])
+    }
+
     async function loadDeals() {
       const { data, error: fetchError } = await supabase
         .from('deals')
@@ -196,6 +212,7 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
 
     loadDeals()
     loadStories()
+    loadOrderedBefore()
 
     const dealsChannel = liveChannel('student-feed-deals')
       .on(
@@ -469,12 +486,16 @@ const getDiscoveryScore = (deal) => {
       ['New this week', visibleDeals.filter((d) => isNewDeal(d, now))],
     ]
     const saved = visibleDeals.filter((d) => social[d.id]?.saved_by_me)
+    const byId = new Map(visibleDeals.map((d) => [d.id, d]))
+    const again = orderedBefore.map((id) => byId.get(id)).filter(Boolean)
     return [
-      // Your saved deals come first and always show (like Instagram's Saved).
+      // Your saved deals come first and always show (like Instagram's Saved),
+      // then deals you picked up before that are still live.
       ...(saved.length > 0 ? [['Saved', saved]] : []),
+      ...(again.length > 0 ? [['Order again', again]] : []),
       ...candidates.filter(([, list]) => list.length > 0 && list.length < visibleDeals.length),
     ]
-  }, [filtering, visibleDeals, social])
+  }, [filtering, visibleDeals, social, orderedBefore])
 
   // First photo a business posted in each category, for its circle.
   const categoryPhotos = useMemo(() => {

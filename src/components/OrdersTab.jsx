@@ -9,7 +9,7 @@ import MerchantPhone from './MerchantPhone.jsx'
 import OrderSteps from './OrderSteps.jsx'
 import { liveChannel } from '../lib/realtime.js'
 import { nowText, reachedStep } from '../lib/orderSteps.js'
-import { Package } from 'lucide-react'
+import { Package, RotateCcw } from 'lucide-react'
 import { formatMoney, formatDate, formatTime } from '../lib/format.js'
 
 const DECLINE_REASON_LABELS = {
@@ -21,6 +21,8 @@ const DECLINE_REASON_LABELS = {
 }
 
 const INACTIVE_ORDER_STATUSES = ['cancelled', 'confirmation_expired', 'payment_expired', 'refunded']
+// Finished orders that can be ordered again (collected, or never went through).
+export const REORDER_STATUSES = ['redeemed', 'completed', 'declined', 'cancelled', 'confirmation_expired', 'payment_expired', 'refunded']
 const DISPUTE_STATUS_LABELS = {
   open: 'Under review',
   under_review: 'Under review',
@@ -468,6 +470,17 @@ function NormalOrderCard({ order, onRaiseDispute }) {
             </p>
           )}
         </div>
+      )}
+
+      {/* Finished orders of deals that are still live (order.deals is empty
+          when the deal is switched off): back to the deal, same quantity. */}
+      {REORDER_STATUSES.includes(status) && deal && (
+        <Link
+          to={`/deal/${order.deal_id}?qty=${order.quantity || 1}`}
+          className="mt-3 mr-3 inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-accent-dim"
+        >
+          <RotateCcw size={16} aria-hidden="true" /> Order again
+        </Link>
       )}
 
       {['paid', 'redeemed', 'completed'].includes(status) && (

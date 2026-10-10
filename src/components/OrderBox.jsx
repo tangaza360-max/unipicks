@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Minus, Plus } from 'lucide-react'
 import { createOrder } from '../lib/orders.js'
 import { priceOrder } from '../lib/orderPricing.js'
@@ -9,7 +9,14 @@ import { formatMoney } from '../lib/format.js'
 // Stays at the bottom of the screen while the student reads the deal.
 export default function OrderBox({ deal, openNow }) {
   const navigate = useNavigate()
-  const [quantity, setQuantity] = useState(1)
+  const [searchParams] = useSearchParams()
+  // "Order again" opens the deal with the same quantity (?qty=2): a whole
+  // number from 1 to 99, and never more than the deal allows (bundles: 1).
+  const [quantity, setQuantity] = useState(() => {
+    const asked = Number(searchParams.get('qty'))
+    const wanted = Number.isInteger(asked) && asked >= 1 && asked <= 99 ? asked : 1
+    return Math.min(wanted, priceOrder(deal, 1).maxQuantity ?? 99)
+  })
   const [placing, setPlacing] = useState(false)
   const [error, setError] = useState('')
 
