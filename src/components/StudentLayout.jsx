@@ -362,8 +362,10 @@ export default function StudentLayout({ children, onLogout }) {
 
       <main
         className="min-h-0 flex-1 px-4"
+        // The top bar is sticky (it takes its own room, notch included), so the
+        // page only needs a small gap; the bottom bar is fixed, so it needs room.
         style={{
-          paddingTop: 'calc(var(--safe-area-top) + 56px)',
+          paddingTop: '16px',
           paddingBottom: 'calc(var(--safe-area-bottom) + 64px)',
         }}
       >
