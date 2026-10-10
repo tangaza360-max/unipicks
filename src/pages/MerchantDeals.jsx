@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
-import { hasStudentPrice, offerBadge } from '../lib/dealPricing.js'
+import { isMissingPrice, offerBadge } from '../lib/dealPricing.js'
 import { liveChannel } from '../lib/realtime.js'
 import VerifyCode from './VerifyCode.jsx'
 import ConfirmModal from '../components/ConfirmModal.jsx'
@@ -694,9 +694,9 @@ export default function MerchantDeals() {
                     </span>
                   </div>
 
-                  {dealOfferType !== 'free_shipping' && !hasStudentPrice(deal) && (
+                  {isMissingPrice(deal) && (
                     <p role="alert" className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
-                      Missing price. Students can't order this deal. Tap Edit and add the price students pay.
+                      Missing price. Students can't see or order this deal. Tap Edit and add the price students pay.
                     </p>
                   )}
                   <div className="flex items-center gap-2 text-xs pt-2">

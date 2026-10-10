@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
-import { studentPrice } from '../lib/dealPricing.js'
+import { isMissingPrice, studentPrice } from '../lib/dealPricing.js'
 import { liveChannel } from '../lib/realtime.js'
 import { createOrder } from '../lib/orders.js'
 import GroupOrders from './GroupOrders.jsx'
@@ -193,10 +193,12 @@ export default function DealsFeed({ advisorOpen = false } = {}) {
       }
 
       // Show the deals now; the stars follow in one request (not one per deal).
-      setDeals(data || [])
+      // A deal without a price can't be ordered, so students don't see it.
+      const priced = (data || []).filter((deal) => !isMissingPrice(deal))
+      setDeals(priced)
       setLoading(false)
 
-      const ids = (data || []).map((deal) => deal.id).slice(0, 200)
+      const ids = priced.map((deal) => deal.id).slice(0, 200)
       if (ids.length === 0) return
       // Stars and likes/saves: two requests for the whole feed, side by side.
       const [stars, socialRes] = await Promise.all([

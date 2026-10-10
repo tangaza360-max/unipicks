@@ -4,6 +4,7 @@ import { Search, Store, Tag, UserPlus, Users } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient.js'
 import StudentAvatar from '../components/StudentAvatar.jsx'
 import { formatMoney } from '../lib/format.js'
+import { isMissingPrice } from '../lib/dealPricing.js'
 
 const tabs = [
   { id: 'people', label: 'People', noun: 'students' },
@@ -93,12 +94,13 @@ export default function StudentSearch() {
           const safeQuery = debouncedQuery.replace(/[(),]/g, ' ').trim()
           const { data, error: searchError } = await supabase
             .from('deals')
-            .select('id, title, business_name, price, final_price, image_url, offer_type')
+            .select('id, title, business_name, price, final_price, image_url, offer_type, discount_value, discount_percent')
             .eq('active', true)
             .or(`title.ilike.%${safeQuery}%,business_name.ilike.%${safeQuery}%`)
             .limit(30)
           if (searchError) throw searchError
-          if (!cancelled) setResults(data || [])
+          // A deal without a price can't be ordered, so students don't see it.
+          if (!cancelled) setResults((data || []).filter((deal) => !isMissingPrice(deal)))
         }
       } catch (searchError) {
         console.error('Search failed:', searchError)

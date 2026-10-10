@@ -7,7 +7,7 @@ import { assertEquals } from 'jsr:@std/assert@1'
 import { db, resetDb } from './fakes/supabase.ts'
 import * as serveStub from './fakes/serve.ts'
 // @ts-ignore: plain JS module from the web app
-import { hasStudentPrice, offerBadge, realDiscountPercent, struckOutPrice, studentPrice } from '../../../src/lib/dealPricing.js'
+import { hasStudentPrice, isMissingPrice, offerBadge, realDiscountPercent, struckOutPrice, studentPrice } from '../../../src/lib/dealPricing.js'
 
 Deno.env.set('SUPABASE_URL', 'http://fake')
 Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', 'fake')
@@ -74,4 +74,27 @@ Deno.test('no price → "Price not set", cannot be ordered, and the server refus
     body: JSON.stringify({ deal_id: 'deal-1', quantity: 1 }),
   }))
   assertEquals(res.status, 409)
+})
+
+// Students don't see a deal when isMissingPrice() is true (Home, Search): the
+// cases below are the ones create-order refuses as "does not have a valid
+// price" (see the test above); a deal with a price is never hidden. Free
+// delivery has no price by design and is not "missing".
+Deno.test('isMissingPrice: deals with no price are hidden, deals with a price never', () => {
+  const missing = [
+    { ...base, offer_type: 'percentage', price: null },
+    { ...base, offer_type: 'percentage', price: 0 },
+    { ...base, offer_type: 'fixed_amount', price: null, discount_value: 500 },
+    { ...base, offer_type: 'fixed_price', final_price: null, discount_value: null },
+    { ...base, offer_type: null, price: null },
+  ]
+  const priced = [
+    { ...base, offer_type: 'percentage', price: 5000, discount_percent: 20 },
+    { ...base, offer_type: 'fixed_amount', price: 5000, discount_value: 1000 },
+    { ...base, offer_type: 'fixed_price', final_price: 3000 },
+    { ...base, offer_type: 'bogo', price: 4000, buy_quantity: 1, get_quantity: 1 },
+  ]
+  for (const d of missing) assertEquals(isMissingPrice(d), true, JSON.stringify(d))
+  for (const d of priced) assertEquals(isMissingPrice(d), false, JSON.stringify(d))
+  assertEquals(isMissingPrice({ ...base, offer_type: 'free_shipping', price: null }), false)
 })

@@ -46,6 +46,13 @@ export function hasStudentPrice(deal) {
   return deal?.offer_type === 'free_shipping' ? false : studentPrice(deal) !== null
 }
 
+// The business hasn't set the price students pay (free delivery offers have
+// none by design). Such deals are hidden from students — they can't be
+// ordered — and the business sees a "Missing price" warning instead.
+export function isMissingPrice(deal) {
+  return deal?.offer_type !== 'free_shipping' && !hasStudentPrice(deal)
+}
+
 // Badge on the deal photo, or null when there is nothing honest to say.
 export function offerBadge(deal) {
   const type = deal?.offer_type || 'percentage'
