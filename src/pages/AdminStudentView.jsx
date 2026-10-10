@@ -175,7 +175,7 @@ export default function AdminStudentView() {
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading student data…</p>
       ) : studentData ? (
-        <div className="space-y-6 bg-card/40 border border-border rounded-lg p-4">
+        <div className="space-y-6 bg-card/40 border border-border rounded-2xl p-4">
           {/* Student info */}
           <div className="border-b border-border pb-3">
             <p className="font-semibold text-lg">

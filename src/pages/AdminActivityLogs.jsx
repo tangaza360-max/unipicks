@@ -76,7 +76,7 @@ export default function AdminActivityLogs() {
         </select>
       </div>
 
-      <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
         {visibleLogs.length === 0 ? (
           <p className="p-8 text-center text-muted-foreground text-sm">No activity logs found.</p>
         ) : (

@@ -35,7 +35,7 @@ export default function DeleteAccount() {
         <article className="mx-auto max-w-3xl space-y-6">
           <BackLink to="/register" />
           <h1 className="font-display text-3xl font-semibold">Your account has been deleted</h1>
-          <p role="status" className="rounded-xl border border-border bg-card p-4 text-sm">
+          <p role="status" className="rounded-2xl border border-border bg-card p-4 text-sm">
             Your account has been deleted and you have been signed out on every device.
           </p>
           <p className="text-muted-foreground leading-7">

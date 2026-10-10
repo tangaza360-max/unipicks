@@ -138,15 +138,15 @@ export default function MerchantAnalytics() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-2xl p-4">
           <p className="text-sm text-muted-foreground">Total Orders</p>
           <p className="font-display text-3xl font-bold text-foreground">{totalRedemptions}</p>
         </div>
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-2xl p-4">
           <p className="text-sm text-muted-foreground">Total Deals</p>
           <p className="font-display text-3xl font-bold text-foreground">{totalDeals}</p>
         </div>
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-2xl p-4">
           <p className="text-sm text-muted-foreground">Active Deals</p>
           <p className="font-display text-3xl font-bold text-foreground">{activeDeals}</p>
         </div>
@@ -154,7 +154,7 @@ export default function MerchantAnalytics() {
 
       {/* Daily chart (simple bar) */}
       {dailyData.length > 0 && (
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-2xl p-4">
           <h3 className="font-display text-sm font-semibold text-foreground mb-3">Last 7 Days</h3>
           <div className="flex items-end gap-2 h-24">
             {dailyData.map((day, idx) => (
@@ -174,7 +174,7 @@ export default function MerchantAnalytics() {
       )}
 
       {/* Top deals */}
-      <div className="bg-card border border-border rounded-lg p-4">
+      <div className="bg-card border border-border rounded-2xl p-4">
         <h3 className="font-display text-sm font-semibold text-foreground mb-3">Top Deals</h3>
         {topDeals.length === 0 ? (
           <p className="text-sm text-muted-foreground">No deals yet</p>
@@ -205,7 +205,7 @@ export default function MerchantAnalytics() {
       </div>
 
       {/* Recent orders */}
-      <div className="bg-card border border-border rounded-lg p-4">
+      <div className="bg-card border border-border rounded-2xl p-4">
         <h3 className="font-display text-sm font-semibold text-foreground mb-3">Recent Orders</h3>
         {recentRedemptions.length === 0 ? (
           <p className="text-sm text-muted-foreground">No orders yet</p>

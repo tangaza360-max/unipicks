@@ -62,7 +62,7 @@ export default function MerchantPromoCreator() {
           </p>
         </div>
 
-        <div className="bg-card-alt rounded-lg p-4">
+        <div className="bg-card-alt rounded-2xl p-4">
           <label htmlFor="promo-prompt" className="field-label">Describe your deal</label>
           <textarea
             id="promo-prompt"
@@ -150,7 +150,7 @@ export default function MerchantPromoCreator() {
         </div>
 
         {/* Preview */}
-        <div className="bg-card-alt rounded-lg p-4">
+        <div className="bg-card-alt rounded-2xl p-4">
           <h3 className="text-sm font-medium text-muted-foreground mb-2">Preview</h3>
           <div className="flex gap-4">
             <img src={selectedImage} alt="Selected" className="w-24 h-24 rounded-lg object-cover" />

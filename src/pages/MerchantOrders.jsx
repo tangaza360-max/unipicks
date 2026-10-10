@@ -301,7 +301,7 @@ export default function MerchantOrders() {
           {orders.map((order) => (
             <div
               key={order.id}
-              className="rounded-xl border border-border bg-card p-4 space-y-3"
+              className="rounded-2xl border border-border bg-card p-4 space-y-3"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>

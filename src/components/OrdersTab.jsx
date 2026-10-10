@@ -304,7 +304,7 @@ export default function OrdersTab() {
           </h3>
           <div className="space-y-3">
             {redemptions.map((redemption) => (
-              <div key={redemption.id} className="border border-border rounded-lg p-4 bg-card shadow-sm transition hover:shadow-md">
+              <div key={redemption.id} className="border border-border rounded-2xl p-4 bg-card shadow-sm transition hover:shadow-md">
                 <p className="font-medium text-sm">{redemption.deals?.title || 'Ordered deal'}</p>
                 <p className="text-muted-foreground text-xs">{redemption.deals?.business_name}</p>
                 <RatingPrompt redemption={redemption} onSaved={loadOrders} />
@@ -341,7 +341,7 @@ function OrderCard({ order, type, quantity }) {
     : null
 
   return (
-    <div className="border border-border rounded-lg p-5 bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md">
+    <div className="border border-border rounded-2xl p-5 bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md">
       <div className="flex items-start justify-between">
         <div>
           <p className="font-medium text-sm">
@@ -384,7 +384,7 @@ function OrderCard({ order, type, quantity }) {
           <p className="text-muted-foreground text-xs mb-1">Members ({order.members.length})</p>
           <div className="flex flex-wrap gap-1">
             {order.members.map((m) => (
-              <span key={m.id} className="text-xs bg-card-alt px-2 py-0.5 rounded-lg text-muted-foreground">
+              <span key={m.id} className="text-xs bg-card-alt px-2 py-0.5 rounded-2xl text-muted-foreground">
                 {m.student_name} × {m.quantity}
               </span>
             ))}
@@ -419,7 +419,7 @@ function NormalOrderCard({ order, onRaiseDispute }) {
   const showDisputeStatus = Boolean(order.dispute_status)
 
   return (
-    <div className="border border-border rounded-lg p-5 bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md">
+    <div className="border border-border rounded-2xl p-5 bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md">
       <div className="flex items-start justify-between">
         <div>
           <p className="font-medium text-sm">

@@ -525,7 +525,7 @@ return () => {
           </div>
         </div>
 
-        <div className="md:bg-card/60 md:border md:border-border md:rounded-lg md:p-6">
+        <div className="md:bg-card/60 md:border md:border-border md:rounded-2xl md:p-6">
           <Suspense fallback={<PageLoading />}>{content}</Suspense>
         </div>
       </div>

@@ -49,7 +49,7 @@ export default function AdminReviews() {
         <h2 className="font-display text-2xl font-semibold text-foreground">Reviews</h2>
         <p className="text-muted-foreground text-sm mt-1">Moderate student ratings and feedback.</p>
       </div>
-      <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
         {reviews.length === 0 ? <p className="p-8 text-center text-muted-foreground text-sm">No reviews yet.</p> : (
           <div className="divide-y divide-border">
             {reviews.map((review) => (

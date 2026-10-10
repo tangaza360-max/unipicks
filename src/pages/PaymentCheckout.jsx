@@ -213,7 +213,7 @@ export default function PaymentCheckout() {
           )}
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-6 space-y-5 shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-6 space-y-5 shadow-sm">
           {order && (
             <div className="space-y-3 border-b border-border pb-4">
               <div className="flex items-center justify-between">

@@ -487,7 +487,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
         {view === 'details' && (
           <>
       {editing ? (
-        <div className="space-y-5 bg-card border border-border rounded-lg p-6 shadow-sm">
+        <div className="space-y-5 bg-card border border-border rounded-2xl p-6 shadow-sm">
           <div>
             <label htmlFor="profile-full-name" className="field-label">Full name</label>
             <input
@@ -588,7 +588,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
           </div>
         </div>
       ) : (
-        <div className="space-y-5 bg-card border border-border rounded-lg p-6 shadow-sm">
+        <div className="space-y-5 bg-card border border-border rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-4">
             {isStudent && socialProfile?.avatar_path ? (
               <OwnAvatar userId={user?.id} name={formData.full_name} />
@@ -699,13 +699,13 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
               Your profile for connecting with other Unipicks students.
             </p>
           {socialProfileLoading ? (
-            <div className="bg-card border border-border rounded-lg p-6">
+            <div className="bg-card border border-border rounded-2xl p-6">
               <p className="text-sm text-muted-foreground">
                 Loading Social profile…
               </p>
             </div>
           ) : !socialProfile ? (
-            <div className="bg-card border border-border rounded-lg p-6">
+            <div className="bg-card border border-border rounded-2xl p-6">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                   <UserRound
@@ -727,7 +727,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
               </div>
             </div>
           ) : editingSocial ? (
-            <div className="space-y-5 bg-card border border-border rounded-lg p-6 shadow-sm">
+            <div className="space-y-5 bg-card border border-border rounded-2xl p-6 shadow-sm">
               <div>
                 <label htmlFor="profile-username" className="field-label">Username</label>
 
@@ -884,7 +884,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
               </div>
             </div>
           ) : (
-            <div className="space-y-5 bg-card border border-border rounded-lg p-6 shadow-sm">
+            <div className="space-y-5 bg-card border border-border rounded-2xl p-6 shadow-sm">
               <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:text-left">
                 <OwnAvatar userId={socialProfile.user_id} name={socialProfile.display_name} />
 
@@ -969,7 +969,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
         {view === 'settings' && (
           <div className="space-y-4">
        {/* Appearance */}
-       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+       <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
          <div>
            <p className="text-sm font-medium">Appearance</p>
            <p className="text-xs text-muted-foreground mt-1">
@@ -979,7 +979,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
 
          <button
            onClick={toggleTheme}
-           className="w-full flex items-center justify-between border border-border bg-card text-muted-foreground hover:text-foreground rounded-xl px-4 py-3 transition text-sm font-medium"
+           className="w-full flex items-center justify-between border border-border bg-card text-muted-foreground hover:text-foreground rounded-2xl px-4 py-3 transition text-sm font-medium"
          >
            <span className="flex items-center gap-2">
              {theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
@@ -1002,7 +1002,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
        <PhoneAlertsCard audience="student" />
 
        {/* Privacy & Security */}
-       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+       <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
          <div>
            <p className="text-sm font-medium">Privacy & Security</p>
            <p className="text-xs text-muted-foreground mt-1">
@@ -1024,7 +1024,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
        </div>
 
        {/* Account */}
-       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+       <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
          <div>
            <p className="text-sm font-medium">Account</p>
            <p className="text-xs text-muted-foreground mt-1">
@@ -1047,7 +1047,7 @@ export default function ProfileTab({ needsActionCount = 0, disputeUnreadCount = 
        </div>
 
        {/* About */}
-       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+       <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
          <div>
            <p className="text-sm font-medium">About</p>
            <p className="text-xs text-muted-foreground mt-1">

@@ -116,7 +116,7 @@ export default function AdminSettings() {
           const type = settingType(setting.value)
           const value = drafts[setting.id]
           return (
-            <div key={setting.id} className="bg-card border border-border rounded-lg p-4 shadow-sm">
+            <div key={setting.id} className="bg-card border border-border rounded-2xl p-4 shadow-sm">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <label htmlFor={`setting-${setting.id}`} className="font-medium text-foreground">

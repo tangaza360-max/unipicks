@@ -130,7 +130,7 @@ export default function Receipt() {
           </button>
         </div>
 
-        <article className="bg-card border border-border rounded-xl p-6 space-y-5 print:border-0 print:p-0">
+        <article className="bg-card border border-border rounded-2xl p-6 space-y-5 print:border-0 print:p-0">
           <header className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-2">
               <Logo size={28} className="text-accent" />

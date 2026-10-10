@@ -124,7 +124,7 @@ export default function AdminDisputes() {
           {orders.map((order) => (
             <div
               key={order.id}
-              className="rounded-xl border border-border bg-card p-4 space-y-2"
+              className="rounded-2xl border border-border bg-card p-4 space-y-2"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>

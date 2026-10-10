@@ -656,7 +656,7 @@ export default function MerchantDeals() {
             return (
               <div
                 key={deal.id}
-                className="border border-border rounded-xl overflow-hidden bg-card shadow-sm hover:shadow-md transition-all duration-200"
+                className="border border-border rounded-2xl overflow-hidden bg-card shadow-sm hover:shadow-md transition-all duration-200"
               >
                 <div className="relative h-40 w-full">
                   {deal.image_url ? (

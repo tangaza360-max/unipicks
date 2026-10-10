@@ -185,7 +185,7 @@ export default function AdminUsers() {
 function UserTable({ users, type, onToggleBan, onDelete }) {
   if (users.length === 0) {
     return (
-      <div className="bg-card border border-border rounded-lg p-8 text-center">
+      <div className="bg-card border border-border rounded-2xl p-8 text-center">
         <p className="text-muted-foreground">
           {type === 'merchant' ? 'No businesses found (including unapproved)' : 'No students found'}
         </p>
@@ -194,7 +194,7 @@ function UserTable({ users, type, onToggleBan, onDelete }) {
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden">
+    <div className="bg-card border border-border rounded-2xl overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 border-b border-border">

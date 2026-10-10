@@ -191,7 +191,7 @@ export default function DealDetail() {
         <BackLink to={signedIn === false ? '/register' : '/dashboard/deals'} />
 
         {/* overflow-clip (not hidden): rounds the corners without breaking the sticky order bar */}
-        <div className="overflow-clip rounded-xl border border-border bg-card shadow-sm">
+        <div className="overflow-clip rounded-2xl border border-border bg-card shadow-sm">
           <div className="relative h-56 w-full sm:h-72">
             {deal.image_url ? (
               <img
@@ -282,7 +282,7 @@ export default function DealDetail() {
             </div>
 
             {(loadingGroups || openGroups.length > 0) && (
-              <section className="rounded-lg border border-border bg-card">
+              <section className="rounded-2xl border border-border bg-card">
                 <div className="flex items-center gap-2 border-b border-border px-4 py-3">
                   <Users size={17} className="text-accent" />
                   <h2 className="font-semibold">Open groups for this deal</h2>

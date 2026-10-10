@@ -240,7 +240,7 @@ export default function NotificationBell({ includeMerchantInbox = true }) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto bg-card border border-border rounded-lg shadow-2xl z-50">
+        <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto bg-card border border-border rounded-2xl shadow-2xl z-50">
           <div className="sticky top-0 bg-card p-3 border-b border-border flex items-center justify-between">
             <span className="font-display font-semibold text-sm">Notifications</span>
             {unreadCount > 0 && (

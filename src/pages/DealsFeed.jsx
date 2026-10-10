@@ -587,7 +587,7 @@ const getDiscoveryScore = (deal) => {
       <button
         type="button"
         onClick={() => navigate('/dashboard/orders')}
-        className="w-full min-h-11 flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left hover:border-accent/50 transition md:hidden"
+        className="w-full min-h-11 flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left hover:border-accent/50 transition md:hidden"
       >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
           <Users size={18} aria-hidden="true" />
@@ -772,7 +772,7 @@ function Advisor({ deals, onBudget }) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-11rem)] md:h-[calc(100vh-8rem)] bg-card border border-border rounded-lg overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-11rem)] md:h-[calc(100vh-8rem)] bg-card border border-border rounded-2xl overflow-hidden">
       <div className="px-4 py-3 border-b border-border">
         <p className="font-display font-semibold text-sm flex items-center gap-2"><SparkleIcon /> Deal Advisor</p>
       </div>

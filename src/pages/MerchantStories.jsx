@@ -150,7 +150,7 @@ export default function MerchantStories() {
       </div>
 
       {/* Upload form */}
-      <div className="bg-card border border-border rounded-xl shadow-sm p-5">
+      <div className="bg-card border border-border rounded-2xl shadow-sm p-5">
         <form onSubmit={handleUpload} className="space-y-4">
           <div className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-6 hover:border-accent transition-colors">
             <input
@@ -212,7 +212,7 @@ export default function MerchantStories() {
               <div
                 key={story.id}
                 onClick={() => handlePreviewStory(story.id)}
-                className="group relative border border-border rounded-xl overflow-hidden bg-card shadow-sm hover:shadow-md transition cursor-pointer"
+                className="group relative border border-border rounded-2xl overflow-hidden bg-card shadow-sm hover:shadow-md transition cursor-pointer"
               >
                 {story.type === 'video' ? (
                   <video

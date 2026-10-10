@@ -189,7 +189,7 @@ export default function SocialOnboarding({ onComplete }) {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-card/60 border border-border rounded-xl p-6 space-y-6"
+        className="bg-card/60 border border-border rounded-2xl p-6 space-y-6"
       >
         {/* Step 1 */}
         {step === 1 && (

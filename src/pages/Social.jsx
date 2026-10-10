@@ -345,7 +345,7 @@ export default function Social() {
   if (selectedStudent) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
-        <section className="bg-card border border-border rounded-xl overflow-hidden">
+        <section className="bg-card border border-border rounded-2xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
             <BackLink onClick={() => setSelectedStudent(null)} />
           </div>
@@ -569,7 +569,7 @@ export default function Social() {
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
           placeholder="Search students, businesses, deals and more..."
-          className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/30"
+          className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary/30"
         />
       </div>
 
@@ -578,7 +578,7 @@ export default function Social() {
             <button
               type="button"
               onClick={() => setShowActivity((current) => !current)}
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-muted transition"
+              className="inline-flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-muted transition"
             >
               <Bell size={18} />
               Activity
@@ -594,7 +594,7 @@ export default function Social() {
           ) : (
             <>
               {searchQuery.trim() && (
-                <section className="bg-card border border-border rounded-xl overflow-hidden">
+                <section className="bg-card border border-border rounded-2xl overflow-hidden">
                   <div className="px-4 py-3 border-b border-border">
                     <h2 className="font-semibold text-sm">Students</h2>
                   </div>
@@ -663,7 +663,7 @@ export default function Social() {
               {/* Stories: yours, then friends' (unseen first) */}
               {!searchQuery.trim() && (
                 <section aria-label="Stories" className="space-y-4">
-                  <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
+                  <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
                     <button
                       type="button"
                       onClick={() =>
@@ -756,7 +756,7 @@ export default function Social() {
                   stories are on Home), so show one sentence and one action
                   instead of placeholder tabs (style guide section 9). */}
               {!searchQuery.trim() && (
-                <section className="rounded-xl border border-border bg-card px-6 py-10 text-center">
+                <section className="rounded-2xl border border-border bg-card px-6 py-10 text-center">
                   <p className="text-sm text-muted-foreground">
                     Find students from your campus and follow them.
                   </p>

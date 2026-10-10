@@ -170,7 +170,7 @@ export default function AdminAnalytics() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-2xl p-4">
           <p className="text-sm text-muted-foreground">Total Users</p>
           <p className="font-display text-3xl font-bold text-foreground">{totalUsers}</p>
           <div className="flex gap-2 text-xs text-muted-foreground mt-1">
@@ -178,7 +178,7 @@ export default function AdminAnalytics() {
             <span>Businesses: {totalMerchants}</span>
           </div>
         </div>
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-2xl p-4">
           <p className="text-sm text-muted-foreground">Total Deals</p>
           <p className="font-display text-3xl font-bold text-foreground">{totalDeals}</p>
           <div className="flex gap-2 text-xs text-muted-foreground mt-1">
@@ -186,11 +186,11 @@ export default function AdminAnalytics() {
             <span>Paused: {totalDeals - activeDeals}</span>
           </div>
         </div>
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-2xl p-4">
           <p className="text-sm text-muted-foreground">Orders</p>
           <p className="font-display text-3xl font-bold text-foreground">{totalRedemptions}</p>
         </div>
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-2xl p-4">
           <p className="text-sm text-muted-foreground">Pending businesses</p>
           <p className="font-display text-3xl font-bold text-foreground">{pendingMerchants}</p>
         </div>
@@ -198,7 +198,7 @@ export default function AdminAnalytics() {
 
       {/* Daily chart */}
       {dailyRedemptions.length > 0 && (
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-2xl p-4">
           <h3 className="font-display text-sm font-semibold text-foreground mb-3">Orders (Last 7 Days)</h3>
           <div className="flex items-end gap-2 h-24">
             {dailyRedemptions.map((day, idx) => {
@@ -222,7 +222,7 @@ export default function AdminAnalytics() {
       )}
 
       {/* Top deals */}
-      <div className="bg-card border border-border rounded-lg p-4">
+      <div className="bg-card border border-border rounded-2xl p-4">
         <h3 className="font-display text-sm font-semibold text-foreground mb-3">Top Deals</h3>
         {topDeals.length === 0 || topDeals.every(d => d.redemptionCount === 0) ? (
           <p className="text-sm text-muted-foreground">No orders yet</p>
@@ -245,7 +245,7 @@ export default function AdminAnalytics() {
       </div>
 
       {/* Recent orders */}
-      <div className="bg-card border border-border rounded-lg p-4">
+      <div className="bg-card border border-border rounded-2xl p-4">
         <h3 className="font-display text-sm font-semibold text-foreground mb-3">Recent Orders</h3>
         {recentRedemptions.length === 0 ? (
           <p className="text-sm text-muted-foreground">No orders yet</p>

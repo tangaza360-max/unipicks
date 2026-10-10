@@ -46,11 +46,11 @@ export default function ForgotPassword() {
         </div>
 
         {sent ? (
-          <p role="status" className="text-sm rounded-lg border border-border bg-card/60 px-4 py-3 text-foreground">
+          <p role="status" className="text-sm rounded-2xl border border-border bg-card/60 px-4 py-3 text-foreground">
             If an account exists for this email, we sent a link to reset your password. Check your inbox and spam folder.
           </p>
         ) : (
-          <form onSubmit={handleSubmit} className="bg-card/60 border border-border rounded-lg p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="bg-card/60 border border-border rounded-2xl p-6 space-y-5">
             <div>
               <label htmlFor="forgot-email" className="field-label">Email</label>
               <input

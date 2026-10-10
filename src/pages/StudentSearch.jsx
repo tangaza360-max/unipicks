@@ -197,7 +197,7 @@ export default function StudentSearch() {
             const status = friendStatuses[person.user_id]
             const isRequesting = Boolean(requestingIds[person.user_id])
             return (
-              <article key={person.user_id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 sm:p-4">
+              <article key={person.user_id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 sm:p-4">
                 <StudentAvatar userId={person.user_id} name={person.display_name || 'Student'} size="md" alt="" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{person.display_name || 'Student'}</p>
@@ -225,7 +225,7 @@ export default function StudentSearch() {
           })
         ) : activeTab === 'businesses' ? (
           results.map((business) => (
-            <article key={business.user_id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 sm:p-4">
+            <article key={business.user_id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 sm:p-4">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent/15 text-sm font-semibold text-accent">
                 {getInitials(business.business_name)}
               </span>
@@ -250,7 +250,7 @@ export default function StudentSearch() {
                 key={deal.id}
                 type="button"
                 onClick={() => navigate(`/deal/${deal.id}`)}
-                className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-3 text-left transition hover:border-accent/50 sm:p-4"
+                className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left transition hover:border-accent/50 sm:p-4"
               >
                 {deal.image_url ? (
                   <img src={deal.image_url} alt="" className="h-16 w-16 shrink-0 rounded-lg object-cover" />

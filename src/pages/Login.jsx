@@ -42,14 +42,14 @@ export default function Login() {
         </div>
 
         {linkNotice && (
-          <p role="alert" className="text-sm rounded-lg border border-border bg-card/60 px-4 py-3 text-foreground">
+          <p role="alert" className="text-sm rounded-2xl border border-border bg-card/60 px-4 py-3 text-foreground">
             {linkNotice}
           </p>
         )}
 
         <form
           onSubmit={handleSubmit}
-          className="bg-card/60 border border-border rounded-lg p-6 space-y-5"
+          className="bg-card/60 border border-border rounded-2xl p-6 space-y-5"
         >
           <div>
             <label htmlFor="login-email" className="field-label">Email</label>

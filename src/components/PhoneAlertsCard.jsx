@@ -77,7 +77,7 @@ export default function PhoneAlertsCard({ variant = 'settings', audience = 'stud
       : 'After a business accepts your order, you have 5 minutes to pay.'
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 space-y-3" data-testid="phone-alerts">
+    <div className="rounded-2xl border border-border bg-card p-4 space-y-3" data-testid="phone-alerts">
       <div className="flex items-start gap-3">
         <BellRing size={18} className="text-accent mt-0.5 shrink-0" aria-hidden="true" />
         <div>

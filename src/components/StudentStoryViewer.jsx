@@ -436,7 +436,7 @@ export default function StudentStoryViewer({ owners, startIndex = 0, onClose }) 
           <div
             role="alertdialog"
             aria-label="Delete this story?"
-            className="w-full max-w-md rounded-t-xl bg-card p-5 text-foreground sm:rounded-xl"
+            className="w-full max-w-md rounded-t-2xl bg-card p-5 text-foreground sm:rounded-2xl"
             style={{ paddingBottom: 'calc(var(--safe-area-bottom) + 20px)' }}
           >
             <h2 className="font-display text-lg font-semibold">Delete this story?</h2>

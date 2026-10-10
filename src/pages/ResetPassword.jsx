@@ -97,7 +97,7 @@ export default function ResetPassword() {
           <p className="text-muted-foreground text-sm">At least {MIN_LENGTH} characters.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-card/60 border border-border rounded-lg p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="bg-card/60 border border-border rounded-2xl p-6 space-y-5">
           <div>
             <label htmlFor="new-password" className="field-label">New password</label>
             <input

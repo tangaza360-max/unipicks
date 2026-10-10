@@ -234,7 +234,7 @@ export default function AdminReports() {
             return (
               <div
                 key={report.id}
-                className={`rounded-xl border bg-card p-4 space-y-3 ${overdue ? 'border-red-400/60' : 'border-border'}`}
+                className={`rounded-2xl border bg-card p-4 space-y-3 ${overdue ? 'border-red-400/60' : 'border-border'}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">

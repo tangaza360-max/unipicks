@@ -123,7 +123,7 @@ export default function GroupOrders() {
       </header>
 
       {joinFormOpen && (
-        <div className="rounded-lg border border-border bg-card p-4">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold">Join a group order</h3>
             <button
@@ -484,7 +484,7 @@ function GroupOrderCard({ order, hostLabel, actions, expanded, error, children }
     : 0
 
   return (
-    <article className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+    <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <div className="flex gap-3 p-3">
         {deal?.image_url ? (
           <img
